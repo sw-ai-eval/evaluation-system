@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>평가 시스템</title>
+</head>
+
+<body>
+
+<div style="display: flex;">
+
+    <!-- sidebar -->
+    <div style="width: 220px;">
+        <div th:replace="fragments/sidebar :: sidebar"></div>
+    </div>
+
+    <!-- content -->
+    <div style="flex: 1; padding: 20px;">
+        <div th:insert="~{::content}"></div>
+    </div>
+
+</div>
+
+</body>
+</html>
