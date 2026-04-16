@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/default :: layout(~{::content})">
+
+<section th:fragment="content">
+    <h1>사원 관리 페이지</h1>
+
+    <table border="1">
+        <tr>
+            <th>사번</th>
+            <th>이름</th>
+        </tr>
+        <tr>
+            <td>1001</td>
+            <td>홍길동</td>
+        </tr>
+    </table>
+</section>
+
+</html>
