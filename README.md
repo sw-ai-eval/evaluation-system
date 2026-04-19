@@ -1,3 +1,4 @@
-3차 수정 erd (https://www.erdcloud.com/d/GXkcZEbxARZXLqWX2)
+4차 수정 erd (https://www.erdcloud.com/d/GXkcZEbxARZXLqWX2)
 
-<img width="3550" height="1972" alt="Image" src="https://github.com/user-attachments/assets/dc469275-6cc6-4be6-bd92-14ec19432b42" />
+<img width="3284" height="1762" alt="Image" src="https://github.com/user-attachments/assets/4339b6c1-41f4-4178-bad9-2870d9d64c4c" />
+
