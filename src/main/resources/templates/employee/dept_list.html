@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>부서 관리</title>
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/admin.css}">
+</head>
+<body class="admin-container">
+
+    <div th:replace="~{layout/sidebar :: sidebar('🏢 부서 목록', ~{:: #deptTree})}">
+        <div id="deptTree">
+            <div class="tree-item active">📂 (S1000) 1본부 (영업)</div>
+            <div class="tree-item" style="padding-left: 25px;">└ 📄 (S1100) A부서</div>
+            <div class="tree-item" style="padding-left: 25px;">└ 📄 (S1200) B부서</div>
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <h2 style="font-size: 19px;">부서 관리</h2>
+            <div style="font-size: 12px; color: #888;">🏠 / 시스템관리 / 부서관리</div>
+        </div>
+
+        <div class="search-filter">
+            <input type="text" class="form-control" style="width: 150px;" placeholder="부서명">
+            <input type="text" class="form-control" style="width: 120px;" placeholder="부서코드">
+            <select class="form-control" style="width: 130px;">
+                <option>사용여부(전체)</option>
+                <option>사용</option>
+                <option>미사용</option>
+            </select>
+            <button class="btn btn-primary">조회</button>
+        </div>
+
+        <div class="form-area">
+            <div class="card-ui" style="max-width: 850px; padding: 40px;">
+                <h3 style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px;">부서 정보 수정</h3>
+                
+                <div class="form-group">
+                    <label>상위부서</label>
+                    <select class="form-control"><option>1본부 (영업)</option></select>
+                </div>
+                <div class="form-group">
+                    <label>부서코드</label>
+                    <input type="text" class="form-control" value="S1100" disabled>
+                </div>
+                <div class="form-group">
+                    <label>부서명 *</label>
+                    <input type="text" class="form-control" value="A부서" required>
+                </div>
+                <div class="form-group">
+                    <label>부서장</label>
+                    <div style="display:flex; gap:8px; flex:1;">
+                        <input type="text" class="form-control" value="홍길동 (2024001)" readonly>
+                        <button class="btn btn-secondary">검색</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>사용여부</label>
+                    <div style="display:flex; gap: 20px; flex:1;">
+                        <label style="font-weight:normal;"><input type="radio" name="useYn" checked> 사용</label>
+                        <label style="font-weight:normal;"><input type="radio" name="useYn"> 미사용</label>
+                    </div>
+                </div>
+
+                <div style="text-align: right; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <button class="btn">복사</button>
+                    <button class="btn btn-primary">저장</button>
+                    <button class="btn btn-danger">삭제</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+</html>
