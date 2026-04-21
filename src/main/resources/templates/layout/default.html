@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      th:fragment="layout">
+
 <head>
     <meta charset="UTF-8">
     <title>평가 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/department.css}">
 </head>
 
-<body>
-
-<div style="display: flex;">
+<body style="display: flex;">
 
     <!-- sidebar -->
     <div style="width: 220px;">
@@ -16,10 +17,10 @@
 
     <!-- content -->
     <div style="flex: 1; padding: 20px;">
-        <div th:insert="~{::content}"></div>
+        <div th:replace="~{::content}"></div>
     </div>
 
-</div>
+    <script src="/js/department.js"></script>
 
 </body>
 </html>

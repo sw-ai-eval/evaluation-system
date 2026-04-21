@@ -8,6 +8,7 @@ public class EvalSystemaiApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(EvalSystemaiApplication.class, args);
+	
 	}
 
 }
