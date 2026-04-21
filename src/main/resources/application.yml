@@ -1,0 +1,11 @@
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    # 알려주신 211.232.94.161 IP와 1533 포트, SKUEDU DB를 적용했습니다.
+    url: jdbc:sqlserver://211.232.94.161:1533;databaseName=SKUEDU;encrypt=true;trustServerCertificate=true;
+    username: SKUEDU01
+    password: init000! 
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.eval.domain

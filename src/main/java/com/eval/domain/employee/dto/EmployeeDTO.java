@@ -12,6 +12,6 @@ public class EmployeeDTO {
     private String deptCode;    // 부서코드
     private String status;      // 재직상태 (재직, 휴직, 퇴사)
     private int failCount;      // 비밀번호 실패 횟수
-    private boolean locked;     // 계정 잠금 여부 (true/false)
+    private int locked;     	// 계정 잠금 여부
     private String role;        // 권한 (USER, LEADER, ADMIN)
 }

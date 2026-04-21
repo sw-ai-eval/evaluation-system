@@ -2,8 +2,7 @@ package com.eval.global.security;
 
 import com.eval.domain.employee.dto.EmployeeDTO;
 import com.eval.domain.employee.mapper.EmployeeMapper;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.LockedException;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,28 +20,23 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String empNo) throws UsernameNotFoundException {
-        // 1. MyBatis Mapper를 통해 사원 정보 조회
         EmployeeDTO employee = employeeMapper.findByEmpNo(empNo);
         
+        // 1. 사번이 아예 없는 경우
         if (employee == null) {
-            throw new UsernameNotFoundException("존재하지 않는 사번입니다.");
+            throw new InternalAuthenticationServiceException("존재하지 않는 사번입니다.");
         }
 
-        // 2. 퇴사자 처리 (예: Status가 'RESIGNED' 또는 '퇴사'인 경우)
-        if ("퇴사".equals(employee.getStatus())) {
-            throw new DisabledException("퇴사 처리된 계정입니다. 로그인이 제한됩니다.");
-        }
+        // 2. 상태값 판별
+        boolean isResigned = employee.getStatus() != null && "퇴사".equals(employee.getStatus().trim());
+        boolean isAccountLocked = employee.getFailCount() >= 5 || employee.getLocked() == 1;
 
-        // 3. 5회 오류 잠금 처리
-        if (employee.getFailCount() >= 5 || employee.isLocked()) {
-            throw new LockedException("비밀번호 5회 오류로 계정이 잠겼습니다. 관리자에게 문의하세요.");
-        }
-
-        // 4. Spring Security가 알아들을 수 있는 User 객체로 변환하여 반환
         return User.builder()
                 .username(employee.getEmpNo())
                 .password(employee.getPassword())
-                .roles(employee.getRole()) // 예: "USER", "ADMIN", "LEADER"
+                .roles(employee.getRole()) 
+                .disabled(isResigned)           // true면 시큐리티가 스스로 DisabledException을 발생시킴
+                .accountLocked(isAccountLocked) // true면 시큐리티가 스스로 LockedException을 발생시킴
                 .build();
     }
 }
