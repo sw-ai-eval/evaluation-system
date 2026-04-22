@@ -1,13 +1,13 @@
-package pack;
+package com.eval;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class EvalSystemaiApplication {
+public class EvalSystemApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(EvalSystemaiApplication.class, args);
+		SpringApplication.run(EvalSystemApplication.class, args);
 	}
 
 }

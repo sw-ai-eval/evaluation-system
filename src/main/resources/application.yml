@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    url: jdbc:sqlserver://211.232.94.161:1533;databaseName=SKUEDU;encrypt=true;trustServerCertificate=true;
+    username: SKUEDU01
+    password: init000! 
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.eval.domain

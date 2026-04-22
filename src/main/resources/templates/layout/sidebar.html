@@ -1,0 +1,55 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<div th:fragment="sidebar" style="padding: 10px; background: #f5f5f5; height: 100vh;">
+    <h3>메뉴</h3>
+    <ul style="list-style: none; padding: 0;">
+
+        <!-- 관리자 -->
+        <li sec:authorize="hasRole('ADMIN')">
+            <a href="/employee">사원 관리</a>
+        </li>
+
+        <li sec:authorize="hasRole('ADMIN')">
+            <a href="/department">부서 관리</a>
+        </li>
+
+        <li sec:authorize="hasRole('ADMIN')">
+            <a href="/evaluation">평가요소 관리</a>
+        </li>
+
+        <li sec:authorize="hasRole('ADMIN')">
+            <a href="/evaluator">평가자 관리</a>
+        </li>
+
+
+        <!-- ================= 평가 메뉴 ================= -->
+
+        <li>
+            <a href="/evaluation/performance">성과/업무평가</a>
+        </li>
+
+        <li>
+            <a href="/evaluation/competency">역량평가</a>
+        </li>
+
+        <li>
+            <a href="/evaluation/interview">면담평가</a>
+        </li>
+
+        <li>
+            <a href="/evaluation/multi">다면평가</a>
+        </li>
+
+        <li>
+            <a href="/evaluation/employee-score">사원별 평가 점수/부서별 등급 현황</a>
+        </li>
+
+        <!-- ================= 최종 등급 확정 (임원만) ================= -->
+<!-- 
+        <li sec:authorize="principal?.positionLevel == 'EXECUTIVE'">
+            <a href="/evaluation/final-grade">최종등급확정</a>
+        </li>
+ -->
+    </ul>
+</div>
