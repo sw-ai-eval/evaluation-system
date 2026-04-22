@@ -1,0 +1,206 @@
+/* =========================================
+   전역 변수 & 기본 설정
+   ========================================= */
+:root {
+    --primary-color: #2563eb;       /* 신뢰감을 주는 블루 */
+    --primary-hover: #1d4ed8;
+    --danger-color: #ef4444;        /* 삭제/경고 레드 */
+    --danger-hover: #dc2626;
+    --bg-color: #f3f4f6;            /* 전체 배경색 */
+    --panel-bg: #ffffff;            /* 패널 배경색 */
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    font-family: 'Pretendard', 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+}
+
+/* =========================================
+   레이아웃 설정 (좌: 조직도, 우: 폼)
+   ========================================= */
+.dashboard-container {
+    display: flex;
+    gap: 24px;
+    max-width: 1200px;
+    margin: 30px auto;
+    align-items: flex-start; /* 양쪽 패널 높이가 제각각 늘어나지 않도록 방지 */
+}
+
+.panel {
+    background-color: var(--panel-bg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    padding: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.tree-panel {
+    flex: 1;
+    min-width: 450px;
+}
+
+.form-panel {
+    flex: 1;
+    min-width: 400px;
+}
+
+/* =========================================
+   입력 폼 & 검색 영역
+   ========================================= */
+.form-header {
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-main);
+}
+
+.search-box {
+    background-color: #f8fafc;
+    padding: 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* =========================================
+   버튼 스타일
+   ========================================= */
+button {
+    font-family: inherit;
+}
+
+.btn-primary, .btn-outline, .btn-danger {
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+.btn-outline {
+    background-color: white;
+    border-color: var(--border-color);
+    color: var(--text-main);
+    padding: 6px 12px; /* 트리 내부 버튼은 조금 더 작게 */
+    font-size: 13px;
+}
+
+.btn-outline:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: #eff6ff;
+}
+
+/* =========================================
+   조직도 (Tree) 스타일
+   ========================================= */
+.tree-root ul {
+    list-style: none;
+    padding-left: 24px;
+    margin: 0;
+}
+
+.tree-root > div > ul {
+    padding-left: 0; /* 최상위 ul은 들여쓰기 제거 */
+}
+
+.dept-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 12px;
+    margin-bottom: 6px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    transition: background-color 0.2s;
+}
+
+.dept-item:hover {
+    background-color: #f9fafb;
+    border-color: var(--border-color);
+}
+
+.toggle-btn {
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 12px;
+    transition: transform 0.2s;
+    user-select: none;
+}
+
+/* JS에서 열림 상태일 때 .open 클래스를 토글해준다고 가정 */
+.toggle-btn.open {
+    transform: rotate(90deg);
+}
+
+.toggle-placeholder {
+    width: 24px;
+    display: inline-block;
+}
+
+.dept-name {
+    flex: 1;
+    font-weight: 500;
+    margin-left: 8px;
+    font-size: 15px;
+}
+
+.children {
+    border-left: 1px dashed var(--border-color);
+    margin-left: 11px; /* 토글 버튼 중앙에 선이 오도록 조정 */
+}
