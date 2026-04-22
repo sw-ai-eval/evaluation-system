@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -23,6 +24,7 @@ import com.eval.domain.employee.EmployeeRepository;
 
 
 @Controller
+@RequestMapping("/admin/department")
 public class DepartmentController {
 
     private final DepartmentService departmentService;
@@ -40,11 +42,13 @@ public class DepartmentController {
 
         List<Department> tree = departmentService.getDepartmentTree();
         List<Department> list = departmentRepository.findAll();
+        List<Employee> empList = employeeRepository.findAll();
 
         model.addAttribute("deptTree", tree);
         model.addAttribute("deptList", list);
+        model.addAttribute("empList", empList);
 
-        return "department";
+        return "dept/department";
     }
     
     @PostMapping("/department/create")
