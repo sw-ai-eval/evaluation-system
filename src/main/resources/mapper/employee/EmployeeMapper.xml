@@ -33,5 +33,30 @@
         SET login_fail_count = 0
         WHERE emp_no = #{empNo}
     </update>
+    
+    <update id="resetPasswordAndUnlock">
+   		UPDATE dbo.employee_52
+    	SET password = #{encodedPassword},
+        login_fail_count = 0,
+        locked = 0
+    	WHERE emp_no = #{empNo}
+	</update>
+	
+	<select id="findAll" resultType="com.eval.domain.employee.dto.EmployeeDTO">
+        SELECT 
+            emp_no              AS empNo,
+            name                AS empName,
+            dept_id             AS deptId,  status,
+            login_fail_count    AS failCount,
+            locked
+        FROM dbo.employee_52
+        ORDER BY emp_no ASC
+    </select>
+    
+    <update id="updateLockedStatus">
+    	UPDATE dbo.employee_52
+    	SET locked = 1
+    	WHERE emp_no = #{empNo}
+	</update>
 
 </mapper>

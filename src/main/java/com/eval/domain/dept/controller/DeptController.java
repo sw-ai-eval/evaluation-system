@@ -1,4 +1,4 @@
-package com.eval.domain.employee.controller;
+package com.eval.domain.dept.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;

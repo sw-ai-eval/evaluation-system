@@ -49,6 +49,7 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
                 
         } else if (exception instanceof LockedException) {
             // 이미 잠긴 계정일 때
+        	employeeService.forceLock(empNo);
             errorMessage = lockedMessage;
             
         } else if (exception instanceof DisabledException) {
