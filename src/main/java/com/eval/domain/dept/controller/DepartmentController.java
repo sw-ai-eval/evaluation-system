@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
@@ -46,6 +47,7 @@ public class DepartmentController {
 
         List<Department> tree = departmentService.getDepartmentTree();
 
+
         Boolean useYnBool = null;
         if ("true".equals(useYn)) useYnBool = true;
         else if ("false".equals(useYn)) useYnBool = false;
@@ -78,6 +80,12 @@ public class DepartmentController {
         model.addAttribute("name", name);
         model.addAttribute("useYn", useYn);
         model.addAttribute("editId", editId); // ⭐ 중요
+
+
+
+        List<Employee> empList = employeeRepository.findAll(); // 혜나가추가
+        model.addAttribute("empList", empList);
+
 
         return "dept/department";
     }
