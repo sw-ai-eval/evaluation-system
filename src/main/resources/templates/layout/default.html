@@ -5,20 +5,34 @@
 <head>
     <meta charset="UTF-8">
     <title>평가 시스템</title>
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <link rel="stylesheet" th:href="@{/css/department.css}">
 </head>
 
-<body style="display: flex;">
+<body class="layout-body">
 
-    <!-- sidebar -->
-    <div style="width: 220px;">
-        <div th:replace="layout/sidebar :: sidebar"></div>
-    </div>
 
-    <!-- content -->
-    <div style="flex: 1; padding: 20px;">
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+
+    <div class="layout-content">
         <div th:replace="~{::content}"></div>
     </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const currentPath = window.location.pathname;
+            const menuItems = document.querySelectorAll('.menu-item');
+
+            menuItems.forEach(item => {
+                if (item.getAttribute('href') === currentPath) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+
 
     <script src="/js/department.js"></script>
 

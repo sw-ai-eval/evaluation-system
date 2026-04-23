@@ -1,12 +1,10 @@
-package com.eval.domain.dept.repository;
+package pack.department;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import com.eval.domain.dept.Department;
 
 import jakarta.persistence.LockModeType;
 
@@ -28,16 +26,4 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     @Modifying
     @Query("delete from Department d where d.id = :id")
     void deleteByDeptId(@Param("id") String id);
-    
-    @Query("""
-    		SELECT d FROM Department d
-    		WHERE (:name IS NULL OR :name = ''
-    		       OR d.id LIKE %:name%
-    		       OR d.name LIKE %:name%)
-    		AND (:useYn IS NULL OR d.useYn = :useYn)
-    		""")List<Department> search(@Param("name") String name,@Param("useYn") Boolean useYn);
-    
-    
-    
-    
 }

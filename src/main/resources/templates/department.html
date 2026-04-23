@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      th:replace="~{layout/default :: layout}">
+      th:replace="layout/default :: layout">
 <head>
 <meta charset="UTF-8">
 <title>부서 관리</title>
@@ -23,16 +23,15 @@
         </div>
         
         <div class="panel form-panel" id="formArea">
-        	<div class="form-overlay" id="formOverlay" onclick="closeForm()"></div>
             <div class="search-box">
-			    <form action="/department" method="get" class="search-form">
+			    <form action="/department/search" method="get" class="search-form">
 			
 			        <div class="form-group">
-			            <label>부서명/부서코드</label>
+			            <label>부서명</label>
 			            <input type="text"
 			                   name="name"
 			                   class="form-control"
-			                   placeholder="검색할 부서명/부서코드를 입력하세요" />
+			                   placeholder="검색할 부서명을 입력하세요" />
 			        </div>
 			
 			        <div class="form-group">
@@ -49,65 +48,9 @@
 			        </button>
 			
 			    </form>
-			    <div class="table-wrapper">
-				
-				    <table class="table">
-				        <thead>
-				            <tr>
-				                <th>부서코드</th>
-				                <th>부서명</th>
-				                <th>사용여부</th>
-				                <th>관리</th>
-				            </tr>
-				        </thead>
-				
-				        <tbody>
-				
-				        <!-- 데이터 있을 때 -->
-				        <tr th:each="dept : ${list}">
-						    <td class="td-code" th:text="${dept.id}"></td>
-						
-						    <td class="td-name" th:text="${dept.name}"></td>
-						
-						    <td>
-						        <span th:classappend="${dept.useYn} ? 'badge badge-true' : 'badge badge-false'"
-						              th:text="${dept.useYn ? '사용' : '미사용'}">
-						        </span>
-						    </td>
-						
-						    <td>
-						        <button type="button"
-						                class="btn-outline"
-						                th:data-id="${dept.id}"
-						                th:data-name="${dept.name}"
-						                th:data-leaderempno="${dept.leaderEmpNo}"
-						                th:data-parentid="${dept.parentId}"
-						                th:data-useyn="${dept.useYn}"
-						                onclick="showEditForm(this)">
-						            수정
-						        </button>
-						    </td>
-						</tr>
-				
-				        </tbody>
-				    </table>
-				
-				    <!-- 데이터 없을 때 -->
-				    <div class="empty-state" th:if="${list != null and #lists.isEmpty(list)}">
-					    
-					    <div class="empty-icon">🔍</div>
-					
-					    <div class="empty-title">
-					        검색 결과가 없습니다
-					    </div>
-					
-					    <div class="empty-desc">
-					        조건을 변경하거나 다른 부서를 검색해보세요
-					    </div>
-					
-					</div>
-				
-				</div>
+			    <div>
+			    	
+			    </div>
 			
 			</div>
 
@@ -142,10 +85,8 @@
                         </select>
                     </div>
                     
-                   <div class="form-actions">
+                   
                     <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">저장하기</button>
-                    <button type="button" onclick="closeForm()" class="btn-back">닫기</button>
-                    </div>
                 </form>
             </div>
         
@@ -175,20 +116,17 @@
                         </select>
                     </div>
         
-                    <div class="form-group" th:with="eid=${editId}">
-					    <label>상위 부서</label>
-					
-					    <select name="parentId" id="edit-parentId" class="form-control">
-						
-						    <option value="">상위 부서 없음</option>
-						
-						    <option th:each="dept : ${parentList}"
-						            th:value="${dept.id}"
-						            th:text="${dept.name}">
-						    </option>
-						
-						</select>
-					</div>
+                    <div class="form-group">
+                        <label>상위 부서</label>
+                        <select name="parentId" id="edit-parentId" class="form-control">
+                            <option value="">상위 부서 없음</option>
+                            <option th:each="dept : ${deptList}"
+                                    th:if="${dept.id != editId}"
+                                    th:value="${dept.id}"
+                                     th:text="${dept.name}">
+                            </option>
+                        </select>
+                    </div>
         
                     <div class="form-group">
                         <label>사용 여부</label>
@@ -197,13 +135,10 @@
                             <option value="false">미사용</option>
                         </select>
                     </div>
-        			
-        			<div class="form-actions">
+        
                     <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">변경사항 저장</button>
-                    <button type="button" class="btn-danger" onclick="deleteDepartment()" style="width: 100%; margin-top: 10px; background-color: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">부서 삭제</button>
-					<button type="button" onclick="closeForm()" class="btn-back">닫기</button>
-					</div>
 				</form>
+				<button type="button" class="btn-danger" onclick="deleteDepartment()" style="width: 100%; margin-top: 10px; background-color: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">부서 삭제</button>
             </div>
         </div>
     </div>

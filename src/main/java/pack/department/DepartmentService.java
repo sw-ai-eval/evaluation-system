@@ -1,4 +1,4 @@
-package com.eval.domain.dept.service;
+package pack.department;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -8,16 +8,10 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
-
-import com.eval.domain.dept.Department;
-import com.eval.domain.dept.dto.DepartmentDto;
-import com.eval.domain.dept.repository.DepartmentRepository;
-import com.eval.domain.employee.EmployeeRepository;
+import pack.employee.EmployeeRepository;
 
 
 @Service
@@ -84,12 +78,8 @@ public class DepartmentService {
             dept.setLevel(0);
         }
 
-        // 🔥 로그인 사용자 사번
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String empNo = auth.getName();
-
         dept.setCreatedAt(LocalDateTime.now());
-        dept.setCreatedBy(empNo);   // ✅ 여기 변경
+        dept.setCreatedBy("SYSTEM");
 
         // 🔥 여기서 ID 생성 (락 안에서 실행됨)
         String newId = generateDepartmentId(dto.getParentId());
@@ -181,13 +171,6 @@ public class DepartmentService {
         if (dto.getLeaderEmpNo() == null || dto.getLeaderEmpNo().toString().isBlank()) {
             dto.setLeaderEmpNo(null);
         }
-        
-        // 🔥 로그인 사용자 사번
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String empNo = auth.getName();
-
-        dept.setUpdatedAt(LocalDateTime.now());
-        dept.setUpdatedBy(empNo); 
 
         // 3) 실제 업데이트
         dept.setName(dto.getName());
@@ -227,10 +210,5 @@ public class DepartmentService {
     @Transactional
     public void delete(String deptId) {
     	departmentRepository.deleteByDeptId(deptId);
-    }
-    ////////////////////////////////////////////////////////////// 부서 조회
-    
-    public List<Department> search(String name, Boolean useYn) {
-        return departmentRepository.search(name, useYn);
     }
 }
