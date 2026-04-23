@@ -35,18 +35,54 @@ public class DepartmentController {
         this.employeeRepository=employeeRepository;
     }
 
+    // 부서관리 페이지
     @GetMapping("/department")
-    public String departments(Model model) {
+    public String departments(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String useYn,
+            @RequestParam(required = false) String editId, // ⭐ 추가
+            Model model
+    ) {
 
         List<Department> tree = departmentService.getDepartmentTree();
-        List<Department> list = departmentRepository.findAll();
+
+        Boolean useYnBool = null;
+        if ("true".equals(useYn)) useYnBool = true;
+        else if ("false".equals(useYn)) useYnBool = false;
+
+        List<Department> list;
+
+        if ((name != null && !name.isEmpty()) || useYnBool != null) {
+            list = departmentService.search(name, useYnBool);
+        } else {
+            list = departmentRepository.findAll();
+        }
+
+        // ⭐ 전체 리스트
+        List<Department> deptList = departmentRepository.findAll();
+
+        // ⭐ 수정 시 자기 자신 제외 리스트
+        List<Department> parentList = deptList;
+
+        if (editId != null) {
+            parentList = deptList.stream()
+                    .filter(d -> !d.getId().equals(editId))
+                    .toList();
+        }
 
         model.addAttribute("deptTree", tree);
-        model.addAttribute("deptList", list);
+        model.addAttribute("deptList", deptList);
+        model.addAttribute("parentList", parentList); // ⭐ 핵심
 
-        return "department";
+        model.addAttribute("list", list);
+        model.addAttribute("name", name);
+        model.addAttribute("useYn", useYn);
+        model.addAttribute("editId", editId); // ⭐ 중요
+
+        return "dept/department";
     }
     
+    // 부서 생성 매핑
     @PostMapping("/department/create")
     public String create_dept(@ModelAttribute DepartmentDto dto) {
 
@@ -55,6 +91,7 @@ public class DepartmentController {
         return "redirect:/department";
     }
 
+    //부서 수정 메핑
     @PostMapping("/department/update")
     public String update_dept(@ModelAttribute DepartmentDto dto) {
     	
@@ -85,14 +122,6 @@ public class DepartmentController {
         return "삭제 완료";
     }
     
-    
-    //검색 필터
-    @GetMapping("/department/search")
-    public String search_dept() {
-    	
-    	
-
-        return "redirect:/department";
-    }
+   
     
 }

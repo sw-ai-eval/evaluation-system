@@ -21,12 +21,21 @@ function deleteDepartment() {
     });
 }
 
+function closeForm() {
+    document.getElementById("createForm").style.display = "none";
+    document.getElementById("editForm").style.display = "none";
+    document.getElementById("formOverlay").style.display = "none";
+}
+
 function showCreateForm() {
+	closeForm();
+
     const create = document.getElementById("createForm");
     const edit = document.getElementById("editForm");
 
     if (edit) edit.style.display = "none";
     if (create) create.style.display = "block";
+
 }
 
 function showEditForm(btn) {
@@ -48,6 +57,15 @@ function showEditForm(btn) {
     set("edit-leaderEmpNo", d.leaderempno);
     set("edit-parentId", d.parentid || "");
     set("edit-useYn", d.useyn);
+	
+	requestAnimationFrame(() => {
+	    const select = document.getElementById("edit-parentId");
+
+	    Array.from(select.options).forEach(opt => {
+	        opt.disabled = (opt.value === d.id);
+	    });
+	});
+	
 
     // ✅ 직원 리스트 조회 (핵심 수정 부분)
     fetch(`/department/${d.id}/employees`)
@@ -76,12 +94,14 @@ function showEditForm(btn) {
         .catch(err => {
             console.error("❌ 직원 목록 조회 오류:", err);
         });
+	
+	const create = document.getElementById("createForm");
+	const edit = document.getElementById("editForm");
 
-    const create = document.getElementById("createForm");
-    const edit = document.getElementById("editForm");
+	if (create) create.style.display = "none";
+	if (edit) edit.style.display = "block";
 
-    if (create) create.style.display = "none";
-    if (edit) edit.style.display = "block";
+	document.getElementById("formOverlay").style.display = "block";
 }
 
 function toggleChildren(id) {

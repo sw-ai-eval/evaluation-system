@@ -28,4 +28,16 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     @Modifying
     @Query("delete from Department d where d.id = :id")
     void deleteByDeptId(@Param("id") String id);
+    
+    @Query("""
+    		SELECT d FROM Department d
+    		WHERE (:name IS NULL OR :name = ''
+    		       OR d.id LIKE %:name%
+    		       OR d.name LIKE %:name%)
+    		AND (:useYn IS NULL OR d.useYn = :useYn)
+    		""")List<Department> search(@Param("name") String name,@Param("useYn") Boolean useYn);
+    
+    
+    
+    
 }
