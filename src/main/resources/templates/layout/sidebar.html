@@ -1,0 +1,41 @@
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>사이드바 </title>
+
+<link rel="stylesheet" th:href="@{/css/sidebar.css}">
+</head>
+<body>
+<div th:fragment="sidebar" class="sidebar-container">
+    <div class="sidebar-header">
+        <h2>📊 평가 시스템</h2>
+    </div>
+
+    <div class="sidebar-content">
+        
+        <div sec:authorize="hasRole('ADMIN')" class="menu-group">
+            <div class="menu-label">관리자 메뉴</div>
+            <ul class="menu-list">
+                <li><a href="/employee" class="menu-item">👥 사원 관리</a></li>
+                <li><a href="/department" class="menu-item">🏢 부서 관리</a></li>
+                <li><a href="/evaluation" class="menu-item">📑 평가요소 관리</a></li>
+                <li><a href="/evaluator" class="menu-item">⚖️ 평가자 관리</a></li>
+                <li><a href="/admin/management" class="menu-item">🔐 로그인 계정 관리</a></li>
+            </ul>
+        </div>
+
+        <div class="menu-group">
+            <div class="menu-label">나의 평가</div>
+            <ul class="menu-list">
+                <li><a href="/evaluation/performance" class="menu-item">🎯 성과/업무평가</a></li>
+                <li><a href="/evaluation/competency" class="menu-item">💪 역량평가</a></li>
+                <li><a href="/evaluation/interview" class="menu-item">🤝 면담평가</a></li>
+                <li><a href="/evaluation/multi" class="menu-item">🔄 다면평가</a></li>
+                <li><a href="/evaluation/employee-score" class="menu-item">📈 평가 점수/등급 현황</a></li>
+            </ul>
+        </div>
+
+        </div>
+</div>
+</body>

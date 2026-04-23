@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout}">
+<head>
+<meta charset="UTF-8">
+<title>부서 관리</title>
+
+<link rel="stylesheet" th:href="@{/css/department.css}">
+</head>
+
+<body>
+    <div th:fragment="content" class="dashboard-container">
+    
+        <div class="panel tree-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h2 style="margin: 0; font-size: 22px;">조직도</h2>
+                <button type="button" class="btn-primary" onclick="showCreateForm()">+ 새 부서 생성</button>
+            </div>
+            
+            <div class="tree-root">
+                <div th:replace="~{::deptTree(${deptTree})}"></div>
+            </div>
+        </div>
+        
+        <div class="panel form-panel" id="formArea">
+        	<div class="form-overlay" id="formOverlay" onclick="closeForm()"></div>
+            <div class="search-box">
+			    <form action="/department" method="get" class="search-form">
+			
+			        <div class="form-group">
+			            <label>부서명/부서코드</label>
+			            <input type="text"
+			                   name="name"
+			                   class="form-control"
+			                   placeholder="검색할 부서명/부서코드를 입력하세요" />
+			        </div>
+			
+			        <div class="form-group">
+			            <label>사용 여부</label>
+			            <select name="useYn" class="form-control">
+			                <option value="">전체</option>
+			                <option value="true">사용</option>
+			                <option value="false">미사용</option>
+			            </select>
+			        </div>
+			
+			        <button type="submit" class="btn-primary search-btn">
+			            🔍 부서 검색
+			        </button>
+			
+			    </form>
+			    <div class="table-wrapper">
+				
+				    <table class="table">
+				        <thead>
+				            <tr>
+				                <th>부서코드</th>
+				                <th>부서명</th>
+				                <th>사용여부</th>
+				                <th>관리</th>
+				            </tr>
+				        </thead>
+				
+				        <tbody>
+				
+				        <!-- 데이터 있을 때 -->
+				        <tr th:each="dept : ${list}">
+						    <td class="td-code" th:text="${dept.id}"></td>
+						
+						    <td class="td-name" th:text="${dept.name}"></td>
+						
+						    <td>
+						        <span th:classappend="${dept.useYn} ? 'badge badge-true' : 'badge badge-false'"
+						              th:text="${dept.useYn ? '사용' : '미사용'}">
+						        </span>
+						    </td>
+						
+						    <td>
+						        <button type="button"
+						                class="btn-outline"
+						                th:data-id="${dept.id}"
+						                th:data-name="${dept.name}"
+						                th:data-leaderempno="${dept.leaderEmpNo}"
+						                th:data-parentid="${dept.parentId}"
+						                th:data-useyn="${dept.useYn}"
+						                onclick="showEditForm(this)">
+						            수정
+						        </button>
+						    </td>
+						</tr>
+				
+				        </tbody>
+				    </table>
+				
+				    <!-- 데이터 없을 때 -->
+				    <div class="empty-state" th:if="${list != null and #lists.isEmpty(list)}">
+					    
+					    <div class="empty-icon">🔍</div>
+					
+					    <div class="empty-title">
+					        검색 결과가 없습니다
+					    </div>
+					
+					    <div class="empty-desc">
+					        조건을 변경하거나 다른 부서를 검색해보세요
+					    </div>
+					
+					</div>
+				
+				</div>
+			
+			</div>
+
+
+            <div id="createForm" style="display:none;">
+                <h3 class="form-header">✨ 새 부서 생성</h3>
+                <form action="/department/create" method="post">
+                    <div class="form-group">
+                        <label>부서명</label>
+                        <input type="text" name="name" class="form-control" placeholder="부서명을 입력하세요" required />
+                    </div>
+                    
+
+                    <div class="form-group">
+					    <label>상위 부서</label>
+					    <select name="parentId" class="form-control">
+					        <option value="">상위 부서 없음</option>
+					
+					        <option th:each="dept : ${deptList}"
+					                th:value="${dept.id}"
+					                th:text="${dept.name}">
+					        </option>
+					
+					    </select>
+					</div>
+
+                    <div class="form-group">
+                        <label>사용 여부</label>
+                        <select name="useYn" class="form-control">
+                            <option value="true">사용</option>
+                            <option value="false">미사용</option>
+                        </select>
+                    </div>
+                    
+                   <div class="form-actions">
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">저장하기</button>
+                    <button type="button" onclick="closeForm()" class="btn-back">닫기</button>
+                    </div>
+                </form>
+            </div>
+        
+            <div id="editForm" style="display:none;">
+                <h3 class="form-header">✏️ 부서 정보 수정</h3>
+                <form action="/department/update" method="post">
+                    
+                    <div class="form-group">
+                        <label>부서코드(읽기 전용)</label>
+                        <input type="text" name="id" id="edit-id" class="form-control" readonly/>
+                    </div>
+        
+                    <div class="form-group">
+                        <label>부서명</label>
+                        <input type="text" name="name" id="edit-name" class="form-control" placeholder="부서명" required />
+                    </div>
+                    
+
+                    <div class="form-group">
+                        <label>부서장 사원번호</label>
+                        <select name="leaderEmpNo" id="edit-leaderEmpNo" class="form-control">
+                        	<option value="">선택 안 함</option>
+					        <option th:each="emp : ${empList}"
+					                th:value="${emp.empNo}"
+					                th:text="${emp.name}">
+					        </option>
+                        </select>
+                    </div>
+        
+                    <div class="form-group" th:with="eid=${editId}">
+					    <label>상위 부서</label>
+					
+					    <select name="parentId" id="edit-parentId" class="form-control">
+						
+						    <option value="">상위 부서 없음</option>
+						
+						    <option th:each="dept : ${parentList}"
+						            th:value="${dept.id}"
+						            th:text="${dept.name}">
+						    </option>
+						
+						</select>
+					</div>
+        
+                    <div class="form-group">
+                        <label>사용 여부</label>
+                        <select name="useYn" id="edit-useYn" class="form-control">
+                            <option value="true">사용</option>
+                            <option value="false">미사용</option>
+                        </select>
+                    </div>
+        			
+        			<div class="form-actions">
+                    <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px;">변경사항 저장</button>
+                    <button type="button" class="btn-danger" onclick="deleteDepartment()" style="width: 100%; margin-top: 10px; background-color: #ef4444; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: 500;">부서 삭제</button>
+					<button type="button" onclick="closeForm()" class="btn-back">닫기</button>
+					</div>
+				</form>
+            </div>
+        </div>
+    </div>
+
+    <th:block th:fragment="deptTree(deptList)">
+        <ul>
+            <li th:each="dept : ${deptList}">
+                <div class="dept-item">
+                    <span th:if="${dept.children != null and !#lists.isEmpty(dept.children)}"
+                          class="toggle-btn"
+                          th:attr="onclick=|toggleChildren('${dept.id}')|">
+                        ▶
+                    </span>
+                    <span th:unless="${dept.children != null and !#lists.isEmpty(dept.children)}" class="toggle-placeholder"></span>
+    
+                    <span class="dept-name" th:text="${dept.name} + ' (' + ${dept.id} + ')'"></span>
+    
+                    <button type="button" class="btn-outline"
+                            th:data-id="${dept.id}"
+                            th:data-name="${dept.name}"
+                            th:data-leaderempno="${dept.leaderEmpNo}"
+                            th:data-parentid="${dept.parentId}"
+                            th:data-useyn="${dept.useYn}"
+                            onclick="showEditForm(this)">
+                        수정
+                    </button>
+                </div>
+    
+                <div class="children"
+                     th:id="'child-' + ${dept.id}"
+                     th:style="${dept.children == null or #lists.isEmpty(dept.children)} ? 'display:none' : ''">
+                    <div th:replace="~{::deptTree(${dept.children})}"></div>
+                </div>
+            </li>
+        </ul>
+    </th:block>
+    <script src="/js/department.js"></script>
+</body>
+</html>

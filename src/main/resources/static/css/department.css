@@ -204,3 +204,146 @@ button {
     border-left: 1px dashed var(--border-color);
     margin-left: 11px; /* 토글 버튼 중앙에 선이 오도록 조정 */
 }
+
+/* =========================================
+   부서 조회 테이블 (Gemini 스타일)
+   ========================================= */
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--panel-bg);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+    font-size: 14px;
+    margin-top: 12px;
+}
+
+/* 헤더 */
+.table thead {
+    background-color: #f8fafc;
+}
+
+.table th {
+    text-align: left;
+    padding: 14px 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* 본문 */
+.table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: var(--text-main);
+}
+
+/* hover 인터랙션 */
+.table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f9fafb;
+    transform: scale(1.01);
+}
+
+/* 마지막 줄 라인 제거 */
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+#formArea {
+    position: relative;
+}
+
+#createForm,
+#editForm {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    background: white;
+    z-index: 1000;
+
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+    display: none;
+}
+
+.btn-back {
+    background-color: #ffffff;
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    margin-top: 10px;
+}
+/* =========================================
+   폼 버튼 가로 정렬
+   ========================================= */
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+}
+
+/* 버튼 크기 균등하게 */
+.form-actions button {
+    flex: 1;
+}
+
+.btn-back:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background-color: #eff6ff;
+}
+
+.btn-back:active {
+    transform: scale(0.98);
+}
+
+/* =========================================
+   Empty State (검색 결과 없음)
+   ========================================= */
+
+.empty-state {
+    margin-top: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    background-color: #f9fafb;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+}
+
+/* 아이콘 */
+.empty-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* 제목 */
+.empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+/* 설명 */
+.empty-desc {
+    font-size: 13px;
+    color: var(--text-muted);
+}

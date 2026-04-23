@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>로그인</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background-color: #f0f2f5; font-family: 'Noto Sans KR', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        
+        .login-card { background: #ffffff; width: 100%; max-width: 420px; padding: 50px 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); text-align: center; }
+        .login-card h2 { color: #1a1a1a; font-size: 26px; font-weight: 700; margin-bottom: 35px; }
+
+        .form-group { text-align: left; position: relative; }
+        
+        .form-control { width: 100%; padding: 14px 16px; border: 1px solid #ddd; font-size: 15px; outline: none; transition: border-color 0.2s; }
+        
+        /* 입력창 선택 시 파란색 하이라이트 */
+        .form-control:focus { border-color: #0056b3; z-index: 1; position: relative; }
+        
+        #empNo { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+        #password { 
+            border-bottom-left-radius: 8px; 
+            border-bottom-right-radius: 8px; 
+            margin-top: -1px; 
+            margin-bottom: 15px; 
+        }
+
+        /* 로그인 상태 유지 체크박스 스타일 */
+        .login-options { display: flex; align-items: center; margin-bottom: 12px; font-size: 14px; color: #666; text-align: left; }
+        .login-options input[type="checkbox"] { margin-right: 8px; width: 18px; height: 18px; cursor: pointer; accent-color: #0056b3; }
+
+        /* 통합 에러 메시지 스타일 */
+        .error-msg { 
+            color: #ff003e; 
+            font-size: 13px; 
+            margin-bottom: 20px; 
+            text-align: left; 
+            display: none; 
+            font-weight: 500; 
+            line-height: 1.5;
+            white-space: pre-line; 
+        }
+
+        /* 로그인 버튼 */
+        .btn-login { width: 100%; padding: 15px; background-color: #a0a0a0; color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: 700; cursor: pointer; transition: background-color 0.2s; }
+        .btn-login.active { background-color: #0056b3; }
+        
+        .login-footer { margin-top: 25px; font-size: 13px; color: #888; }
+        .login-footer a { color: #666; text-decoration: none; }
+        .login-footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <h2>평가 관리 시스템</h2>
+
+        <form th:action="@{/login}" method="post" id="loginForm" onsubmit="return validateForm()">            
+            
+            <div class="form-group">
+                <input type="text" id="empNo" name="empNo" class="form-control" placeholder="사번" oninput="checkInputs()" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <input type="password" id="password" name="password" class="form-control" placeholder="비밀번호" oninput="checkInputs()">
+            </div>
+
+            <div class="login-options">
+                <input type="checkbox" id="remember-me" name="remember-me">
+                <label for="remember-me" style="cursor: pointer;">로그인 상태 유지</label>
+            </div>
+
+            <div id="validationError" class="error-msg" th:style="${param.error} ? 'display:block' : 'display:none'"><span th:if="${param.error}" th:text="${param.errorMessage}">사번 또는 비밀번호가 잘못 되었습니다.
+사번과 비밀번호를 정확히 입력해 주세요.</span></div>
+
+            <button type="submit" id="loginBtn" class="btn-login">로그인</button>
+        </form>
+
+        <div class="login-footer">
+            <a href="#" onclick="alert('관리자에게 문의하세요.'); return false;">비밀번호 찾기</a>
+            <span style="margin: 0 8px;">|</span>
+            <a href="#" onclick="alert('IT지원팀으로 문의하세요.'); return false;">시스템 문의</a>
+        </div>
+    </div>
+
+    <script>
+        const empInput = document.getElementById('empNo');
+        const pwInput = document.getElementById('password');
+        const loginBtn = document.getElementById('loginBtn');
+        const validationError = document.getElementById('validationError');
+
+        function checkInputs() {
+            if (empInput.value.trim() !== "" && pwInput.value.trim() !== "") {
+                loginBtn.classList.add('active');
+            } else {
+                loginBtn.classList.remove('active');
+            }
+            
+            validationError.style.display = "none";
+            validationError.innerHTML = ""; 
+        }
+
+        function validateForm() {
+            // 사번 검증
+            if (empInput.value.trim() === "") {
+                validationError.innerText = "사번을 입력해 주세요.";
+                validationError.style.display = "block";
+                empInput.focus();
+                return false;
+            }
+            
+            // 비밀번호 검증
+            if (pwInput.value.trim() === "") {
+                validationError.innerText = "비밀번호를 입력해 주세요.";
+                validationError.style.display = "block";
+                pwInput.focus();
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>
