@@ -24,7 +24,6 @@ import com.eval.domain.employee.EmployeeRepository;
 
 
 @Controller
-@RequestMapping("/admin/department")
 public class DepartmentController {
 
     private final DepartmentService departmentService;

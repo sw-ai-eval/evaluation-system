@@ -31,6 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/department/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             // 2. 로그인 설정
@@ -65,8 +66,12 @@ public class SecurityConfig {
                 .expiredUrl("/login?expired=true") 
             )
             // 5. CSRF 설정
-            .csrf(csrf -> csrf.disable());
+            .csrf(csrf -> csrf.disable()
             
+            // 권한 없이 접근할 경우
+            .exceptionHandling(ex -> ex
+          		 .accessDeniedPage("/access-denied")));
+        	
         return http.build();
     }
 }
