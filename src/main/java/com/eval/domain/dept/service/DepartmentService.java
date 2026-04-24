@@ -32,6 +32,11 @@ public class DepartmentService {
         this.employeeRepository =employeeRepository;
     }
     
+    ////////////////////////////////// 모든 부서 조회 용
+    public List<Department> findAll() {
+        return departmentRepository.findAll();
+    }
+    
     public Department findById(String id) {
         return departmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
@@ -228,7 +233,7 @@ public class DepartmentService {
     public void delete(String deptId) {
     	departmentRepository.deleteByDeptId(deptId);
     }
-    ////////////////////////////////////////////////////////////// 부서 조회
+    ////////////////////////////////////////////////////////////// 부서 검색
     
     public List<Department> search(String name, Boolean useYn) {
         return departmentRepository.search(name, useYn);

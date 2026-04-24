@@ -1,5 +1,6 @@
 package com.eval.domain.employee.mapper;
 
+import com.eval.domain.employee.dto.EmpManageDTO;
 import com.eval.domain.employee.dto.EmployeeDTO;
 
 import java.util.List;
@@ -27,6 +28,13 @@ public interface EmployeeMapper {
     
     // 전체 사원 목록 조회
     List<EmployeeDTO> findAll();
+    List<EmpManageDTO> findAllEmp();
     
     void updateLockedStatus(String empNo);
+    
+    //사원 검색 용
+    List<EmpManageDTO> search(@Param("keyword") String keyword, @Param("deptId") String deptId, @Param("status") String status);
+    
+    EmpManageDTO findByEmpNoDetail(String empNo);
+    
 }

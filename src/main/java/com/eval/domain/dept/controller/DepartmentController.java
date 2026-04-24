@@ -82,10 +82,13 @@ public class DepartmentController {
         model.addAttribute("editId", editId); // ⭐ 중요
 
 
+        model.addAttribute("pageType", "dept/department");// css 
+        
 
         List<Employee> empList = employeeRepository.findAll(); // 혜나가추가
         model.addAttribute("empList", empList);
 
+        
 
         return "dept/department";
     }
