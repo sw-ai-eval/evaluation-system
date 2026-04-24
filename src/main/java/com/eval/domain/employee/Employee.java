@@ -1,13 +1,10 @@
 package com.eval.domain.employee;
-
-import java.time.LocalDateTime;
-
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -16,17 +13,63 @@ import lombok.Setter;
 public class Employee {
 
     @Id
-    @Column(name = "emp_no")
+    @Column(name = "emp_no", length = 50)
     private String empNo;
 
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "dept_id")
+    @Column(name = "dept_id", nullable = false, length = 50)
     private String deptId;
 
-    @Column(name = "password")
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "status", nullable = false, length = 20)
+    private String status;
+
+    @Column(name = "email", length = 100)
+    private String email;
+
+    @Column(name = "password", nullable = false, length = 255)
     private String password;
 
+    @Column(name = "phone", nullable = false, length = 50)
+    private String phone;
 
+    @Column(name = "hire_date", nullable = false)
+    private LocalDate hireDate;
+
+    @Column(name = "resign_date")
+    private LocalDate resignDate;
+
+    @Column(name = "position_level", nullable = false, length = 50)
+    private String positionLevel;
+
+    @Column(name = "position", nullable = false, length = 50)
+    private String position;
+
+    @Column(name = "role", nullable = false, length = 20)
+    private String role = "USER";
+
+    @Column(name = "job", length = 50)
+    private String job;
+
+    @Column(name = "created_by", nullable = false, length = 50)
+    private String createdBy;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_by", length = 50)
+    private String updatedBy;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    @Column(name = "locked", nullable = false)
+    private boolean locked = false;
+
+    @Column(name = "login_fail_count", nullable = false)
+    private int failCount = 0;
+
+    @Column(name = "locked_at")
+    private LocalDateTime lockedAt;
 }

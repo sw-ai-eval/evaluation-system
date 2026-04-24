@@ -6,7 +6,10 @@
     <meta charset="UTF-8">
     <title>평가 시스템</title>
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
-    <link rel="stylesheet" th:href="@{/css/department.css}">
+    <!-- 부서 페이지일 때 부서 CSS -->
+    <link rel="stylesheet" th:href="@{/css/department.css}" th:if="${pageType == 'dept/department'}">
+    <!-- 사원 페이지일 때 사원 CSS -->
+    <link rel="stylesheet" th:href="@{/css/employee.css}" th:if="${pageType == 'emp/employee'}">
 </head>
 
 <body class="layout-body">
@@ -34,7 +37,10 @@
     </script>
 
 
-    <script src="/js/department.js"></script>
+        <!-- 부서 페이지일 때만 부서 JS 로드 -->
+    <script th:src="@{/js/department.js}" th:if="${pageType == 'dept/department'}"></script>
+    <!-- 사원 페이지일 때만 사원 JS 로드 -->
+    <script th:src="@{/js/employee.js}" th:if="${pageType == 'emp/employee'}"></script>
 
 </body>
 </html>

@@ -1,5 +1,8 @@
 package com.eval.domain.employee.service;
 
+import com.eval.domain.employee.Employee;
+import com.eval.domain.employee.EmployeeRepository;
+import com.eval.domain.employee.dto.EmpManageDTO;
 import com.eval.domain.employee.dto.EmployeeDTO;
 import com.eval.domain.employee.mapper.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +19,9 @@ public class EmployeeService {
 
     private final EmployeeMapper employeeMapper;
     private final PasswordEncoder passwordEncoder;
+    private final EmployeeRepository employeeRepository;
 
+   
     /**
      * 신규 사원 등록
      */
@@ -75,4 +80,47 @@ public class EmployeeService {
     public List<EmployeeDTO> getAllEmployees() {
         return employeeMapper.findAll();
     }
+    
+    public List<EmpManageDTO> findEmployees(String keyword, String deptId, String status) {
+        if (isEmpty(keyword) && isEmpty(deptId) && isEmpty(status)) {
+            return employeeMapper.findAllEmp();
+        }
+        return employeeMapper.search(keyword, deptId, status);
+    }
+
+    private boolean isEmpty(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+    public EmpManageDTO findByEmpNo(String empNo) {
+        return employeeMapper.findByEmpNoDetail(empNo);
+    }
+    
+    public void createEmployee(EmpManageDTO employeeDTO) {
+
+        // DTO를 엔티티로 변환
+        Employee employee = new Employee();
+        employee.setEmpNo(employeeDTO.getEmpNo()); // 사번 자동 증가 로직 구현해야 함----------------------
+        employee.setName(employeeDTO.getName());
+        employee.setDeptId(employeeDTO.getDeptId());
+        employee.setStatus(employeeDTO.getStatus());
+        employee.setRole(employeeDTO.getRole());
+        employee.setEmail(employeeDTO.getEmail());
+        employee.setPhone(employeeDTO.getPhone());
+        employee.setPositionLevel(employeeDTO.getPositionLevel());
+        employee.setJob(employeeDTO.getJob());
+        employee.setHireDate(employeeDTO.getHireDate());
+        employee.setPosition(employeeDTO.getPosition());
+
+        // 기본값 설정 (필요 시)
+        employee.setFailCount(0);
+        employee.setLocked(false);
+
+        // 엔티티 저장
+        employeeRepository.save(employee);
+    }
+    
+    private String create_EmpNo() { ////////////////////////////////////// 사번 자동 증가 로직 구현 
+    	return "사번";
+    }
+    
 }
