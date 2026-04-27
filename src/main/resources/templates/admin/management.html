@@ -47,7 +47,7 @@
     /* 상태 색상 수정 */
     .bg-active { background: #f1f3f5; color: #495057; }   /* 재직: 회색 */
     .bg-normal { background: #e6ffed; color: #28a745; }   /* 정상: 초록색 배지 */
-    .bg-retired { background: #ffeef0; color: #f85149; }  /* 퇴사: 연한 빨강 */
+    .bg-RESIGNED { background: #ffeef0; color: #f85149; }  /* 퇴사: 연한 빨강 */
     .bg-locked { background: #fff3cd; color: #856404; }   /* 잠김: 노랑 */
     .bg-me { background: #f0f7ff; color: #0969da; }       /* 본인: 파랑 */
 
@@ -87,13 +87,13 @@
                 
                 <td>
                     <span th:if="${emp.status == 'ACTIVE' or emp.status == '재직'}" class="badge bg-active">재직</span>
-                    <span th:if="${emp.status == 'RETIRED' or emp.status == '퇴사'}" class="badge bg-retired">퇴사</span>
+                    <span th:if="${emp.status == 'RESIGNED' or emp.status == '퇴사'}" class="badge bg-RESIGNED">퇴사</span>
                 </td>
                 
                 <td>
                     <span th:if="${emp.empNo == #authentication.name}" class="badge bg-me">로그인 계정</span>
                     
-                    <span th:if="${(emp.status == 'RETIRED' or emp.status == '퇴사') and emp.empNo != #authentication.name}">-</span>
+                    <span th:if="${(emp.status == 'RESIGNED' or emp.status == '퇴사') and emp.empNo != #authentication.name}">-</span>
                     
                     <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and (emp.locked == 1 or emp.failCount >= 5) and emp.empNo != #authentication.name}" 
                           class="badge bg-locked">잠김</span>
@@ -103,12 +103,12 @@
                 </td>
                 
                 <td>
-                    <button th:if="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RETIRED' and emp.empNo != #authentication.name}" 
+                    <button th:if="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}" 
                             class="btn-reset" 
                             th:onclick="doReset([[${emp.empNo}]], [[${emp.empName}]])">
                         계정 복구
                     </button>
-                    <span th:unless="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RETIRED' and emp.empNo != #authentication.name}">-</span>
+                    <span th:unless="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}">-</span>
                 </td>
             </tr>
         </tbody>
