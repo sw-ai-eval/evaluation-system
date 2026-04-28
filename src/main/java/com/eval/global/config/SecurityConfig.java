@@ -8,6 +8,7 @@ import org.springframework.security.web.SecurityFilterChain;
 
 import com.eval.global.security.CustomAuthFailureHandler;
 import com.eval.global.security.CustomAuthSuccessHandler;
+import com.eval.global.security.CustomUserDetailsService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -18,6 +19,8 @@ public class SecurityConfig {
 
     private final CustomAuthFailureHandler customAuthFailureHandler;
     private final CustomAuthSuccessHandler customAuthSuccessHandler;
+    
+    private final CustomUserDetailsService customUserDetailsService;
 
     @Bean
     public org.springframework.security.web.session.HttpSessionEventPublisher httpSessionEventPublisher() {
@@ -27,7 +30,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // 1. 접근 권한 설정
+            // 접근 권한 설정
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
@@ -35,7 +38,8 @@ public class SecurityConfig {
                 .requestMatchers("/evaluation/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
-            // 2. 로그인 설정
+            
+            // 로그인 설정
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -45,7 +49,8 @@ public class SecurityConfig {
                 .failureHandler(customAuthFailureHandler)
                 .permitAll()
             )
-            // 3. 로그아웃 설정 (세션 및 쿠키 삭제 보강)
+            
+            // 로그아웃 설정 (세션 및 쿠키 삭제 보강)
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
@@ -53,7 +58,16 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID") // 클라이언트 쿠키 삭제
                 .permitAll()
             )
-            // 4. 세션 관리 설정
+            
+            // 로그인 상태 유지
+            .rememberMe(remember -> remember
+                    .key("evalProjectKey") // 비밀키
+                    .tokenValiditySeconds(60 * 60 * 24 * 7) // 7일간 유지
+                    .userDetailsService(customUserDetailsService) // 사용자 정보 가져올 서비스
+                    .rememberMeParameter("remember-me") // HTML 체크박스 name
+                )
+            
+            // 세션 관리 설정
             .sessionManagement(session -> session
                 // 세션 고정 보호: 로그인 시마다 세션 ID를 새로 발급하여 가로채기 방지
                 .sessionFixation().changeSessionId()
@@ -66,7 +80,8 @@ public class SecurityConfig {
                 // 세션이 만료(중복 로그인 등)되었을 때 이동할 페이지
                 .expiredUrl("/login?expired=true") 
             )
-            // 5. CSRF 설정
+            
+            // CSRF 설정
             .csrf(csrf -> csrf.disable()
             
             // 권한 없이 접근할 경우
