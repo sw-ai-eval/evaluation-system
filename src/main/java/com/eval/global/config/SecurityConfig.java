@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers("/login", "/css/**", "/js/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/department/**").hasRole("ADMIN")
+                .requestMatchers("/evaluation/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             // 2. 로그인 설정

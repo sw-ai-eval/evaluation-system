@@ -5,7 +5,7 @@ import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "eval_question_52") // DDL 이름과 일치
+@Table(name = "eval_question_52")
 @Getter @Setter @NoArgsConstructor
 public class EvalItem {
     @Id
@@ -28,7 +28,7 @@ public class EvalItem {
 
     @Column(name = "is_common") 
     private boolean isCommon;
-
+    
     @Column(name = "created_by")
     private String createdBy;
 

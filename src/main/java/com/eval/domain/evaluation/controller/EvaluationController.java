@@ -73,7 +73,8 @@ public class EvaluationController {
                 existing.setYear(evalType.getYear());
                 existing.setStartDate(evalType.getStartDate());
                 existing.setEndDate(evalType.getEndDate());
-                existing.setStatus(evalType.isStatus()); 
+                existing.setStatus(evalType.isStatus());
+                existing.setGuideline(evalType.getGuideline());
                 existing.setUpdatedBy("ADMIN");
                 existing.setUpdatedAt(LocalDateTime.now());
                 evalTypeRepository.save(existing);
@@ -175,6 +176,10 @@ public class EvaluationController {
         try {
             if (weights == null || weights.isEmpty()) {
                 return "error: 데이터 없음";
+            }
+            int totalWeight = weights.stream().mapToInt(DeptEvalWeight::getWeight).sum();
+            if (totalWeight != 100) {
+                return "error: 가중치 합계가 100%가 아닙니다. (현재 서버에서 계산된 합계: " + totalWeight + "%)";
             }
             evaluationService.saveDeptWeights(weights.get(0).getDeptId(), weights);
             return "success";

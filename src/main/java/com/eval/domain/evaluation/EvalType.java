@@ -18,6 +18,8 @@ public class EvalType {
     private boolean status;
     private Integer year;
 
+    @Column(name = "guideline")
+    private String guideline;
     @Column(name = "created_by")
     private String createdBy;
     @Column(name = "created_at")
