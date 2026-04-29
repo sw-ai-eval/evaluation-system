@@ -20,7 +20,7 @@
         .info-label { width: 120px; font-weight: bold; color: #718096; }
         .info-value { color: #1a202c; font-weight: 500; }
         
-        /* 🌟 비밀번호 폼 관련 스타일 추가 */
+        /* 비밀번호 폼 관련 스타일 추가 */
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-flex h3 { margin: 0; color: #2d3748; font-size: 18px; }
         
@@ -54,7 +54,7 @@
             </div>
             <div class="info-row">
                 <div class="info-label">사번</div>
-                <div class="info-value" th:text="${empNo} ?: '2026001'">2026001</div>
+                <div class="info-value" th:text="${empNo} ?: '2026001'">1234</div>
             </div>
             <div class="info-row">
                 <div class="info-label">이름</div>
@@ -77,14 +77,14 @@
                 <button type="button" class="btn-toggle" id="toggleBtn" onclick="togglePasswordForm()">비밀번호 변경</button>
             </div>
             
-            <!-- 🌟 처음에는 display: none; 으로 숨겨둠 -->
+            <!-- 처음에는 display: none; 으로 숨겨둠 -->
             <div id="passwordFormArea" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
                 <form action="/my-page/change-password" method="post" onsubmit="return validatePassword()">
                     <!-- CSRF 활성화 시 사용: <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /> -->
                     
                     <div class="form-group">
                         <label>현재 비밀번호</label>
-                        <input type="password" id="currentPw" name="currentPw" class="form-control" placeholder="현재 비밀번호를 입력하세요">
+                        <input type="password" id="currentPw" name="currentPw" class="form-control" placeholder="현재 비밀번호">
                     </div>
                     <div class="form-group">
                         <label>새 비밀번호</label>
@@ -105,8 +105,20 @@
 
     </div>
 
-    <script>
-        // 🌟 비밀번호 폼
+    <script th:inline="javascript">
+        // 백엔드(Controller)에서 보낸 성공/실패 메시지 띄우기
+        const errorMessage = /*[[${errorMessage}]]*/ null;
+        const successMessage = /*[[${successMessage}]]*/ null;
+
+        if (errorMessage) {
+            alert(errorMessage);
+        }
+        
+        if (successMessage) {
+            alert(successMessage);
+        }
+
+        // 비밀번호 폼 열고 닫기
         function togglePasswordForm() {
             const formArea = document.getElementById('passwordFormArea');
             const toggleBtn = document.getElementById('toggleBtn');
@@ -125,14 +137,14 @@
             }
         }
 
-        // 비밀번호 검증
+        // 3. 비밀번호 입력값 빈칸 및 일치 여부 프론트엔드 검증
         function validatePassword() {
             const currentPw = document.getElementById('currentPw').value;
             const newPw = document.getElementById('newPw').value;
             const confirmPw = document.getElementById('confirmPw').value;
 
-            if (!currentPw) { alert('현재 비밀번호를 입력해주세요.'); return false; }
-            if (!newPw) { alert('새 비밀번호를 입력해주세요.'); return false; }
+            if (!currentPw) { alert('현재 비밀번호를 입력해 주세요.'); return false; }
+            if (!newPw) { alert('새 비밀번호를 입력해 주세요.'); return false; }
             if (newPw !== confirmPw) { alert('새 비밀번호가 일치하지 않습니다.'); return false; }
 
             return true;

@@ -82,6 +82,7 @@
 	    SELECT
 	        emp_no AS empNo,
 	        name AS name,
+	        password AS password,
 	        dept_id AS deptId,
 	        status AS status,
 	        locked AS locked,
@@ -96,5 +97,11 @@
 	    FROM dbo.employee_52
 	    WHERE emp_no = #{empNo}
 	</select>
+	
+	<update id="updatePassword">
+    	UPDATE dbo.employee_52
+       	SET password = #{newPw}
+     	WHERE emp_no = #{empNo}
+	</update>
 
 </mapper>
