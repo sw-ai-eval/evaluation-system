@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -43,7 +44,7 @@ public class DepartmentService {
     }
     
     public List<Department> getDepartmentTree() {
-        List<Department> list = departmentRepository.findAll();
+        List<Department> list = departmentRepository.findByDeleteYn(false);
         return buildTree(list);
     }
 
@@ -57,11 +58,21 @@ public class DepartmentService {
         }
 
         for (Department d : list) {
-            if (d.getParentId() == null) {
+
+            if (d.getParent() == null) {
                 root.add(d);
             } else {
-                Department parent = map.get(d.getParentId());
-                parent.getChildren().add(d);
+
+                Department parent = map.get(d.getParent().getId());
+
+                if (parent != null) {
+                    if (parent.getChildren() == null) {
+                        parent.setChildren(new ArrayList<>());
+                    }
+                    parent.getChildren().add(d);
+                } else {
+                    root.add(d);
+                }
             }
         }
 
@@ -74,29 +85,28 @@ public class DepartmentService {
         Department dept = new Department();
 
         dept.setName(dto.getName());
-        dept.setParentId(dto.getParentId());
-        dept.setUseYn(dto.getUseYn());
+        dept.setUseYn(dto.isUseYn());
 
         Department parent = null;
 
-        // 🔥 부모 락 획득
         if (dto.getParentId() != null && !dto.getParentId().isBlank()) {
-            parent = departmentRepository.findByIdForUpdate(dto.getParentId())
+            parent = departmentRepository.findById(dto.getParentId())
                     .orElseThrow(() -> new IllegalArgumentException("상위 부서 없음"));
 
+            dept.setParent(parent);
             dept.setLevel(parent.getLevel() + 1);
         } else {
             dept.setLevel(0);
+            dept.setParent(null);
         }
 
-        // 🔥 로그인 사용자 사번
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String empNo = auth.getName();
 
         dept.setCreatedAt(LocalDateTime.now());
-        dept.setCreatedBy(empNo);   // ✅ 여기 변경
+        dept.setCreatedBy(empNo);
+        dept.setDeleteYn(false);
 
-        // 🔥 여기서 ID 생성 (락 안에서 실행됨)
         String newId = generateDepartmentId(dto.getParentId());
         dept.setId(newId);
 
@@ -104,19 +114,16 @@ public class DepartmentService {
     }
     private String generateDepartmentId(String parentId) {
 
-        // 🔥 ROOT 통일
         if (parentId == null || parentId.isBlank()) {
             parentId = "ROOT";
         }
 
-        // 🔹 부모 가져오기 (락 걸린 메서드 쓰는 게 좋음)
         Department parent = departmentRepository.findById(parentId)
                 .orElseThrow();
 
         int parentLevel = parent.getLevel();
 
-        // 🔹 같은 부모 자식 조회 (여기도 락)
-        List<Department> children = departmentRepository.findByParentId(parentId);
+        List<Department> children = departmentRepository.findByParent_Id(parentId);
 
         int index = parentLevel + 1;
 
@@ -171,52 +178,98 @@ public class DepartmentService {
     @Transactional
     public void update(DepartmentDto dto) {
 
-        Department dept = departmentRepository.findById(dto.getId()).orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+        Department dept = departmentRepository.findById(dto.getId())
+                .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
 
-        // 1) 순환 체크
-        if (isCircular(dto.getId(), dto.getParentId())) {
-            throw new IllegalArgumentException("부모 부서 설정 오류 (순환 구조)");
-        }
-
-        // 2) 자기 자신을 부모로 못 가게
         if (dto.getId().equals(dto.getParentId())) {
             throw new IllegalArgumentException("자기 자신을 부모로 지정할 수 없음");
         }
+
+        if (isCircular(dto.getId(), dto.getParentId())) {
+            throw new IllegalArgumentException("부모 부서 설정 오류 (순환 구조)");
+        }
+        ///////////////////////////////////////////////////////////////////////////////////
+        /// 
+        /// 
+        boolean oldUseYn = dept.isUseYn();
+        boolean newUseYn = dto.isUseYn();
         
-        if (dto.getLeaderEmpNo() == null || dto.getLeaderEmpNo().toString().isBlank()) {
-            dto.setLeaderEmpNo(null);
+        String oldLeader = dept.getLeaderEmpNo();
+        String newLeader = dto.getLeaderEmpNo();
+        
+        // 🔥 미사용 -> 사용으로 변경할 때만 상위(직계) 체크
+	     // 부서 상태 변경 시 상위 부서 체크
+     // 🔥 미사용 -> 사용으로 변경할 때만 상위 체크
+        if (dto.isUseYn()) {
+
+            Department currentDept = departmentRepository.findById(dto.getId())
+                    .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+
+            if (currentDept.getParent() != null) {
+
+                Department parentDept = departmentRepository.findById(currentDept.getParent().getId())
+                        .orElseThrow(() -> new IllegalArgumentException("상위 부서 없음"));
+
+                // 부모가 미사용이면 차단
+                if (!parentDept.isUseYn()) {
+                    throw new IllegalArgumentException("상위 부서가 미사용 상태라 현재 부서를 사용으로 변경할 수 없습니다.");
+                }
+            }
         }
         
-        // 🔥 로그인 사용자 사번
+
+        if (newLeader == null || newLeader.isBlank()) {
+            newLeader = null;
+        } else {
+            boolean exists = employeeRepository.existsById(newLeader);
+            if (!exists) {
+                throw new IllegalArgumentException("존재하지 않는 사원입니다.");
+            }
+        }
+
+        dept.setLeaderEmpNo(newLeader);
+        
+        dept.setName(dto.getName());
+        dept.setLeaderEmpNo(newLeader);
+        dept.setUseYn(dto.isUseYn());
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String empNo = auth.getName();
 
         dept.setUpdatedAt(LocalDateTime.now());
-        dept.setUpdatedBy(empNo); 
+        dept.setUpdatedBy(empNo);
+        
+        // 🔥 사용 -> 미사용일 때만 하위 전파
+        if (oldUseYn && !newUseYn) {
 
-        // 3) 실제 업데이트
-        dept.setName(dto.getName());
-        dept.setLeaderEmpNo(dto.getLeaderEmpNo());
-        dept.setParentId(dto.getParentId());
-        dept.setUseYn(dto.getUseYn());
+            List<String> childIds = getAllChildIds(dto.getId());
+            childIds.add(dto.getId()); // 자기 포함
+
+            departmentRepository.disableAllByIds(childIds);
+        }
+        
+        applyLeaderChange(oldLeader, newLeader);
     }
     private boolean isCircular(String deptId, String newParentId) {
+
         if (newParentId == null) return false;
 
         if (deptId.equals(newParentId)) return true;
 
         Department parent = departmentRepository.findById(newParentId)
-            .orElse(null);
+                .orElse(null);
 
         while (parent != null) {
-            if (parent.getParentId() == null) return false;
 
-            if (parent.getParentId().equals(deptId)) {
-                return true; // 자기 자신으로 돌아옴 → 순환
+            Department next = parent.getParent();
+
+            if (next == null) return false;
+
+            if (next.getId().equals(deptId)) {
+                return true;
             }
 
-            parent = departmentRepository.findById(parent.getParentId())
-                .orElse(null);
+            parent = next;
         }
 
         return false;
@@ -238,4 +291,36 @@ public class DepartmentService {
     public List<Department> search(String name, Boolean useYn) {
         return departmentRepository.search(name, useYn);
     }
+    ///////////////////////////////////////////////////////////////// 하위 부서 미사용 처리
+    /// 
+    public List<String> getAllChildIds(String parentId) {
+    	List<String> result = new ArrayList<>();
+	    collect(parentId, result);
+	    return result;
+	}
+	
+	private void collect(String parentId, List<String> result) {
+	
+	    List<String> children = departmentRepository.findChildIds(parentId);
+	
+	    for (String childId : children) {
+	        result.add(childId);
+	        collect(childId, result); // 🔁 계속 내려감
+	    }
+	}
+	//////////////////////////////////////////////////////////////////// 부서장 변경시 전 부서장으로 부서원으로
+	private void applyLeaderChange(String oldLeader, String newLeader) {
+
+	    if (Objects.equals(oldLeader, newLeader)) return;
+
+	    // 기존 부서장 → 부서원
+	    if (oldLeader != null) {
+	        employeeRepository.updatePosition(oldLeader, "부서원");
+	    }
+
+	    // 신규 부서장 → 부서장
+	    if (newLeader != null) {
+	        employeeRepository.updatePosition(newLeader, "부서장");
+	    }
+	}
 }

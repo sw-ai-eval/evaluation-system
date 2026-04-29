@@ -9,17 +9,21 @@
     margin-bottom: 20px; /* 리스트와 폼 사이에 간격을 두어 폼이 아래로 나타나도록 설정 */
 }
 
-/* 오른쪽 폼(사원 등록) */
+/* 폼(사원 등록) */
 .detail-section {
-    width: 80vw;           /* 화면 너비의 80%로 설정 (뷰포트 크기 기준) */
-    max-width: 500px;      /* 최대 너비는 500px로 제한 */
-    display: none;         /* 처음에는 숨김 */
-    position: absolute;    /* 화면에 바로 표시되게 하기 위해 absolute로 위치 지정 */
-    top: 60px;             /* 리스트 바로 아래에 위치 */
-    left: 50%;             /* 화면의 왼쪽에서 50% 위치 */
-    transform: translateX(-50%); /* 정확히 화면 가운데로 위치 */
-    transition: all 0.3s ease-in-out;
-    opacity: 0;            /* 처음에는 보이지 않도록 설정 */
+   	width: 80vw;
+    max-width: 500px;
+
+    position: fixed;   /* absolute → fixed 추천 */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+
+    display: none;
+    opacity: 0;
+    transition: all 0.3s ease-in-out;         /* 처음에는 보이지 않도록 설정 */
+    
 }
 
 /* 오른쪽 폼이 보이도록 할 때 클래스 추가 */
@@ -46,6 +50,8 @@ body {
   padding: 24px;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      max-height: 80vh;
+    overflow-y: auto;
 }
 
 .form-grid {
@@ -162,6 +168,14 @@ button.danger {
 width: fit-content;
 flex: 0 0 auto;
 }
+.badge.manager {
+    background: #d1fae5;
+  color: #065f46;
+}
+
+.badge.staff {
+    background-color: #e5e7eb;
+}
 .badge.active {
   background: #d1fae5;
   color: #065f46;
@@ -243,4 +257,52 @@ flex: 0 0 auto;
     background: #f9fafb;
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+}
+
+.switch input {
+    display: none;
+}
+
+.track {
+    width: 48px;
+    height: 26px;
+    background: #e5e7eb;
+    border-radius: 999px;
+    position: relative;
+    transition: 0.2s;
+}
+
+.thumb {
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: 0.2s;
+}
+
+.switch input:checked + .thumb {
+    transform: translateX(22px);
+}
+
+.error-box {
+    background: #ffe5e5;
+    color: #d60000;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ffb3b3;
+    border-radius: 5px;
+    white-space: pre-line;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+.card h3 {
+    position: sticky;
+    top: 0;
+    background: white;
+    padding-bottom: 10px;
+    z-index: 10;
 }

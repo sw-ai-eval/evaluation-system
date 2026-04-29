@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.eval.domain.dept.mapper.DepartmentMapper">
+	
+	<select id="selectDepartmentList" resultType="com.eval.domain.dept.dto.DepartmentDto">
+		SELECT 
+		    d.id,
+		    d.name,
+		    d.use_yn AS useYn,
+		    d.parent_id AS parentId,
+		    p.name AS parentName
+		FROM dbo.department_52 d
+		LEFT JOIN dbo.department_52 p
+		    ON d.parent_id = p.id
+		
+		</select>
+	
+		<select id="search" resultType="com.eval.domain.dept.dto.DepartmentDto">
+		    SELECT 
+		        d.id,
+		        d.name,
+		        d.use_yn AS useYn,
+		        d.parent_id AS parentId,
+		        p.name AS parentName
+		    FROM dbo.department_52 d
+		    LEFT JOIN dbo.department_52 p
+		        ON d.parent_id = p.id
+		    WHERE 1=1
+		
+		    <!-- 부서명 + 부서코드 검색 -->
+		    <if test="name != null and name != ''">
+		        AND (
+		            d.id LIKE CONCAT(#{name}, '%')
+		            OR d.name LIKE CONCAT('%', #{name}, '%')
+		        )
+		    </if>
+		
+		    <!-- 사용 여부 -->
+		    <if test="useYn != null">
+		        AND d.use_yn = #{useYn}
+		    </if>
+		</select>
+</mapper>

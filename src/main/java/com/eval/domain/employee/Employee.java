@@ -43,7 +43,7 @@ public class Employee {
     @Column(name = "position_level", nullable = false, length = 50)
     private String positionLevel;
 
-    @Column(name = "position", nullable = false, length = 50)
+    @Column(name = "position", length = 50)
     private String position;
 
     @Column(name = "role", nullable = false, length = 20)
@@ -65,7 +65,7 @@ public class Employee {
     private LocalDateTime updatedAt;
 
     @Column(name = "locked", nullable = false)
-    private boolean locked = false;
+    private Integer locked = 0;
 
     @Column(name = "login_fail_count", nullable = false)
     private int failCount = 0;
