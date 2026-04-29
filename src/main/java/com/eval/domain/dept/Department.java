@@ -20,9 +20,6 @@ public class Department {
     @Column(name = "leader_emp_no")
     private String leaderEmpNo;
 
-    @Column(name = "parent_id")
-    private String parentId;
-
     @Column(name = "name")
     private String name;
 
@@ -39,11 +36,17 @@ public class Department {
     private LocalDateTime updatedAt;
 
     @Column(name = "use_yn")
-    private Boolean useYn;
+    private boolean useYn;
     
     @Column(name = "level")
     private int level;
+    
+    @Column(name="delete_yn")
+    private Boolean deleteYn;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private Department parent;
 
     @Transient
     private List<Department> children;

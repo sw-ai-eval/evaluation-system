@@ -80,7 +80,8 @@
                         </td>
                         <td>
 				            <!-- 수정 버튼 -->
-				            <button class="btn-edit" th:data-emp-no="${emp.empNo}"
+				            <button class="btn-edit" 
+				            		th:data-emp-no="${emp.empNo}"
 				                    th:data-emp-name="${emp.name}"
 				                    th:data-emp-dept="${emp.deptId}"
 				                    th:data-emp-position="${emp.positionLevel}"
@@ -112,7 +113,7 @@
                     	</div> 
                     	<div> 
                     		<label>이메일</label> 
-                    		<input type="email" th:field="*{email}" /> 
+                    		<input type="email" th:field="*{email}" required /> 
                     	</div> 
                     </div> 
                     <div class="row-group"> 
@@ -123,7 +124,7 @@
                     	<div> 
                     		<label>부서</label> 
                     		<select th:field="*{deptId}" required> 
-	                    		<option th:each="dept : ${deptList}" th:value="${dept.id}" th:text="${dept.name}"> 
+	                    		<option th:each="dept : ${deptList}" th:if="${!dept.deleteYn}" th:value="${dept.id}" th:text="${dept.name}"> 
 	                    		</option> 
                     		</select> 
                     	</div> 
@@ -131,11 +132,11 @@
                     <div class="row-group"> 
                     	<div> 
                     		<label>직급</label> 
-                    		<input type="text" th:field="*{positionLevel}" /> 
+                    		<input type="text" th:field="*{positionLevel}" required/> 
                     	</div> 
                     	<div> 
                     		<label>직종</label> 
-                    		<input type="text" th:field="*{job}" /> 
+                    		<input type="text" th:field="*{job}" required/> 
                     	</div> 
                     </div> 
                     <div class="row-group"> 
@@ -153,39 +154,14 @@
 	                    </div>   
                     </div> 
                    <div class="row-group">
+
+					    <div>
+					        <label class="field-label">권한</label>
 					
-					    <!-- 🔷 부서장 여부 -->
-					    <div class="checkbox-row">
-					        <label>부서장 여부</label>
-					
-					        <!-- 해제 상태 기본값 -->
-					        <input type="hidden" name="position" value="부서원"/>
-					
-					        <label class="toggle">
-					            <input type="checkbox"
-					                   name="position"
-					                   value="1"
-					                   th:checked="${employee.position == '부서장'}"/>
-					            <span class="slider"></span>
-					            <span class="toggle-text">부서장 지정</span>
-					        </label>
-					    </div>
-					
-					    <!-- 🔷 관리자 권한 -->
-					    <div class="checkbox-row">
-					        <label>관리자 권한 부여</label>
-					
-					        <!-- 기본값 -->
-					        <input type="hidden" name="role" value="user"/>
-					
-					        <label class="toggle">
-					            <input type="checkbox"
-					                   name="role"
-					                   value="admin"
-					                   th:checked="${employee.role == 'admin'}"/>
-					            <span class="slider"></span>
-					            <span class="toggle-text">관리자</span>
-					        </label>
+					        <select th:field="*{role}">
+					            <option value="USER">일반 사용자</option>
+					            <option value="ADMIN">관리자</option>
+					        </select>
 					    </div>
 					
 					</div>
@@ -202,12 +178,26 @@
     <div class="detail-section" id="employee-update-form">
         <div class="card">
             <h3>사원 수정</h3>
-            <form th:action="@{/employee/save}" method="post" th:object="${employee}">
+            <form th:action="@{/employee/update}" method="post" th:object="${employee}">
                 <!-- 폼 내용 동일 -->
                 <div class="form-grid">
-                	<div style="display: flex; flex-direction: column; gap: 6px;">
-					    <label>사원 번호 (수정 불가)</label>
-					    <input type="text" th:field="*{empNo}" readonly="readonly"  />
+                	<div class="row-group">
+                		<div>
+              				<label>사원 번호 (수정 불가)</label>
+					    	<input type="text" th:field="*{empNo}" readonly="readonly"  />
+                		</div>
+					    
+					    <div>
+
+						    <label>부서장 여부</label>
+										
+							<span id="positionBadge"
+							      th:classappend="${employee.position == '부서장' ? 'badge manager' : 'badge staff'}"
+							      th:text="${employee.position}">
+							</span>
+                    	
+						</div>
+						
 					</div>
                 	<div class="row-group">
                 	
@@ -217,7 +207,7 @@
                     	</div> 
                     	<div> 
                     		<label>이메일</label> 
-                    		<input type="email" th:field="*{email}" /> 
+                    		<input type="email" th:field="*{email}" required /> 
                     	</div> 
                     </div> 
                     <div class="row-group"> 
@@ -228,7 +218,7 @@
                     	<div> 
                     		<label>부서</label> 
                     		<select th:field="*{deptId}" required> 
-	                    		<option th:each="dept : ${deptList}" th:value="${dept.id}" th:text="${dept.name}"> 
+	                    		<option th:each="dept : ${deptList}" th:if="${!dept.deleteYn}" th:value="${dept.id}" th:text="${dept.name}"> 
 	                    		</option> 
                     		</select> 
                     	</div> 
@@ -236,11 +226,11 @@
                     <div class="row-group"> 
                     	<div> 
                     		<label>직급</label> 
-                    		<input type="text" th:field="*{positionLevel}" /> 
+                    		<input type="text" th:field="*{positionLevel}" required/> 
                     	</div> 
                     	<div> 
                     		<label>직종</label> 
-                    		<input type="text" th:field="*{job}" /> 
+                    		<input type="text" th:field="*{job}" required /> 
                     	</div> 
                     </div> 
                     <div class="row-group"> 
@@ -266,54 +256,26 @@
 	                    </div>  
                     	<div>
                     		<label>계정 잠금 상태</label>
-                    		<span th:classappend="${
-							        employee.locked == 0 ? 'badge active' : 'badge resigned'
-							    }"
-							    th:text="${employee.locked == 0 ? '활성화' : '잠금'}">
-							</span>
+                    		<span id="lockedBadge" class="badge"></span>
                     	</div>
                     
                     </div>
                     <div class="row-group">
 					
-					    <div class="checkbox-row">
-						    <label>부서장 여부</label>
-						
-						    <input type="hidden" name="position" value="부서원"/>
-						
-						    <label class="toggle">
-						        <input type="checkbox"
-						               name="position"
-						               value="1"
-						               th:checked="${employee.position == true or employee.position == '부서장'}"/>
-						        <span class="slider"></span>
-						        <span class="toggle-text">부서장 지정</span>
-						    </label>
-						</div>
+					    <div>
+					        <label class="field-label">권한</label>
 					
-					    <!-- 🔷 관리자 권한 -->
-											    <!-- 🔷 관리자 권한 -->
-						<div class="checkbox-row">
-						    <label>관리자 권한 부여</label>
-						
-						    <!-- 기본값 -->
-						    <input type="hidden" name="role" value="user"/>
-						
-						    <label class="toggle">
-						        <input type="checkbox"
-						               name="role"
-						               value="admin"
-						               th:checked="${employee.role == 'admin'}"/>
-						        <span class="slider"></span>
-						        <span class="toggle-text">관리자</span>
-						    </label>
-						</div>
+					        <select th:field="*{role}">
+					            <option value="USER">일반 사용자</option>
+					            <option value="ADMIN">관리자</option>
+					        </select>
+					    </div>
 					
 					</div>
-					                    
+					<div id="errorBox" class="error-box" style="display:none;"></div>          
                     <div class="actions">
                         <button type="submit" class="primary">저장</button>
-                        <button type="button" class="danger">삭제</button>
+                        <!-- <button type="button" class="danger">삭제</button> -->
                         <button type="button" class="secondary" onclick="closeEditForm()">닫기</button>
                     </div> 
                 </div>

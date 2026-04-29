@@ -1,6 +1,7 @@
 package com.eval.domain.dept.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.eval.domain.dept.Department;
 import com.eval.domain.dept.dto.DepartmentDto;
@@ -57,11 +59,11 @@ public class DepartmentController {
         if ((name != null && !name.isEmpty()) || useYnBool != null) {
             list = departmentService.search(name, useYnBool);
         } else {
-            list = departmentRepository.findAll();
+            list = departmentRepository.findByDeleteYn(false);
         }
 
         // ⭐ 전체 리스트
-        List<Department> deptList = departmentRepository.findAll();
+        List<Department> deptList = departmentRepository.findByDeleteYn(false);
 
         // ⭐ 수정 시 자기 자신 제외 리스트
         List<Department> parentList = deptList;
@@ -104,18 +106,36 @@ public class DepartmentController {
 
     //부서 수정 메핑
     @PostMapping("/department/update")
-    public String update_dept(@ModelAttribute DepartmentDto dto) {
-    	
-    	departmentService.update(dto);
-    	
-    	return "redirect:/department";
+    @ResponseBody
+    public Map<String, Object> update_dept(@ModelAttribute DepartmentDto dto) {
+
+        Map<String, Object> result = new HashMap<>();
+        
+        String leader = dto.getLeaderEmpNo();
+
+        if (leader == null || leader.isBlank()) {
+            dto.setLeaderEmpNo(null);
+        }
+        
+        try {
+            departmentService.update(dto);
+
+            result.put("success", true);
+            result.put("message", "수정 완료");
+
+        } catch (IllegalArgumentException e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
     }
     
     // 부서장 지정하기 위한 부서원 리스트 가져오기
     @GetMapping("/department/{id}/employees")
     @ResponseBody
     public List<Employee> getEmployees(@PathVariable String id) {
-        return employeeRepository.findByDeptId(id);
+        return employeeRepository.findByDeptIdAndStatusNot(id, "RESIGNED");
     }
     
     @PostMapping("/department/{id}/delete")
