@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/default :: layout">
+<head>
+<meta charset="UTF-8">
+<title>평가요소 관리</title>
+</head>
+
+<body>
+    <div th:fragment="content" class="eval-dashboard">
+        
+        <style>
+            .eval-dashboard { 
+                padding: 10px; 
+                font-family: 'Malgun Gothic', sans-serif; 
+            }
+            .panel { 
+                background: #fff; 
+                border-radius: 8px; 
+                border: 1px solid #e5e7eb; 
+                padding: 24px; 
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+                margin-bottom: 24px; 
+            }
+            .tab-container { 
+                display: flex; 
+                gap: 8px; 
+                margin-bottom: 24px; 
+                border-bottom: 1px solid #e5e7eb; 
+                padding-bottom: 12px; 
+            }
+            .tab-item { 
+                padding: 10px 20px; 
+                cursor: pointer; 
+                border-radius: 6px; 
+                font-weight: 600; 
+                color: #6b7280; 
+                transition: all 0.2s; 
+            }
+            .tab-item:hover { 
+                background-color: #f3f4f6; 
+            }
+            .tab-item.active { 
+                background-color: #eff6ff; 
+                color: #2563eb; 
+            }
+            .tab-content { 
+                display: none; 
+            }
+            .tab-content.active { 
+                display: block; 
+                animation: fadeIn 0.3s; 
+            }
+            @keyframes fadeIn { 
+                from { opacity: 0; } 
+                to { opacity: 1; } 
+            }
+            
+            .table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                margin-top: 10px;
+            }
+            .table th { 
+                background-color: #f9fafb; 
+                padding: 12px 16px; 
+                text-align: center;
+                font-weight: 600; 
+                color: #4b5563; 
+                border-bottom: 1px solid #e5e7eb; 
+            }
+            .table td { 
+                padding: 16px; 
+                border-bottom: 1px solid #f3f4f6; 
+                color: #334155; 
+                text-align: center;
+                vertical-align: middle;
+            }
+            
+            /* 🌟 버튼 줄바꿈 방지 스타일 추가 */
+            .actions-cell {
+                white-space: nowrap !important;
+                min-width: 150px; /* 버튼 두 개가 충분히 들어갈 공간 확보 */
+            }
+
+            .btn-primary { 
+                background-color: #2563eb; 
+                color: white; 
+                border: none; 
+                border-radius: 6px; 
+                padding: 10px 18px; 
+                font-weight: 600; 
+                cursor: pointer; 
+            }
+            .btn-primary:hover { 
+                background-color: #1d4ed8; 
+            }
+            .btn-outline { 
+                border: 1px solid #d1d5db; 
+                background: white; 
+                color: #374151; 
+                border-radius: 6px; 
+                padding: 8px 14px; 
+                cursor: pointer; 
+            }
+            .btn-outline:hover { 
+                background-color: #f9fafb; 
+            }
+            
+            .weight-card { 
+                max-width: 450px; 
+                background: #f8fafc; 
+                border-radius: 12px; 
+                padding: 20px; 
+                border: 1px dashed #cbd5e1; 
+            }
+            .form-group label { 
+                display: block; 
+                font-weight: 600; 
+                margin-bottom: 6px; 
+                color: #334155; 
+            }
+            
+            .form-control { 
+                width: 100%; 
+                padding: 10px; 
+                border: 1px solid #d1d5db; 
+                border-radius: 6px; 
+                outline: none; 
+                box-sizing: border-box; 
+            }
+            .form-control:focus { 
+                border-color: #2563eb; 
+            }
+            
+            .weight-status { 
+                margin-top: 15px; 
+                padding: 12px; 
+                border-radius: 8px; 
+                text-align: center; 
+                font-weight: bold; 
+            }
+            .status-ok { 
+                background-color: #dcfce7; 
+                color: #166534; 
+            }
+            .status-err { 
+                background-color: #fee2e2; 
+                color: #991b1b; 
+            }
+
+            .modal-overlay { 
+                display: none; 
+                position: fixed; 
+                top: 0; 
+                left: 0; 
+                width: 100%; 
+                height: 100%; 
+                background: rgba(0,0,0,0.5); 
+                z-index: 1000; 
+                justify-content: center; 
+                align-items: center; 
+            }
+            .modal-content { 
+                background: #fff; 
+                padding: 24px; 
+                border-radius: 8px; 
+                width: 450px; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+                box-sizing: border-box; 
+            }
+            .modal-header { 
+                display: flex; 
+                justify-content: space-between; 
+                align-items: center; 
+                margin-bottom: 20px; 
+                font-size: 18px; 
+                font-weight: bold; 
+            }
+            .modal-close { 
+                cursor: pointer; 
+                border: none; 
+                background: none; 
+                font-size: 24px; 
+                color: #888; 
+                padding: 0; 
+            }
+        </style>
+
+        <div class="tab-container">
+            <div class="tab-item active" onclick="switchTab('type')">평가 유형 관리</div>
+            <div class="tab-item" onclick="switchTab('question')">평가 문항 관리</div>
+            <div class="tab-item" onclick="switchTab('weight')">조직별 가중치/등급 설정</div>
+        </div>
+        
+        <div id="tab-type" class="tab-content active panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;">평가 유형 관리</h3>
+                <button class="btn-primary" onclick="window.openNewTypeModal()">+ 유형 등록</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>유형명</th>
+                        <th>연도</th>
+                        <th>시작일</th>
+                        <th>종료일</th>
+                        <th>상태</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="type : ${typeList}">
+                        <td style="font-weight: 600;" th:text="${type.name}"></td>
+                        <td th:text="${type.year}"></td>
+                        <td th:text="${type.startDate != null ? #temporals.format(type.startDate, 'yyyy-MM-dd') : ''}"></td>
+                        <td th:text="${type.endDate != null ? #temporals.format(type.endDate, 'yyyy-MM-dd') : ''}"></td>
+                        <td>
+                            <span th:if="${type.status}" style="color: #2563eb; font-weight: bold;">활성</span>
+                            <span th:unless="${type.status}" style="color: #9ca3af; font-weight: bold;">비활성</span>
+                        </td>
+                        <td class="actions-cell">
+                            <button class="btn-outline" 
+                                    th:data-id="${type.id}" 
+                                    th:data-name="${type.name}" 
+                                    th:data-year="${type.year}" 
+                                    th:data-start="${type.startDate != null ? #temporals.format(type.startDate, 'yyyy-MM-dd') : ''}" 
+                                    th:data-end="${type.endDate != null ? #temporals.format(type.endDate, 'yyyy-MM-dd') : ''}" 
+                                    th:data-status="${type.status}"
+                                    th:data-guideline="${type.guideline}"
+                                    onclick="window.openEditTypeModal(this.getAttribute('data-id'), this.getAttribute('data-name'), this.getAttribute('data-year'), this.getAttribute('data-start'), this.getAttribute('data-end'), this.getAttribute('data-status'), this.getAttribute('data-guideline'))">
+                                수정
+                            </button>
+                            <button class="btn-outline" style="color: #dc2626; border-color: #fca5a5; margin-left: 5px;" 
+                                    th:data-id="${type.id}"
+                                    onclick="window.deleteTypeFromServer(this.getAttribute('data-id'))">
+                                삭제
+                            </button>
+                        </td>
+                    </tr>
+                    
+                    <tr th:if="${#lists.isEmpty(typeList)}">
+                        <td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">
+                            등록된 평가 유형이 없습니다.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tab-question" class="tab-content panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="margin:0;">세부 평가 지표</h3>
+                <button class="btn-primary" onclick="window.openNewItemModal()">+ 문항 추가</button>
+            </div>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th style="width: 15%;">유형명</th>
+                        <th style="width: 15%;">카테고리</th>
+                        <th style="width: 40%;">문항 내용</th>
+                        <th style="width: 10%;">답변 타입</th>
+                        <th style="width: 10%;">공통</th>
+                        <th style="width: 10%;">관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${itemList}">
+                        <td th:text="${item.evalType != null ? item.evalType.name : ''}"></td>
+                        <td th:text="${item.category}"></td>
+                        <td th:text="${item.content}"></td>
+                        <td th:text="${item.answerType == 'SCORE' ? '점수형' : '서술형'}"></td>
+                        <td th:text="${item.isCommon ? 'Y' : 'N'}"></td>
+                        <td class="actions-cell">
+                            <button class="btn-outline" 
+                                    th:data-id="${item.id}"
+                                    th:data-typeid="${item.evalType != null ? item.evalType.id : ''}"
+                                    th:data-category="${item.category}"
+                                    th:data-content="${item.content}"
+                                    th:data-answertype="${item.answerType}"
+                                    th:data-iscommon="${item.isCommon ? 'Y' : 'N'}"
+                                    onclick="window.openEditItemModal(this)">수정</button>
+                            <button class="btn-outline" style="color: #dc2626; border-color: #fca5a5; margin-left: 5px;" 
+                                    th:data-id="${item.id}"
+                                    onclick="window.deleteItemFromServer(this.getAttribute('data-id'))">삭제</button>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(itemList)}">
+                        <td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">
+                            등록된 평가 문항이 없습니다.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tab-weight" class="tab-content panel">
+            <h3 style="margin-bottom: 20px;">조직별 맞춤 설정 (가중치 & 등급)</h3>
+            
+            <div class="form-group" style="max-width: 400px; margin-bottom: 30px;">
+                <label>대상 부서 선택</label>
+                <select class="form-control" id="deptSelect" onchange="loadDeptSettings(this.value)">
+                    <option value="">-- 부서를 선택하세요 --</option>
+                    <option th:each="dept : ${deptList}" 
+                            th:value="${dept.id}" 
+                            th:text="${dept.name} + ' (' + ${dept.id} + ')'"></option>
+                </select>
+            </div>
+
+            <div style="display: flex; gap: 40px;">
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 15px;">평가 유형 가중치</h4>
+                    <div class="weight-card" id="weightContainer">
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <label style="margin:0;">근태 (%)</label>
+                            <input type="number" class="form-control weight-input" style="width: 100px; text-align: right;" value="20" oninput="window.calculateTotal()">
+                        </div>
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <label style="margin:0;">성과 (%)</label>
+                            <input type="number" class="form-control weight-input" style="width: 100px; text-align: right;" value="40" oninput="window.calculateTotal()">
+                        </div>
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+                            <label style="margin:0;">역량 (%)</label>
+                            <input type="number" class="form-control weight-input" style="width: 100px; text-align: right;" value="40" oninput="window.calculateTotal()">
+                        </div>
+                        
+                        <div id="weightTotalAlert" class="weight-status status-ok">
+                            합계: <span id="weightTotalSum">100</span>% (정상)
+                        </div>
+                        <button class="btn-primary" id="btnSaveWeight" style="width: 100%; margin-top: 15px;">가중치 저장</button>
+                    </div>
+                </div>
+
+                <div style="flex: 1;">
+                    <h4 style="margin-bottom: 15px;">조직별 등급 기준</h4>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40%;">등급</th>
+                                <th style="width: 60%;">누적 상위 (%)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 800; font-size: 1.1rem; color: #111827;">S 등급</td>
+                                <td><input type="number" id="gradeS" class="form-control" style="width:100px; text-align:right; display:inline-block;" value="10"> %</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 700; font-size: 1.1rem; color: #111827;">A 등급</td>
+                                <td><input type="number" id="gradeA" class="form-control" style="width:100px; text-align:right; display:inline-block;" value="30"> %</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600; font-size: 1.1rem; color: #111827;">B 등급</td>
+                                <td><input type="number" id="gradeB" class="form-control" style="width:100px; text-align:right; display:inline-block;" value="70"> %</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600; font-size: 1.1rem; color: #111827;">C 등급</td>
+                                <td><input type="number" id="gradeC" class="form-control" style="width:100px; text-align:right; display:inline-block;" value="90"> %</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600; font-size: 1.1rem; color: #111827;">D 등급</td>
+                                <td><input type="number" id="gradeD" class="form-control" style="width:100px; text-align:right; display:inline-block;" value="100"> %</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <button id="btnSaveGrade" class="btn-primary" style="width: 100%; margin-top: 15px;">등급 기준 저장</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="typeModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="typeModalTitle">➕ 평가 유형 등록</span>
+                    <button class="modal-close" onclick="window.closeModal('typeModal')">&times;</button>
+                </div>
+                
+                <input type="hidden" id="typeId">
+                
+                <div class="form-group">
+                    <label>유형명</label>
+                    <input type="text" class="form-control" id="newTypeName" placeholder="예: 성과평가">
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>평가 연도</label>
+                    <input type="number" class="form-control" id="newTypeYear" value="2026">
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>시작일</label>
+                        <input type="date" class="form-control" id="newTypeStartDate" onchange="window.updateMinEndDate(this.value)">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>종료일</label>
+                        <input type="date" class="form-control" id="newTypeEndDate">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>운영 상태</label>
+                    <select class="form-control" id="newTypeStatus">
+                        <option value="true">활성</option>
+                        <option value="false">비활성</option>
+                    </select>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px;">
+                    <label>평가/면담 가이드라인 (선택)</label>
+                    <textarea class="form-control" id="newTypeGuideline" rows="4" placeholder="평가자들에게 안내할 주의사항이나 매뉴얼을 입력하세요."></textarea>
+                </div>
+                
+                <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="window.saveTypeToServer()">저장</button>
+            </div>
+        </div>
+
+        <div id="questionModal" class="modal-overlay">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <span id="itemModalTitle">➕ 평가 문항 추가</span>
+                    <button class="modal-close" onclick="window.closeModal('questionModal')">&times;</button>
+                </div>
+                <input type="hidden" id="itemId">
+                <div class="form-group">
+                    <label>대상 유형</label>
+                    <select class="form-control" id="itemTypeId">
+                        <option th:each="type : ${typeList}" th:value="${type.id}" th:text="${type.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>카테고리</label>
+                    <input type="text" class="form-control" id="itemCategory" placeholder="예: 리더십">
+                </div>
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>문항 내용</label>
+                    <textarea class="form-control" id="itemContent" rows="3" placeholder="평가할 문항 내용을 입력하세요."></textarea>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>답변 타입</label>
+                        <select class="form-control" id="itemAnswerType">
+                            <option value="SCORE">점수형</option>
+                            <option value="TEXT">서술형</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>공통 여부</label>
+                        <select class="form-control" id="itemIsCommon">
+                            <option value="Y">공통 (Y)</option>
+                            <option value="N">특수 (N)</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="window.saveItemToServer()">저장</button>
+            </div>
+        </div>
+
+        <script th:src="@{/js/evaluation-setting.js}"></script>
+    </div>
+</body>
+</html>

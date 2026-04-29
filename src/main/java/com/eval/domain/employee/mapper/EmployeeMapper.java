@@ -37,4 +37,7 @@ public interface EmployeeMapper {
     
     EmpManageDTO findByEmpNoDetail(String empNo);
     
+    // 마이페이지에서 본인 비밀번호 변경
+    void updatePassword(@Param("empNo") String empNo, @Param("newPw") String newPw);
+    
 }

@@ -113,5 +113,11 @@
 		WHERE emp_no = #{empNo}
 		]]>
 	</select>
+	
+	<update id="updatePassword">
+    	UPDATE dbo.employee_52
+       	SET password = #{newPw}
+     	WHERE emp_no = #{empNo}
+	</update>
 
 </mapper>
