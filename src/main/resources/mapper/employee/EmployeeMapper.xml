@@ -44,11 +44,11 @@
 	
 	<select id="findAll" resultType="com.eval.domain.employee.dto.EmployeeDTO">
         SELECT 
-            emp_no              AS empNo,
-            name                AS empName,
-            dept_id             AS deptId,  status,
-            login_fail_count    AS failCount,
-            locked
+            emp_no AS empNo,
+            name AS empName,
+            dept_id AS deptId,  status,
+            login_fail_count AS failCount,
+            locked AS locked
         FROM dbo.employee_52
         ORDER BY emp_no ASC
     </select>
@@ -60,41 +60,58 @@
 	</update>
 
 	<select id="findAllEmp" resultType="com.eval.domain.employee.dto.EmpManageDTO">
-	    SELECT 
-	        e.emp_no AS empNo,
-	        e.dept_id AS deptId,
-	        d.name AS deptName,   <!-- 🔥 추가 -->
-	        e.name,
-	        e.status,
-	        e.position,
-	        e.role,
-	        e.job,
-	        e.email,
-	        e.phone,
-	        e.hire_date AS hireDate,
-	        e.position_level AS positionLevel
-	    FROM dbo.employee_52 e
-	    LEFT JOIN dbo.department_52 d 
-	        ON e.dept_id = d.id
+		<![CDATA[
+		SELECT
+		    e.emp_no AS empNo,
+		    e.dept_id AS deptId,
+		    d.name AS deptName,
+		    e.name AS name,
+		    CASE
+		        WHEN e.resign_date IS NOT NULL
+		         AND e.resign_date <= CAST(GETDATE() AS DATE)
+		        THEN 'RESIGNED'
+		        ELSE e.status
+		    END AS status,
+		    e.position AS position,
+		    e.role AS role,
+		    e.job AS job,
+		    e.email AS email,
+		    e.phone AS phone,
+		    e.hire_date AS hireDate,
+		    e.position_level AS positionLevel,
+		    e.resign_date AS resignDate,
+		    e.locked AS locked
+		FROM dbo.employee_52 e
+		LEFT JOIN dbo.department_52 d ON e.dept_id = d.id
+		]]>
 	</select>
 		
 	<select id="findByEmpNoDetail" resultType="com.eval.domain.employee.dto.EmpManageDTO">
-	    SELECT
-	        emp_no AS empNo,
-	        name AS name,
-	        dept_id AS deptId,
-	        status AS status,
-	        locked AS locked,
-	        role AS role,
-	        email AS email,
-	        phone AS phone,
-	        position_level AS positionLevel,
-	        job AS job,
-	        hire_date AS hireDate,
-	        resign_date AS resignDate,
-	        position AS position
-	    FROM dbo.employee_52
-	    WHERE emp_no = #{empNo}
+		<![CDATA[
+		SELECT
+		    emp_no AS empNo,
+		    name AS name,
+		    dept_id AS deptId,
+		
+		    CASE
+		        WHEN resign_date IS NOT NULL
+		         AND resign_date <= CAST(GETDATE() AS DATE)
+		        THEN 'RESIGNED'
+		        ELSE status
+		    END AS status,
+		
+		    locked AS locked,
+		    role AS role,
+		    email AS email,
+		    phone AS phone,
+		    position_level AS positionLevel,
+		    job AS job,
+		    hire_date AS hireDate,
+		    resign_date AS resignDate,
+		    position AS position
+		FROM dbo.employee_52
+		WHERE emp_no = #{empNo}
+		]]>
 	</select>
 
 </mapper>

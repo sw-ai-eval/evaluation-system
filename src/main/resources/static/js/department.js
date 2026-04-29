@@ -41,71 +41,112 @@ function showCreateForm() {
 }
 
 function showEditForm(btn) {
-    console.log("dataset:", btn.dataset);
 
     const d = btn.dataset;
 
     const set = (id, value) => {
         const el = document.getElementById(id);
-        if (!el) {
-            console.warn("❌ 요소 없음:", id);
-            return;
-        }
+        if (!el) return;
         el.value = value ?? "";
     };
 
     set("edit-id", d.id);
     set("edit-name", d.name);
-    set("edit-leaderEmpNo", d.leaderempno);
-    set("edit-parentId", d.parentid || "");
-    set("edit-useYn", d.useyn);
+    set("edit-useYn", d.useyn === "true" ? "true" : "false");
 
-	requestAnimationFrame(() => {
-	    const select = document.getElementById("edit-parentId");
+    const leaderSelect = document.getElementById("edit-leaderEmpNo");
 
-	    Array.from(select.options).forEach(opt => {
-	        opt.disabled = (opt.value === d.id);
-	    });
-	});
-	
+    // 기본값 먼저 세팅
+    if (leaderSelect) {
+        leaderSelect.innerHTML = `<option value="">선택 안 함</option>`;
+    }
 
-    // ✅ 직원 리스트 조회 (핵심 수정 부분)
+    // 직원 목록 로딩
     fetch(`/department/${d.id}/employees`)
-        .then(res => {
-            if (!res.ok) throw new Error("직원 조회 실패");
-            return res.json();
-        })
+        .then(res => res.json())
         .then(list => {
-            const select = document.querySelector('#edit-leaderEmpNo');
-
-            if (!select) {
-                console.warn("❌ select 없음: edit-leaderEmpNo");
-                return;
-            }
-
-            select.innerHTML = `<option value="">선택 안 함</option>`;
 
             list.forEach(emp => {
                 const opt = document.createElement('option');
                 opt.value = emp.empNo;
                 opt.textContent = emp.name;
-                select.appendChild(opt);
+                leaderSelect.appendChild(opt);
             });
-			select.value = d.leaderempno || "";
-        })
-        .catch(err => {
-            console.error("❌ 직원 목록 조회 오류:", err);
+
+            // 🔥 여기서 반드시 설정 (옵션 생성 후)
+            leaderSelect.value = d.leaderempno || "";
         });
 
-	
-	const create = document.getElementById("createForm");
-	const edit = document.getElementById("editForm");
+    set("edit-parentId", d.parentid || "");
+    set("edit-parentName", d.parentname || "");
 
-	if (create) create.style.display = "none";
-	if (edit) edit.style.display = "block";
+    const form = document.querySelector("#editForm form");
 
-	document.getElementById("formOverlay").style.display = "block";
+    // ❌ removeAttribute 제거 → 대신 value 유지
+    form.onsubmit = (e) => {
+
+        const leader = document.getElementById("edit-leaderEmpNo");
+
+        // FK 방지: 빈 값이면 null로 보내기
+        if (leader.value === "") {
+            leader.value = ""; // 유지 (삭제하지 않음)
+        }
+    };
+
+    document.getElementById("createForm").style.display = "none";
+    document.getElementById("editForm").style.display = "block";
+    document.getElementById("formOverlay").style.display = "block";
 }
+
+function submitUpdateForm() {
+
+    const form = document.querySelector("#editForm form");
+    const formData = new FormData(form);
+
+    const leader = document.getElementById("edit-leaderEmpNo");
+
+	if (!leader.value) {
+	    formData.set("leaderEmpNo", "");
+	}
+
+	fetch("/department/update", {
+	    method: "POST",
+	    body: formData
+	})
+	.then(async res => {
+	    const text = await res.text();
+
+	    try {
+	        return JSON.parse(text);
+	    } catch (e) {
+	        throw new Error(text);
+	    }
+	})
+	.then(data => {
+	    alert(data.message);
+
+	    if (data.success) {
+	        document.getElementById("editForm").style.display = "none";
+	        document.getElementById("formOverlay").style.display = "none";
+	        location.reload();
+	    }
+	})
+	.catch(err => {
+	    console.error(err);
+	    alert("서버 오류");
+	});
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.querySelector("#editForm form");
+
+    form.addEventListener("submit", function(e) {
+        e.preventDefault();
+        submitUpdateForm();
+    });
+});
+
 
 function toggleChildren(id) {
     const el = document.getElementById("child-" + id);

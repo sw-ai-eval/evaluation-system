@@ -1,5 +1,7 @@
 package com.eval.domain.employee.service;
 
+import com.eval.domain.dept.Department;
+import com.eval.domain.dept.repository.DepartmentRepository;
 import com.eval.domain.employee.Employee;
 import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.employee.dto.EmpManageDTO;
@@ -7,21 +9,34 @@ import com.eval.domain.employee.dto.EmployeeDTO;
 import com.eval.domain.employee.mapper.EmployeeMapper;
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Objects;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@RequiredArgsConstructor
 public class EmployeeService {
 
     private final EmployeeMapper employeeMapper;
     private final PasswordEncoder passwordEncoder;
     private final EmployeeRepository employeeRepository;
-
-   
+    private final DepartmentRepository departmentRepository;
+    public EmployeeService(EmployeeMapper employeeMapper,
+            PasswordEncoder passwordEncoder,
+            EmployeeRepository employeeRepository,
+            DepartmentRepository departmentRepository) {
+	this.employeeMapper = employeeMapper;
+	this.passwordEncoder = passwordEncoder;
+	this.employeeRepository = employeeRepository;
+	this.departmentRepository=departmentRepository;
+	}
     /**
      * 신규 사원 등록
      */
@@ -83,7 +98,12 @@ public class EmployeeService {
     
     public List<EmpManageDTO> findEmployees(String keyword, String deptId, String status) {
         if (isEmpty(keyword) && isEmpty(deptId) && isEmpty(status)) {
-            return employeeMapper.findAllEmp();
+        	List<EmpManageDTO> list = employeeMapper.findAllEmp();
+        	for (EmpManageDTO dto : list) {
+        	    System.out.println("DB → DTO locked = " + dto.getLocked()
+        	        + " / empNo = " + dto.getEmpNo());
+        	}
+        	return list;
         }
         return employeeMapper.search(keyword, deptId, status);
     }
@@ -95,11 +115,26 @@ public class EmployeeService {
         return employeeMapper.findByEmpNoDetail(empNo);
     }
     
-    public void createEmployee(EmpManageDTO employeeDTO) {
+    
+    public void createEmp(EmpManageDTO employeeDTO) {
 
         // DTO를 엔티티로 변환
         Employee employee = new Employee();
-        employee.setEmpNo(employeeDTO.getEmpNo()); // 사번 자동 증가 로직 구현해야 함----------------------
+        
+        String empNo = generateEmpNo();
+        
+        
+        // 관리자 사번 --> 생성자 표시용
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminNo = auth.getName();
+
+        employee.setCreatedAt(LocalDateTime.now());
+        employee.setCreatedBy(adminNo); 
+        employee.setResignDate(null);   // 퇴사일 제외
+	    employee.setPassword("$2a$10$kBio8K0mGAXpAAJ9o3XWNuJlDSNd7DxN4CgD.jOsLDFKyBSt9rK0u");     //  초기 비밀번호 1234
+	    employee.setPosition("부서원");
+        
+        employee.setEmpNo(empNo); // 사번 자동 증가 로직 구현해야 함----------------------
         employee.setName(employeeDTO.getName());
         employee.setDeptId(employeeDTO.getDeptId());
         employee.setStatus(employeeDTO.getStatus());
@@ -109,18 +144,103 @@ public class EmployeeService {
         employee.setPositionLevel(employeeDTO.getPositionLevel());
         employee.setJob(employeeDTO.getJob());
         employee.setHireDate(employeeDTO.getHireDate());
-        employee.setPosition(employeeDTO.getPosition());
 
         // 기본값 설정 (필요 시)
         employee.setFailCount(0);
-        employee.setLocked(false);
+        employee.setLocked(0);
 
         // 엔티티 저장
         employeeRepository.save(employee);
     }
     
-    private String create_EmpNo() { ////////////////////////////////////// 사번 자동 증가 로직 구현 
-    	return "사번";
+    private String generateEmpNo() { ////////////////////////////////////// 사번 자동 증가 로직 구현 
+    	Long next = employeeRepository.getNextEmpNo();
+        return String.valueOf(next);
     }
     
+    
+    @Transactional
+    public void updateEmp(EmpManageDTO dto) { ////////////////////////////////////// 사원 정보 수정
+    	
+    	Employee employee = employeeRepository.findById(dto.getEmpNo())
+                .orElseThrow(() -> new IllegalArgumentException("사원 없음"));
+    	System.out.println("employeeRepository = " + employeeRepository);
+    	
+    	
+    	boolean deptChanged=false;
+    	if (employee.getDeptId() != null &&
+    		    dto.getDeptId() != null &&
+    		    !employee.getDeptId().equals(dto.getDeptId())) {
+    		    deptChanged = true;
+    		}
+
+    	if ("부서장".equals(employee.getPosition()) && deptChanged) {
+    	    throw new IllegalArgumentException("부서장은 부서 이동 대상에서 제외됩니다. \n리더 권한 이양 후 진행해 주세요.");
+    	}
+    	
+        // 관리자 사번 --> 수정자 표시용
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String adminNo = auth.getName();
+        
+        employee.setUpdatedBy(adminNo);
+        employee.setUpdatedAt(LocalDateTime.now());
+        
+    	employee.setName(dto.getName());
+    	employee.setEmail(dto.getEmail());
+    	employee.setPhone(dto.getPhone());
+    	employee.setDeptId(dto.getDeptId());
+    	employee.setPositionLevel(dto.getPositionLevel());
+    	employee.setJob(dto.getJob());
+    	employee.setHireDate(dto.getHireDate());
+    	employee.setResignDate(dto.getResignDate());
+    	employee.setRole(dto.getRole());
+        
+
+    	boolean isResigned =
+    	        dto.getResignDate() != null
+    	        && !dto.getResignDate().isAfter(LocalDate.now());
+
+    	if (isResigned) {
+    	    employee.setStatus("RESIGNED");
+    	    employee.setLocked(1);
+    	    employee.setLockedAt(LocalDateTime.now());
+    	} else {
+    	    employee.setStatus(dto.getStatus());
+    	    
+    	}
+    	
+    	if ("부서장".equals(employee.getPosition()) && isResigned) {
+
+    	    // 1. 직원 직책 제거
+    	    //employee.setPosition("");
+
+    	    // 2. 부서 정보 조회
+    	    Department department = departmentRepository
+    	            .findById(employee.getDeptId())
+    	            .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+
+    	    // 3. 부서장 사번 제거 (핵심)
+    	    if (employee.getEmpNo() != null &&
+    	    	    employee.getEmpNo().equals(department.getLeaderEmpNo())) {
+    	        department.setLeaderEmpNo(null);
+    	        department.setUpdatedBy(adminNo);
+    	        department.setUpdatedAt(LocalDateTime.now());
+    	    }
+
+    	    System.out.println("부서장 퇴사 → 부서장 공석 처리 완료 (deptId=" + employee.getDeptId() + ")");
+    	}
+    	
+    	if (employee.getPosition() == null) {
+            employee.setPosition("부서원");
+        }
+
+        if (employee.getCreatedAt() == null) {
+            employee.setCreatedAt(LocalDateTime.now());
+        }
+
+        if (employee.getCreatedBy() == null) {
+            employee.setCreatedBy(adminNo);
+        }
+        
+    }
 }

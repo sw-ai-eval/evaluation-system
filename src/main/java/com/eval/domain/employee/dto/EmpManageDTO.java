@@ -20,8 +20,7 @@ public class EmpManageDTO {
     private String deptName; // 부서명 조인으로 찾을 거임
 
     private String status;
-    private int failCount;
-    private int locked;
+    private Integer locked;
     private String role; // 권한
 
     private String email;
@@ -35,8 +34,14 @@ public class EmpManageDTO {
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate resignDate;
     
-    private String position; // leader 여부 (checkbox)
+    private String position; 
     
     private LocalDateTime createdAt;
     private String createdBy;
+    
+    public String getPositionDisplay() {
+        return position;
+    }
+    
+    
 }

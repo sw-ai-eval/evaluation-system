@@ -11,6 +11,8 @@ public class DepartmentDto {
     private String name;
     private String leaderEmpNo;
     private String parentId;
-    private Boolean useYn;
+    private boolean useYn;
     private int level;
+
+    private String parentName;
 }
