@@ -146,27 +146,15 @@ function loadDeptSettings(deptId) {
     const gradeC = document.getElementById('gradeC');
     const gradeD = document.getElementById('gradeD');
 
-    if(deptId.includes('S')) { 
-        weightInputs[0].value = 20; 
-        weightInputs[1].value = 50; 
-        weightInputs[2].value = 30;
-        
-        gradeS.value = 15; 
-        gradeA.value = 35; 
-        gradeB.value = 75; 
-        gradeC.value = 95; 
-        gradeD.value = 100; 
-    } else {
-        weightInputs[0].value = 30; 
-        weightInputs[1].value = 30; 
-        weightInputs[2].value = 40;
-        
-        gradeS.value = 10; 
-        gradeA.value = 30; 
-        gradeB.value = 70; 
-        gradeC.value = 90; 
-        gradeD.value = 100; 
-    }
+		weightInputs[0].value = 20; 
+	    weightInputs[1].value = 40; 
+	    weightInputs[2].value = 40;
+
+	    gradeS.value = 10; 
+	    gradeA.value = 30; 
+	    gradeB.value = 70; 
+	    gradeC.value = 90; 
+	    gradeD.value = 100;
     
     window.calculateTotal(); 
 }
