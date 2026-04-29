@@ -50,7 +50,7 @@
         <!-- 내 기본 정보 영역 -->
         <div class="content-card">
             <div class="header-flex">
-                <h3>내 기본 정보</h3>
+                <h3>내 정보</h3>
             </div>
             <div class="info-row">
                 <div class="info-label">사번</div>
@@ -73,12 +73,16 @@
         <div class="content-card">
             <div class="header-flex">
                 <h3>보안 설정</h3>
-                <!-- 이 버튼을 누르면 폼이 열립니다 -->
-                <button type="button" class="btn-toggle" id="toggleBtn" onclick="togglePasswordForm()">비밀번호 변경</button>
             </div>
             
-            <!-- 처음에는 display: none; 으로 숨겨둠 -->
-            <div id="passwordFormArea" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+            <div class="info-row" id="passwordBtnRow">
+                <div class="info-label" style="display: flex; align-items: center;">비밀번호</div>
+                <div class="info-value">
+                    <button type="button" class="btn-toggle" id="toggleBtn" onclick="togglePasswordForm()">비밀번호 변경</button>
+                </div>
+            </div>
+            
+            <div id="passwordFormArea" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 10px;">
                 <form action="/my-page/change-password" method="post" onsubmit="return validatePassword()">
                     <!-- CSRF 활성화 시 사용: <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /> -->
                     
@@ -121,14 +125,14 @@
         // 비밀번호 폼 열고 닫기
         function togglePasswordForm() {
             const formArea = document.getElementById('passwordFormArea');
-            const toggleBtn = document.getElementById('toggleBtn');
+            const passwordBtnRow = document.getElementById('passwordBtnRow');
             
             if (formArea.style.display === 'none') {
                 formArea.style.display = 'block';
-                toggleBtn.style.display = 'none'; // 열리면 '비밀번호 변경' 상단 버튼은 숨김
+                passwordBtnRow.style.display = 'none'; // 열리면 버튼이 있는 줄 전체를 숨김
             } else {
                 formArea.style.display = 'none';
-                toggleBtn.style.display = 'block'; // 취소하면 다시 상단 버튼 보임
+                passwordBtnRow.style.display = 'flex'; // 취소하면 다시 버튼 줄 보임
                 
                 // 입력창 초기화
                 document.getElementById('currentPw').value = '';

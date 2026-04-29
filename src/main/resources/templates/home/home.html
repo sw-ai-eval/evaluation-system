@@ -11,10 +11,13 @@
     <style>
         body { margin: 0; display: flex; font-family: 'Noto Sans KR', sans-serif; background-color: #f4f6f9; min-height: 100vh; }
         
-        /* 오른쪽 메인 컨텐츠 영역 */
-        .main-content { flex-grow: 1; padding: 40px; margin-left: 250px; /* 사이드바 너비만큼 띄우기 */ box-sizing: border-box; }
-        
-        /* 🌟 프로필 카드 스타일 */
+        .main-content { 
+    		flex-grow: 1; 
+   			padding: 40px 40px 40px 0px;
+    		margin-left: 100px;
+    		box-sizing: border-box; 
+		}
+        /* 프로필 카드 스타일 */
         .profile-widget { 
             display: flex; align-items: center; background: white; 
             padding: 20px 25px; border-radius: 12px; 
@@ -56,25 +59,22 @@
 </head>
 <body>
 
-    <!-- 🌟 사이드바 불러오기 -->
+    <!-- 사이드바 불러오기 -->
     <div th:replace="~{layout/sidebar :: sidebar}"></div>
 
-    <!-- 🌟 대시보드 메인 영역 -->
+    <!-- 대시보드 메인 영역 -->
     <div class="main-content">
         
         <!-- 프로필 위젯 (사진 스타일) -->
         <div class="profile-widget">
             <div class="profile-avatar">
-                <!-- 나중에 실제 사원 사진으로 교체 가능 -->
                 👤 
             </div>
             <div class="profile-info">
-                <!-- 이름 클릭 시 마이페이지(/my-page)로 바로 이동 -->
                 <a class="profile-name" th:href="@{/my-page}">
                     <span th:text="${empName} ?: '홍길동'">홍길동</span>
                     <span style="font-size: 14px; margin-left: 2px; color: #a0aec0;">&gt;</span>
                 </a>
-                <!-- 소속 / 직급 / 사번 -->
                 <div class="profile-meta">
                     <span th:text="${deptName} ?: '인사팀'">인사팀</span> / 
                     <span th:text="${position} ?: '대리'">대리</span> / 
