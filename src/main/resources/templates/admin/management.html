@@ -3,117 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <title>관리자 페이지</title>
+    <!-- 사이드바 CSS 연결 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    
     <style>
-    /* 전체 테이블 컨테이너 */
-    .admin-container {
-        max-width: 1000px;
-        margin: 40px auto;
-        padding: 20px;
-        background: #fff;
-        border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    
-    h1 { font-size: 24px; margin-bottom: 25px; color: #333; }
+        body { margin: 0; display: flex; background-color: #f4f6f9; font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
+        
+        /* 🌟 메인 컨텐츠 영역 */
+        .main-content {
+            flex-grow: 1;
+            padding: 40px;                /* 상하좌우 여백 통일 */
+            box-sizing: border-box;
+            display: flex;
+            justify-content: flex-start;  /* 컨텐츠를 왼쪽부터 배치 */
+        }
 
-    table { width: 100%; border-collapse: collapse; font-size: 14px; }
-    
-    /* 헤더 스타일 */
-    th {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-bottom: 2px solid #dee2e6;
-        color: #495057;
-        font-weight: 700;
-    }
+        /* 🌟 관리자 컨테이너 */
+        .admin-container {
+            width: 100%;
+            max-width: 1400px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+            border: 1px solid #e2e8f0;
+        }
+        
+        h1 { font-size: 24px; margin-bottom: 25px; color: #333; }
 
-    td {
-        padding: 15px;
-        border-bottom: 1px solid #eee;
-        vertical-align: middle;
-        text-align: center;
-        color: #555;
-    }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; }
+        
+        th {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-bottom: 2px solid #dee2e6;
+            color: #495057;
+            font-weight: 700;
+        }
 
-    /* 배지 스타일 통일 */
-    .badge {
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-block;
-    }
-    
-    /* 상태 색상 수정 */
-    .bg-active { background: #f1f3f5; color: #495057; }   /* 재직: 회색 */
-    .bg-normal { background: #e6ffed; color: #28a745; }   /* 정상: 초록색 배지 */
-    .bg-RESIGNED { background: #ffeef0; color: #f85149; }  /* 퇴사: 연한 빨강 */
-    .bg-locked { background: #fff3cd; color: #856404; }   /* 잠김: 노랑 */
-    .bg-me { background: #f0f7ff; color: #0969da; }       /* 본인: 파랑 */
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            vertical-align: middle;
+            text-align: center;
+            color: #555;
+        }
 
-    /* 버튼 스타일 */
-    .btn-reset {
-        padding: 7px 15px;
-        background-color: #0d6efd;
-        color: white;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-size: 13px;
-        transition: background 0.2s;
-    }
-    .btn-reset:hover { background-color: #0b5ed7; }
-</style>
+        /* 배지 스타일 */
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        
+        .bg-active { background: #f1f3f5; color: #495057; }   
+        .bg-normal { background: #e6ffed; color: #28a745; }   
+        .bg-RESIGNED { background: #ffeef0; color: #f85149; }  
+        .bg-locked { background: #fff3cd; color: #856404; }   
+        .bg-me { background: #f0f7ff; color: #0969da; }       
+
+        /* 버튼 스타일 */
+        .btn-reset {
+            padding: 7px 15px;
+            background-color: #0d6efd;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .btn-reset:hover { background-color: #0b5ed7; }
+    </style>
 </head>
 
 <body>
-<div class="admin-container">
-    <h1>사원 계정 관리 및 비밀번호 초기화</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>사번</th>
-                <th>이름</th>
-                <th>상태</th>
-                <th>잠금여부</th>
-                <th>관리</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="emp : ${employees}">
-                <td th:text="${emp.empNo}">1000</td>
-                
-                <td th:text="${emp.empName}">관리자</td>
-                
-                <td>
-                    <span th:if="${emp.status == 'ACTIVE' or emp.status == '재직'}" class="badge bg-active">재직</span>
-                    <span th:if="${emp.status == 'RESIGNED' or emp.status == '퇴사'}" class="badge bg-RESIGNED">퇴사</span>
-                </td>
-                
-                <td>
-                    <span th:if="${emp.empNo == #authentication.name}" class="badge bg-me">로그인 계정</span>
-                    
-                    <span th:if="${(emp.status == 'RESIGNED' or emp.status == '퇴사') and emp.empNo != #authentication.name}">-</span>
-                    
-                    <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and (emp.locked == 1 or emp.failCount >= 5) and emp.empNo != #authentication.name}" 
-                          class="badge bg-locked">잠김</span>
-                    
-                    <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and emp.locked == 0 and emp.failCount < 5 and emp.empNo != #authentication.name}"
-                          class="badge bg-normal">정상</span>
-                </td>
-                
-                <td>
-                    <button th:if="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}" 
-                            class="btn-reset" 
-                            th:onclick="doReset([[${emp.empNo}]], [[${emp.empName}]])">
-                        계정 복구
-                    </button>
-                    <span th:unless="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}">-</span>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+    <!-- 사이드바 불러오기 -->
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <div class="main-content">
+        <div class="admin-container">
+            <h1>사원 계정 관리 및 비밀번호 초기화</h1>
+            <table>
+                <thead>
+                    <tr>
+                        <th>사번</th>
+                        <th>이름</th>
+                        <th>상태</th>
+                        <th>잠금여부</th>
+                        <th>관리</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="emp : ${employees}">
+                        <td th:text="${emp.empNo}">1000</td>
+                        <td th:text="${emp.empName}">관리자</td>
+                        <td>
+                            <span th:if="${emp.status == 'ACTIVE' or emp.status == '재직'}" class="badge bg-active">재직</span>
+                            <span th:if="${emp.status == 'RESIGNED' or emp.status == '퇴사'}" class="badge bg-RESIGNED">퇴사</span>
+                        </td>
+                        <td>
+                            <span th:if="${emp.empNo == #authentication.name}" class="badge bg-me">로그인 계정</span>
+                            <span th:if="${(emp.status == 'RESIGNED' or emp.status == '퇴사') and emp.empNo != #authentication.name}">-</span>
+                            <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and (emp.locked == 1 or emp.failCount >= 5) and emp.empNo != #authentication.name}" 
+                                  class="badge bg-locked">잠김</span>
+                            <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and emp.locked == 0 and emp.failCount < 5 and emp.empNo != #authentication.name}"
+                                  class="badge bg-normal">정상</span>
+                        </td>
+                        <td>
+                            <button th:if="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}" 
+                                    class="btn-reset" 
+                                    th:onclick="doReset([[${emp.empNo}]], [[${emp.empName}]])">
+                                계정 복구
+                            </button>
+                            <span th:unless="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}">-</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <script>
     function doReset(empNo, empName) {

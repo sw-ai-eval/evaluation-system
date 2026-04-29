@@ -13,8 +13,7 @@
         
         .main-content { 
     		flex-grow: 1; 
-   			padding: 40px 40px 40px 0px;
-    		margin-left: 100px;
+   			padding: 40px 40px 40px 40px;
     		box-sizing: border-box; 
 		}
         /* 프로필 카드 스타일 */
@@ -99,7 +98,7 @@
 
             <!-- 관리자에게만 보이는 통계 카드 -->
             <div sec:authorize="hasRole('ADMIN')" class="stat-card" style="background-color: #f8fafc;">
-                <div class="stat-title">조직 전체 평가 진척률 [Admin]</div>
+                <div class="stat-title">조직 전체 평가 진척률</div>
                 <div class="stat-value" style="color: #805ad5;">15%</div>
                 <div style="font-size: 12px; color: #a0aec0; margin-top: 8px;">미완료자: 85명 남음</div>
             </div>

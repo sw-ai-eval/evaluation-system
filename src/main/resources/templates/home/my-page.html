@@ -9,18 +9,22 @@
     
     <style>
         body { margin: 0; display: flex; font-family: 'Noto Sans KR', sans-serif; background-color: #f4f6f9; min-height: 100vh; }
-        .main-content { flex-grow: 1; padding: 40px; margin-left: 250px; box-sizing: border-box; }
+        
+        .main-content { flex-grow: 1; padding: 40px; margin-left: 210px; box-sizing: border-box; display: flex; justify-content: flex-start; }
+        
+        /* 선과 박스 길이를 통일하기 위한 컨테이너 */
+        .page-container { width: 100%; max-width: 800px; }
         
         .page-header { margin-bottom: 30px; border-bottom: 2px solid #e2e8f0; padding-bottom: 15px; }
         .page-header h1 { margin: 0; color: #1a202c; font-size: 24px; }
         
-        .content-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; max-width: 600px; margin-bottom: 20px; }
+        /* max-width를 제거하고 부모(page-container) 너비에 맞춤 */
+        .content-card { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 20px; width: 100%; box-sizing: border-box; }
         
         .info-row { display: flex; margin-bottom: 15px; font-size: 15px; }
         .info-label { width: 120px; font-weight: bold; color: #718096; }
         .info-value { color: #1a202c; font-weight: 500; }
         
-        /* 비밀번호 폼 관련 스타일 추가 */
         .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .header-flex h3 { margin: 0; color: #2d3748; font-size: 18px; }
         
@@ -42,106 +46,92 @@
     <div th:replace="~{layout/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        
-        <div class="page-header">
-            <h1>👤 마이페이지</h1>
-        </div>
+        <div class="page-container">
+            <div class="page-header">
+                <h1>👤 마이페이지</h1>
+            </div>
 
-        <!-- 내 기본 정보 영역 -->
-        <div class="content-card">
-            <div class="header-flex">
-                <h3>내 정보</h3>
+            <div class="content-card">
+                <div class="header-flex">
+                    <h3>내 정보</h3>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">사번</div>
+                    <div class="info-value" th:text="${empNo} ?: '2026001'">1234</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">이름</div>
+                    <div class="info-value" th:text="${empName} ?: '홍길동'">홍길동</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-label">소속 / 직급</div>
+                    <div class="info-value">
+                        <span th:text="${deptName} ?: '인사팀'">인사팀</span> / 
+                        <span th:text="${position} ?: '대리'">대리</span>
+                    </div>
+                </div>
             </div>
-            <div class="info-row">
-                <div class="info-label">사번</div>
-                <div class="info-value" th:text="${empNo} ?: '2026001'">1234</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">이름</div>
-                <div class="info-value" th:text="${empName} ?: '홍길동'">홍길동</div>
-            </div>
-            <div class="info-row">
-                <div class="info-label">소속 / 직급</div>
-                <div class="info-value">
-                    <span th:text="${deptName} ?: '인사팀'">인사팀</span> / 
-                    <span th:text="${position} ?: '대리'">대리</span>
+
+            <div class="content-card">
+                <div class="header-flex">
+                    <h3>보안 설정</h3>
+                </div>
+                
+                <div class="info-row" id="passwordBtnRow">
+                    <div class="info-label" style="display: flex; align-items: center;">비밀번호</div>
+                    <div class="info-value">
+                        <button type="button" class="btn-toggle" id="toggleBtn" onclick="togglePasswordForm()">비밀번호 변경</button>
+                    </div>
+                </div>
+                
+                <div id="passwordFormArea" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 10px;">
+                    <form action="/my-page/change-password" method="post" onsubmit="return validatePassword()">
+                        <div class="form-group">
+                            <label>현재 비밀번호</label>
+                            <input type="password" id="currentPw" name="currentPw" class="form-control" placeholder="현재 비밀번호">
+                        </div>
+                        <div class="form-group">
+                            <label>새 비밀번호</label>
+                            <input type="password" id="newPw" name="newPw" class="form-control" placeholder="새 비밀번호">
+                        </div>
+                        <div class="form-group">
+                            <label>새 비밀번호 확인</label>
+                            <input type="password" id="confirmPw" class="form-control" placeholder="새 비밀번호 재입력">
+                        </div>
+
+                        <div class="btn-flex">
+                            <button type="submit" class="btn-save">변경 저장</button>
+                            <button type="button" class="btn-cancel" onclick="togglePasswordForm()">취소</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
-
-        <!-- 비밀번호 변경 영역 -->
-        <div class="content-card">
-            <div class="header-flex">
-                <h3>보안 설정</h3>
-            </div>
-            
-            <div class="info-row" id="passwordBtnRow">
-                <div class="info-label" style="display: flex; align-items: center;">비밀번호</div>
-                <div class="info-value">
-                    <button type="button" class="btn-toggle" id="toggleBtn" onclick="togglePasswordForm()">비밀번호 변경</button>
-                </div>
-            </div>
-            
-            <div id="passwordFormArea" style="display: none; border-top: 1px dashed #e2e8f0; padding-top: 20px; margin-top: 10px;">
-                <form action="/my-page/change-password" method="post" onsubmit="return validatePassword()">
-                    <!-- CSRF 활성화 시 사용: <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" /> -->
-                    
-                    <div class="form-group">
-                        <label>현재 비밀번호</label>
-                        <input type="password" id="currentPw" name="currentPw" class="form-control" placeholder="현재 비밀번호">
-                    </div>
-                    <div class="form-group">
-                        <label>새 비밀번호</label>
-                        <input type="password" id="newPw" name="newPw" class="form-control" placeholder="새 비밀번호">
-                    </div>
-                    <div class="form-group">
-                        <label>새 비밀번호 확인</label>
-                        <input type="password" id="confirmPw" class="form-control" placeholder="새 비밀번호 재입력">
-                    </div>
-
-                    <div class="btn-flex">
-                        <button type="submit" class="btn-save">변경 저장</button>
-                        <button type="button" class="btn-cancel" onclick="togglePasswordForm()">취소</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
     </div>
 
     <script th:inline="javascript">
-        // 백엔드(Controller)에서 보낸 성공/실패 메시지 띄우기
         const errorMessage = /*[[${errorMessage}]]*/ null;
         const successMessage = /*[[${successMessage}]]*/ null;
 
-        if (errorMessage) {
-            alert(errorMessage);
-        }
-        
-        if (successMessage) {
-            alert(successMessage);
-        }
+        if (errorMessage) { alert(errorMessage); }
+        if (successMessage) { alert(successMessage); }
 
-        // 비밀번호 폼 열고 닫기
         function togglePasswordForm() {
             const formArea = document.getElementById('passwordFormArea');
             const passwordBtnRow = document.getElementById('passwordBtnRow');
             
             if (formArea.style.display === 'none') {
                 formArea.style.display = 'block';
-                passwordBtnRow.style.display = 'none'; // 열리면 버튼이 있는 줄 전체를 숨김
+                passwordBtnRow.style.display = 'none';
             } else {
                 formArea.style.display = 'none';
-                passwordBtnRow.style.display = 'flex'; // 취소하면 다시 버튼 줄 보임
-                
-                // 입력창 초기화
+                passwordBtnRow.style.display = 'flex';
                 document.getElementById('currentPw').value = '';
                 document.getElementById('newPw').value = '';
                 document.getElementById('confirmPw').value = '';
             }
         }
 
-        // 3. 비밀번호 입력값 빈칸 및 일치 여부 프론트엔드 검증
         function validatePassword() {
             const currentPw = document.getElementById('currentPw').value;
             const newPw = document.getElementById('newPw').value;
