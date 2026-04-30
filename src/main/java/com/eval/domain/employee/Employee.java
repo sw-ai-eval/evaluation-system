@@ -40,8 +40,8 @@ public class Employee {
     @Column(name = "resign_date")
     private LocalDate resignDate;
 
-    @Column(name = "position_level", nullable = false, length = 50)
-    private String positionLevel;
+    @Column(name = "level_id", nullable = false, length = 50)
+    private Long levelId;
 
     @Column(name = "position", length = 50)
     private String position;
@@ -49,8 +49,8 @@ public class Employee {
     @Column(name = "role", nullable = false, length = 20)
     private String role = "USER";
 
-    @Column(name = "job", length = 50)
-    private String job;
+    @Column(name = "job_id", length = 50)
+    private Long jobId;
 
     @Column(name = "created_by", nullable = false, length = 50)
     private String createdBy;

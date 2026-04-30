@@ -13,7 +13,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	boolean existsByDeptId(String deptId);
 	
 	
-	List<Employee> findByDeptIdAndStatusNot(String deptId, String status);
+	List<Employee> findByDeptIdAndStatus(String deptId, String status);
 	
 	@Query(value = "SELECT NEXT VALUE FOR dbo.emp_seq_52", nativeQuery = true) // 사번 증가 
 	Long getNextEmpNo();

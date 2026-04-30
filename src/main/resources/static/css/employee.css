@@ -104,6 +104,10 @@ button.primary {
   background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: white;
 }
+button.register-btn{
+	background: linear-gradient(135deg, #059669, #10b981);
+	color: white;
+}
 
 button.danger {
   background: #ef4444;
@@ -305,4 +309,108 @@ flex: 0 0 auto;
     background: white;
     padding-bottom: 10px;
     z-index: 10;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-top: 24px;
+    padding: 10px 0;
+}
+
+/* 기본 링크 */
+.pagination a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+
+    font-size: 13px;
+    font-weight: 500;
+    color: #4b5563; /* 회색 계열 */
+    text-decoration: none;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+
+    background-color: #fff;
+
+    transition: all 0.15s ease-in-out;
+}
+
+/* hover */
+.pagination a:hover {
+    border-color: #3b82f6;
+    color: #2563eb;
+    background-color: #f3f6ff;
+}
+
+/* 활성 페이지 */
+.pagination a.active {
+    background-color: #2563eb;
+    color: #fff;
+    border-color: #2563eb;
+
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+}
+
+/* 이전/다음 강조 */
+.pagination a:first-child,
+.pagination a:last-child {
+    font-weight: 600;
+}
+
+/* 비활성 느낌 (Thymeleaf 조건으로 class 붙일 경우 대비) */
+.pagination a.disabled {
+    pointer-events: none;
+    opacity: 0.4;
+}
+.warning-row {
+    background-color: #fff3cd;
+}
+
+.badge.danger {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* =========================================
+   Empty State (검색 결과 없음)
+   ========================================= */
+
+.empty-state {
+    margin-top: 16px;
+    padding: 32px 20px;
+    text-align: center;
+    background-color: #f9fafb;
+    border: 1px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+}
+
+/* 아이콘 */
+.empty-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    opacity: 0.8;
+}
+
+/* 제목 */
+.empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 6px;
+}
+
+/* 설명 */
+.empty-desc {
+    font-size: 13px;
+    color: var(--text-muted);
 }
