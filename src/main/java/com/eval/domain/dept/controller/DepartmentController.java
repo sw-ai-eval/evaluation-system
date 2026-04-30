@@ -135,7 +135,7 @@ public class DepartmentController {
     @GetMapping("/department/{id}/employees")
     @ResponseBody
     public List<Employee> getEmployees(@PathVariable String id) {
-        return employeeRepository.findByDeptIdAndStatusNot(id, "RESIGNED");
+        return employeeRepository.findByDeptIdAndStatus(id, "ACTIVE");
     }
     
     @PostMapping("/department/{id}/delete")

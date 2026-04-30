@@ -32,12 +32,19 @@ public class DepartmentService {
         this.departmentRepository = departmentRepository;
         this.employeeRepository =employeeRepository;
     }
+    ////////////////////////////////// 삭제하지 않은 부서만 조회
+    public List<Department> findDepartmentNoDelete(){
+    	return departmentRepository.findByDeleteYn(false);
+    }
+    
+    
     
     ////////////////////////////////// 모든 부서 조회 용
     public List<Department> findAll() {
         return departmentRepository.findAll();
     }
     
+    //////////////////////////////////// 해당 아이디 조회
     public Department findById(String id) {
         return departmentRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("부서 없음"));

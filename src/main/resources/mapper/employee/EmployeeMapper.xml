@@ -59,61 +59,123 @@
     	WHERE emp_no = #{empNo}
 	</update>
 
-	<select id="findAllEmp" resultType="com.eval.domain.employee.dto.EmpManageDTO">
-		<![CDATA[
-		SELECT
-		    e.emp_no AS empNo,
-		    e.dept_id AS deptId,
-		    d.name AS deptName,
-		    e.name AS name,
-		    CASE
-		        WHEN e.resign_date IS NOT NULL
-		         AND e.resign_date <= CAST(GETDATE() AS DATE)
-		        THEN 'RESIGNED'
-		        ELSE e.status
-		    END AS status,
-		    e.position AS position,
-		    e.role AS role,
-		    e.job AS job,
-		    e.email AS email,
-		    e.phone AS phone,
-		    e.hire_date AS hireDate,
-		    e.position_level AS positionLevel,
-		    e.resign_date AS resignDate,
-		    e.locked AS locked
-		FROM dbo.employee_52 e
-		LEFT JOIN dbo.department_52 d ON e.dept_id = d.id
-		]]>
+	<select id="search" resultType="com.eval.domain.employee.dto.EmpManageDTO">
+	
+	    SELECT
+	        e.emp_no AS empNo,
+	        e.dept_id AS deptId,
+	        d.name AS deptName,
+	        e.name AS name,
+	        e.status AS status,
+	
+	        e.position AS position,
+	        e.role AS role,
+	
+	        e.job_id AS jobId,
+			j.name AS jobName, 
+			
+	        e.email AS email,
+	        e.phone AS phone,
+	        e.hire_date AS hireDate,
+	
+	        e.level_id AS levelId,
+	        l.name AS levelName,  <!-- 🔥 여기 핵심 -->
+	
+	        e.resign_date AS resignDate,
+	        e.locked AS locked,
+	
+	        CASE 
+	            WHEN e.resign_date IS NOT NULL 
+	             AND e.resign_date <![CDATA[<=]]> CAST(GETDATE() AS DATE)
+	             <![CDATA[
+	                AND e.status <> 'RESIGNED'
+	            ]]>
+	            THEN 1 ELSE 0
+	        END AS overdueResignFlag
+	
+	    FROM dbo.employee_52 e
+	
+	    LEFT JOIN dbo.department_52 d 
+	        ON e.dept_id = d.id
+	
+	    LEFT JOIN dbo.code_common_52 j
+		    ON e.job_id = j.id
+		
+		LEFT JOIN dbo.code_common_52 l
+		    ON e.level_id = l.id
+	
+	    <where>
+	        <if test="keyword != null and keyword != ''">
+	            e.emp_no = #{keyword} OR e.name LIKE '%' + #{keyword} + '%'
+	        </if>
+	
+	        <if test="deptId != null and deptId != ''">
+	            AND e.dept_id = #{deptId}
+	        </if>
+	
+	        <if test="status != null and status != ''">
+	            AND e.status = #{status}
+	        </if>
+	    </where>
+	
+	    ORDER BY e.emp_no DESC
+	    OFFSET #{offset} ROWS
+	    FETCH NEXT #{size} ROWS ONLY
+	
 	</select>
 		
 	<select id="findByEmpNoDetail" resultType="com.eval.domain.employee.dto.EmpManageDTO">
-		<![CDATA[
-		SELECT
-		    emp_no AS empNo,
-		    name AS name,
-		    dept_id AS deptId,
-		
-		    CASE
-		        WHEN resign_date IS NOT NULL
-		         AND resign_date <= CAST(GETDATE() AS DATE)
-		        THEN 'RESIGNED'
-		        ELSE status
-		    END AS status,
-		
-		    locked AS locked,
-		    role AS role,
-		    email AS email,
-		    phone AS phone,
-		    position_level AS positionLevel,
-		    job AS job,
-		    hire_date AS hireDate,
-		    resign_date AS resignDate,
-		    position AS position
-		FROM dbo.employee_52
-		WHERE emp_no = #{empNo}
-		]]>
-	</select>
 	
+	    SELECT
+	        e.emp_no AS empNo,
+	        e.name AS name,
+	        e.dept_id AS deptId,
+	        e.status AS status,
+	        e.locked AS locked,
+	        e.role AS role,
+	        e.email AS email,
+	        e.phone AS phone,
+	
+	        e.level_id AS levelId,
+	        l.name AS levelName,
+	
+	        e.job_id AS jobId,
+			j.name AS jobName, 
+			
+	        e.hire_date AS hireDate,
+	        e.resign_date AS resignDate,
+	        e.position AS position
+	
+	    FROM dbo.employee_52 e
+	
+		LEFT JOIN dbo.code_common_52 j
+		    ON e.job_id = j.id
+		
+		LEFT JOIN dbo.code_common_52 l
+		    ON e.level_id = l.id
+	
+	    WHERE e.emp_no = #{empNo}
+	
+	</select>
+	<select id="countEmployees" resultType="int">
+	
+	    SELECT COUNT(*)
+	    FROM dbo.employee_52 e
+	    LEFT JOIN dbo.department_52 d ON e.dept_id = d.id
+	
+	    <where>
+	        <if test="keyword != null and keyword != ''">
+	            AND e.name LIKE '%' + #{keyword} + '%'
+	        </if>
+	        <if test="deptId != null and deptId != ''">
+	            AND e.dept_id = #{deptId}
+	        </if>
+	        <if test="status != null and status != ''">
+	            AND e.status = #{status}
+	        </if>
+	    </where>
+	
+	</select>
 	<update id="updatePassword">
     	UPDATE dbo.employee_52
        	SET password = #{newPw}

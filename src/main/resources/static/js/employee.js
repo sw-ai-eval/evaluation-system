@@ -1,5 +1,38 @@
+let jobCode = [];
+let level = [];
+
+async function loadCodes() {
+    if (jobCode.length > 0) return; // 이미 있으면 패스
+
+    const [jobRes, levelRes] = await Promise.all([
+		fetch('/api/codes/POSITION_LEVEL'),
+        fetch('/api/codes/JOB')
+
+    ]);
+
+    jobCode = await jobRes.json();
+    level = await levelRes.json();
+}
+
+function renderJobSelect(codes) {
+    const select = document.querySelector("select[name='jobCode']");
+    if (!select) return;
+
+    select.innerHTML = "";
+    codes.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.code;
+        opt.textContent = c.name;
+        select.appendChild(opt);
+    });
+}
+
+//// 사원 수정 폼 
 document.querySelectorAll('.btn-edit').forEach(button => {
     button.addEventListener('click', async function () {
+		
+		await loadCodes(); 
+		
 		// 🔥 추가: 에러 초기화
 		const box = document.getElementById("errorBox");
 		if (box) {
@@ -51,8 +84,8 @@ document.querySelectorAll('.btn-edit').forEach(button => {
         setValue('#employee-update-form input[name="email"]', emp.email);
         setValue('#employee-update-form input[name="phone"]', emp.phone);
         setValue('#employee-update-form select[name="deptId"]', emp.deptId);
-        setValue('#employee-update-form input[name="positionLevel"]', emp.positionLevel);
-		setValue('#employee-update-form input[name="job"]', emp.job);
+		setValue('#employee-update-form select[name="jobId"]', emp.jobId);
+		setValue('#employee-update-form select[name="levelId"]', emp.levelId);
         setValue('#employee-update-form select[name="status"]', emp.status);
 		setValue('#employee-update-form input[name="hireDate"]', emp.hireDate);
 		setValue('#employee-update-form input[name="resignDate"]', emp.resignDate);
@@ -108,7 +141,8 @@ function closeEditForm() {
 
 //////////////////////////////////////////////////////////////////////////////////////// 등록
 // 사원 등록 폼을 열기 위한 함수
-document.getElementById('open-register-form-btn').addEventListener('click', function() {
+document.getElementById('open-register-form-btn').addEventListener('click',async function() {
+	await loadCodes();
 	
 	if (document.querySelector('#employee-update-form')?.classList.contains('show')) {
 	        closeEditForm();
@@ -121,12 +155,6 @@ document.getElementById('open-register-form-btn').addEventListener('click', func
 function closeRegisterForm() {
     const form = document.getElementById('employee-register-form');
     form.classList.remove('show');  // 폼을 숨김
-}
-// 사원 삭제 처리
-function deleteEmployee(empNo) {
-    if (confirm("정말 삭제하시겠습니까?")) {
-        location.href = '/employee/delete/' + empNo;  // 삭제 처리
-    }
 }
 
 console.log("사원.js loaded");

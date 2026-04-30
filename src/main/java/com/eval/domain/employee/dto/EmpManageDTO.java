@@ -25,8 +25,11 @@ public class EmpManageDTO {
 
     private String email;
     private String phone;
-    private String positionLevel; //
-    private String job;
+    private Long jobId;
+    private String jobName;
+    
+    private Long levelId;
+    private String levelName; 
     
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate hireDate;
@@ -43,5 +46,6 @@ public class EmpManageDTO {
         return position;
     }
     
+    private int overdueResignFlag;// 
     
 }

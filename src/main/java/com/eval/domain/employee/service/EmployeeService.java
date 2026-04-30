@@ -15,6 +15,11 @@ import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -96,16 +101,19 @@ public class EmployeeService {
         return employeeMapper.findAll();
     }
     
-    public List<EmpManageDTO> findEmployees(String keyword, String deptId, String status) {
-        if (isEmpty(keyword) && isEmpty(deptId) && isEmpty(status)) {
-        	List<EmpManageDTO> list = employeeMapper.findAllEmp();
-        	for (EmpManageDTO dto : list) {
-        	    System.out.println("DB → DTO locked = " + dto.getLocked()
-        	        + " / empNo = " + dto.getEmpNo());
-        	}
-        	return list;
-        }
-        return employeeMapper.search(keyword, deptId, status);
+    public Page<EmpManageDTO> findEmployees(String keyword, String deptId, String status, int page, int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        int offset = page * size;
+
+        List<EmpManageDTO> list =
+                employeeMapper.search(keyword, deptId, status, offset, size);
+
+        int total =
+                employeeMapper.countEmployees(keyword, deptId, status);
+
+        return new PageImpl<>(list, pageable, total);
     }
 
     private boolean isEmpty(String str) {
@@ -141,8 +149,8 @@ public class EmployeeService {
         employee.setRole(employeeDTO.getRole());
         employee.setEmail(employeeDTO.getEmail());
         employee.setPhone(employeeDTO.getPhone());
-        employee.setPositionLevel(employeeDTO.getPositionLevel());
-        employee.setJob(employeeDTO.getJob());
+        employee.setLevelId(employeeDTO.getLevelId());
+        employee.setJobId(employeeDTO.getJobId());
         employee.setHireDate(employeeDTO.getHireDate());
 
         // 기본값 설정 (필요 시)
@@ -189,45 +197,46 @@ public class EmployeeService {
     	employee.setEmail(dto.getEmail());
     	employee.setPhone(dto.getPhone());
     	employee.setDeptId(dto.getDeptId());
-    	employee.setPositionLevel(dto.getPositionLevel());
-    	employee.setJob(dto.getJob());
+    	employee.setLevelId(dto.getLevelId());
+    	employee.setJobId(dto.getJobId());
     	employee.setHireDate(dto.getHireDate());
     	employee.setResignDate(dto.getResignDate());
     	employee.setRole(dto.getRole());
         
+    	boolean wantResigned = "RESIGNED".equals(dto.getStatus());
 
-    	boolean isResigned =
+    	boolean isResignDateValid =
     	        dto.getResignDate() != null
     	        && !dto.getResignDate().isAfter(LocalDate.now());
-
-    	if (isResigned) {
+    	
+    	if (wantResigned && !isResignDateValid) {
+    	    throw new IllegalArgumentException("퇴직일이 아직 도래하지 않았습니다. \n퇴직일을 수정하거나 재직상태를 유지해주세요.");
+    	}
+    	
+    	if (wantResigned && isResignDateValid) {
     	    employee.setStatus("RESIGNED");
     	    employee.setLocked(1);
     	    employee.setLockedAt(LocalDateTime.now());
-    	} else {
-    	    employee.setStatus(dto.getStatus());
     	    
-    	}
-    	
-    	if ("부서장".equals(employee.getPosition()) && isResigned) {
+    	    // 🔥 부서장일 경우 부서 leader 제거
+    	    if ("부서장".equals(employee.getPosition())) {
 
-    	    // 1. 직원 직책 제거
-    	    //employee.setPosition("");
+    	        Department department = departmentRepository
+    	                .findById(employee.getDeptId())
+    	                .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
 
-    	    // 2. 부서 정보 조회
-    	    Department department = departmentRepository
-    	            .findById(employee.getDeptId())
-    	            .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+    	        // 본인이 현재 부서장일 때만 제거
+    	        if (employee.getEmpNo() != null &&
+    	            employee.getEmpNo().equals(department.getLeaderEmpNo())) {
 
-    	    // 3. 부서장 사번 제거 (핵심)
-    	    if (employee.getEmpNo() != null &&
-    	    	    employee.getEmpNo().equals(department.getLeaderEmpNo())) {
-    	        department.setLeaderEmpNo(null);
-    	        department.setUpdatedBy(adminNo);
-    	        department.setUpdatedAt(LocalDateTime.now());
+    	            department.setLeaderEmpNo(null);
+    	            department.setUpdatedBy(adminNo);
+    	            department.setUpdatedAt(LocalDateTime.now());
+    	        }
     	    }
-
-    	    System.out.println("부서장 퇴사 → 부서장 공석 처리 완료 (deptId=" + employee.getDeptId() + ")");
+    	}
+    	else {
+    	    employee.setStatus(dto.getStatus());
     	}
     	
     	if (employee.getPosition() == null) {

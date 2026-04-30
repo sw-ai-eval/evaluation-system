@@ -27,7 +27,7 @@ public class HomeController {
                 model.addAttribute("empName", employee.getName());
                 model.addAttribute("empNo", employee.getEmpNo());
                 model.addAttribute("deptName", employee.getDeptName());
-                model.addAttribute("position", employee.getPositionLevel());
+                model.addAttribute("position", employee.getLevelName());
             }
         }
         

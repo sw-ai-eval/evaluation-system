@@ -33,7 +33,7 @@
 	        </form>
 
 	        <!-- 사원 등록 버튼 -->
-	        <button class="primary" id="open-register-form-btn">+ 사원 등록</button>
+	        <button class="register-btn" id="open-register-form-btn">+ 사원 등록</button>
         </div>
 
         <div class="list-section">
@@ -52,14 +52,14 @@
                 </thead>
 
                 <tbody>
-                    <tr th:each="emp : ${employeeList}">
+                    <tr th:each="emp : ${employeeList}"  th:classappend="${emp.overdueResignFlag == 1} ? 'warning-row'">
                         <td th:text="${emp.empNo}"></td>
                         <td th:text="${emp.name}"></td>
                         <td>
 						    <span th:text="${emp.deptName}"></span>
 						    (<span th:text="${emp.deptId}"></span>)
 						</td>
-                        <td th:text="${emp.positionLevel}"></td>
+                        <td th:text="${emp.levelName}"></td>
                         <td th:text="${emp.email}"></td>
                         <td th:text="${emp.phone}"></td>
                         <td>
@@ -84,17 +84,66 @@
 				            		th:data-emp-no="${emp.empNo}"
 				                    th:data-emp-name="${emp.name}"
 				                    th:data-emp-dept="${emp.deptId}"
-				                    th:data-emp-position="${emp.positionLevel}"
+				                    th:data-emp-levelName="${emp.levelName}"
 				                    th:data-emp-email="${emp.email}"
 				                    th:data-emp-phone="${emp.phone}"
 				                    th:data-emp-status="${emp.status}">
 				                수정
 				            </button>
-				            
+				            <span th:if="${emp.overdueResignFlag == 1}" class="badge danger">
+						    ⚠ 퇴직 처리 지연
+							</span>
                         </td>
                     </tr>
                 </tbody>
+                
             </table>
+            <!-- 데이터 없을 때 -->
+				    <div class="empty-state" th:if="${employeeList != null and #lists.isEmpty(employeeList)}">
+					    
+					    <div class="empty-icon">🔍</div>
+					
+					    <div class="empty-title">
+					        관련된 사원이 없습니다.
+					    </div>
+					
+					    <div class="empty-desc">
+					        조건을 변경하거나 다른 사원을 검색해보세요.
+					    </div>
+					
+					</div>
+            <div class="pagination">
+			
+			    <!-- 이전 버튼 -->
+			    <a th:if="${!employeePage.first}"
+			       th:href="@{/employee(page=${employeePage.number - 1}, 
+			                           keyword=${keyword}, 
+			                           deptId=${deptId}, 
+			                           status=${status})}">
+			        이전
+			    </a>
+			
+			    <!-- 페이지 번호 -->
+			    <span th:each="i : ${#numbers.sequence(0, employeePage.totalPages - 1)}">
+			        <a th:href="@{/employee(page=${i}, 
+			                               keyword=${keyword}, 
+			                               deptId=${deptId}, 
+			                               status=${status})}"
+			           th:text="${i + 1}"
+			           th:classappend="${i == employeePage.number} ? 'active'">
+			        </a>
+			    </span>
+			
+			    <!-- 다음 버튼 -->
+			    <a th:if="${!employeePage.last}"
+			       th:href="@{/employee(page=${employeePage.number + 1}, 
+			                           keyword=${keyword}, 
+			                           deptId=${deptId}, 
+			                           status=${status})}">
+			        다음
+			    </a>
+			
+			</div>
         </div>
 
 	</div>
@@ -130,14 +179,28 @@
                     	</div> 
                     </div> 
                     <div class="row-group"> 
-                    	<div> 
-                    		<label>직급</label> 
-                    		<input type="text" th:field="*{positionLevel}" required/> 
-                    	</div> 
-                    	<div> 
-                    		<label>직종</label> 
-                    		<input type="text" th:field="*{job}" required/> 
-                    	</div> 
+                    	<div>
+						    <label>직급</label>
+						    <select th:field="*{levelId}" required>
+						        <option value="">선택</option>
+						
+						        <option th:each="code : ${level}"
+						                th:value="${code.id}"
+						                th:text="${code.name}">
+						        </option>
+						    </select>
+						</div>
+                    	<div>
+						    <label>직종</label>
+						    <select th:field="*{jobId}" required>
+						        <option value="">선택</option>
+						
+						        <option th:each="code : ${jobCode}"
+						                th:value="${code.id}"
+						                th:text="${code.name}">
+						        </option>
+						    </select>
+						</div> 
                     </div> 
                     <div class="row-group"> 
                     	<div> 
@@ -224,14 +287,28 @@
                     	</div> 
                     </div> 
                     <div class="row-group"> 
-                    	<div> 
-                    		<label>직급</label> 
-                    		<input type="text" th:field="*{positionLevel}" required/> 
-                    	</div> 
-                    	<div> 
-                    		<label>직종</label> 
-                    		<input type="text" th:field="*{job}" required /> 
-                    	</div> 
+                    	<div>
+						    <label>직급</label>
+						    <select th:field="*{levelId}" required>
+						        <option value="">선택</option>
+						
+						        <option th:each="code : ${level}"
+						                th:value="${code.id}"
+						                th:text="${code.name}">
+						        </option>
+						    </select>
+						</div>
+                    	<div>
+						    <label>직종</label>
+						    <select th:field="*{jobId}" required>
+						        <option value="">선택</option>
+						
+						        <option th:each="code : ${jobCode}"
+						                th:value="${code.id}"
+						                th:text="${code.name}">
+						        </option>
+						    </select>
+						</div> 
                     </div> 
                     <div class="row-group"> 
                     	<div> 

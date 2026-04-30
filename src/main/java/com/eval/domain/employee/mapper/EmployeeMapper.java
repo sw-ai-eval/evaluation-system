@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.data.domain.Page;
 
 @Mapper
 public interface EmployeeMapper {
@@ -32,9 +33,19 @@ public interface EmployeeMapper {
     
     void updateLockedStatus(String empNo);
     
-    //사원 검색 용
-    List<EmpManageDTO> search(@Param("keyword") String keyword, @Param("deptId") String deptId, @Param("status") String status);
+    //사원 페이지 별 조회 용
+    List<EmpManageDTO> search(@Param("keyword") String keyword,
+            @Param("deptId") String deptId,
+            @Param("status") String status,
+            @Param("offset") int offset,
+            @Param("size") int size);
     
+    
+    int countEmployees(@Param("keyword") String keyword,
+            @Param("deptId") String deptId,
+            @Param("status") String status);
+    
+    // 사원 수정 폼 데이터 삽입 용
     EmpManageDTO findByEmpNoDetail(String empNo);
     
     // 마이페이지에서 본인 비밀번호 변경
