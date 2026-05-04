@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.eval.domain.evaluation.EvalType;
@@ -46,18 +50,34 @@ public class EvaluationController {
     }
 
     @GetMapping
-    public String evaluationSetting(Model model) {
-        // 1. 부서 목록 조회
+    public String evaluationSetting(
+            @RequestParam(value = "typePage", defaultValue = "0") int typePageNum,
+            @RequestParam(value = "itemPage", defaultValue = "0") int itemPageNum,
+            Model model) {
+        
+        // 1. 부서 목록 (가중치 설정용)
         List<Department> deptList = departmentRepository.findAll();
         model.addAttribute("deptList", deptList);
         
-        // 2. 평가 유형 목록 조회
+        // 2. 모달창 내 '대상 유형' 셀렉트 박스용 전체 목록
         List<EvalType> typeList = evalTypeRepository.findAll();
         model.addAttribute("typeList", typeList);
         
-        // 3. 평가 문항 목록 조회 (전체)
-        List<EvalItem> itemList = evalItemRepository.findAll();
-        model.addAttribute("itemList", itemList);
+        // 3. 가중치 탭용 동적 목록 (운영 상태 '활성' + 가중치 반영 'Y'만 가져옴)
+        List<EvalType> weightTypes = evalTypeRepository.findByStatusTrueAndHasWeightTrue();
+        model.addAttribute("weightTypes", weightTypes);
+        
+        int pageSize = 10;
+        
+        // 4. 평가 유형 페이징 목록 (표 출력용, 등록순 ASC)
+        PageRequest typePageReq = PageRequest.of(typePageNum, pageSize, Sort.by(Sort.Direction.ASC, "id"));
+        Page<EvalType> typePage = evalTypeRepository.findAll(typePageReq);
+        model.addAttribute("typePage", typePage);
+        
+        // 5. 평가 문항 페이징 목록 (표 출력용, 등록순 ASC)
+        PageRequest itemPageReq = PageRequest.of(itemPageNum, pageSize, Sort.by(Sort.Direction.ASC, "id"));
+        Page<EvalItem> itemPage = evalItemRepository.findAll(itemPageReq);
+        model.addAttribute("itemPage", itemPage);
         
         return "evaluation/setting";
     }
@@ -67,6 +87,23 @@ public class EvaluationController {
     @ResponseBody
     public String saveEvalType(@RequestBody EvalType evalType) {
         try {
+            boolean isDuplicate = false;
+            
+            if (evalType.getId() == null) {
+                // 신규 등록 시 연도+이름 중복 체크
+                isDuplicate = evalTypeRepository.existsByYearAndName(evalType.getYear(), evalType.getName());
+            } else {
+                // 수정 시 기존 연도나 이름과 달라졌을 때만 중복 체크
+                EvalType existing = evalTypeRepository.findById(evalType.getId()).orElseThrow();
+                if (!existing.getName().equals(evalType.getName()) || !existing.getYear().equals(evalType.getYear())) {
+                    isDuplicate = evalTypeRepository.existsByYearAndName(evalType.getYear(), evalType.getName());
+                }
+            }
+
+            if (isDuplicate) {
+                return "error: 이미 해당 연도에 [" + evalType.getName() + "] 평가 유형이 존재합니다.";
+            }
+
             if (evalType.getId() != null) {
                 EvalType existing = evalTypeRepository.findById(evalType.getId()).orElseThrow();
                 existing.setName(evalType.getName());
@@ -75,6 +112,7 @@ public class EvaluationController {
                 existing.setEndDate(evalType.getEndDate());
                 existing.setStatus(evalType.isStatus());
                 existing.setGuideline(evalType.getGuideline());
+                existing.setHasWeight(evalType.isHasWeight()); // 가중치 반영 여부 업데이트
                 existing.setUpdatedBy("ADMIN");
                 existing.setUpdatedAt(LocalDateTime.now());
                 evalTypeRepository.save(existing);
@@ -90,49 +128,35 @@ public class EvaluationController {
         }
     }
 
-    // --- 평가 문항 저장 (DDL 명세에 맞춰 완벽 수정) ---
+    // --- 평가 문항 저장 ---
     @PostMapping("/save-item")
     @ResponseBody
     public String saveEvalItem(@RequestBody Map<String, Object> params) {
         try {
             EvalItem item = new EvalItem();
             
-            // 1. 수정 시 ID 처리
             if (params.get("id") != null && !params.get("id").toString().isEmpty()) {
                 item = evalItemRepository.findById(Integer.parseInt(params.get("id").toString())).orElseThrow();
             }
 
-            // 2. 부모인 EvalType 연결
             Integer typeId = Integer.parseInt(params.get("typeId").toString());
             EvalType type = evalTypeRepository.findById(typeId).orElseThrow();
             
             item.setEvalType(type);
             item.setCategory(params.get("category").toString());
-            
-            // 🌟 DDL 컬럼명 매핑 (content -> question)
             item.setContent(params.get("content").toString()); 
-            
-            // 🌟 DDL 컬럼명 매핑 (answerType -> question_type)
             item.setAnswerType(params.get("answerType").toString()); 
-            
-            // 🌟 DDL is_common은 BIT 타입이므로 boolean으로 처리 ("Y"일 때 true)
             item.setCommon("Y".equals(params.get("isCommon").toString()));
             
-            // 🌟 DDL explanation (NOT NULL 제약조건 대응)
             String category = params.get("category").toString();
             item.setExplanation(category + " 항목에 대한 세부 평가 문항입니다.");
 
             if (item.getId() == null) {
-                // 신규 등록
                 item.setCreatedBy("ADMIN");
-                // createdAt은 엔티티 초기값 사용
             } else {
-                // 수정
                 item.setUpdatedBy("ADMIN");
                 item.setUpdatedAt(LocalDateTime.now());
             }
-
-            // 🌟 DDL에 없는 sortOrder 세팅 로직은 완전히 제거함
 
             evalItemRepository.save(item);
             return "success";

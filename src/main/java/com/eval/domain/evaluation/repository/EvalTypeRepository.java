@@ -6,4 +6,8 @@ import java.util.List;
 
 public interface EvalTypeRepository extends JpaRepository<EvalType, Integer> {
     List<EvalType> findByYear(Integer year);
+    
+    boolean existsByYearAndName(Integer year, String name);
+    
+    List<EvalType> findByStatusTrueAndHasWeightTrue();
 }

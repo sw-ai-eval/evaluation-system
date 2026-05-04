@@ -3,9 +3,13 @@ package com.eval.domain.admin.controller;
 import com.eval.domain.employee.dto.EmployeeDTO;
 import com.eval.domain.employee.service.EmployeeService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.List;
 
 @Controller
@@ -16,10 +20,25 @@ public class AdminController {
     private final EmployeeService employeeService;
 
     @GetMapping("/management")
-    public String adminMain(Model model) {
-        // DB에서 전체 사원 목록을 가져와서 'employees'라는 이름으로 화면에 전달
-        List<EmployeeDTO> employees = employeeService.getAllEmployees();
-        model.addAttribute("employees", employees);
+    public String adminMain(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        Model model) {
+        
+        List<EmployeeDTO> allEmployees = employeeService.getAllEmployees();
+
+        int pageSize = 10;
+        int start = page * pageSize;
+        int end = Math.min((start + pageSize), allEmployees.size());
+        
+        if (start > allEmployees.size()) {
+            start = allEmployees.size();
+        }
+        
+        List<EmployeeDTO> pagedList = allEmployees.subList(start, end);
+        Page<EmployeeDTO> employeePage = new PageImpl<>(pagedList, PageRequest.of(page, pageSize), allEmployees.size());
+
+        model.addAttribute("employees", employeePage);
+        
         return "admin/management";
     }
     

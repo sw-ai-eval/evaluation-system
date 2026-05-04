@@ -10,16 +10,14 @@
     <style>
         body { margin: 0; display: flex; background-color: #f4f6f9; font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; }
         
-        /* 🌟 메인 컨텐츠 영역 */
         .main-content {
             flex-grow: 1;
-            padding: 40px;                /* 상하좌우 여백 통일 */
+            padding: 40px;
             box-sizing: border-box;
             display: flex;
-            justify-content: flex-start;  /* 컨텐츠를 왼쪽부터 배치 */
+            justify-content: flex-start;
         }
 
-        /* 🌟 관리자 컨테이너 */
         .admin-container {
             width: 100%;
             max-width: 1400px;
@@ -50,7 +48,6 @@
             color: #555;
         }
 
-        /* 배지 스타일 */
         .badge {
             padding: 6px 14px;
             border-radius: 20px;
@@ -64,8 +61,8 @@
         .bg-RESIGNED { background: #ffeef0; color: #f85149; }  
         .bg-locked { background: #fff3cd; color: #856404; }   
         .bg-me { background: #f0f7ff; color: #0969da; }       
+        .bg-leave { background: #fff3bf; color: #e67700; } 
 
-        /* 버튼 스타일 */
         .btn-reset {
             padding: 7px 15px;
             background-color: #0d6efd;
@@ -77,6 +74,21 @@
             transition: background 0.2s;
         }
         .btn-reset:hover { background-color: #0b5ed7; }
+
+        .pagination { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 16px; 
+            margin-top: 30px; 
+            font-size: 15px;
+        }
+        .page-icon { color: #374151; text-decoration: none; }
+        .page-icon:hover:not(.disabled) { color: #000; }
+        .page-icon.disabled { color: #d1d5db; pointer-events: none; }
+        .page-link { color: #9ca3af; text-decoration: none; }
+        .page-link:hover:not(.disabled) { color: #4b5563; }
+        .page-link.active { color: #000000; font-weight: bold; }
     </style>
 </head>
 
@@ -91,47 +103,67 @@
             <table>
                 <thead>
                     <tr>
-                        <th>사번</th>
-                        <th>이름</th>
-                        <th>상태</th>
-                        <th>잠금여부</th>
-                        <th>관리</th>
+                        <th style="width: 15%;">사번</th>
+                        <th style="width: 20%;">이름</th>
+                        <th style="width: 20%;">상태</th>
+                        <th style="width: 25%;">잠금여부</th>
+                        <th style="width: 20%;">관리</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="emp : ${employees}">
+                    <tr th:each="emp : ${employees.content}">
                         <td th:text="${emp.empNo}">1000</td>
+                        
+                        <!-- 🌟 1. name -> empName 으로 수정 -->
                         <td th:text="${emp.empName}">관리자</td>
+                        
                         <td>
                             <span th:if="${emp.status == 'ACTIVE' or emp.status == '재직'}" class="badge bg-active">재직</span>
+                            <span th:if="${emp.status == 'LEAVE' or emp.status == '휴직'}" class="badge bg-leave">휴직</span>
                             <span th:if="${emp.status == 'RESIGNED' or emp.status == '퇴사'}" class="badge bg-RESIGNED">퇴사</span>
                         </td>
                         <td>
                             <span th:if="${emp.empNo == #authentication.name}" class="badge bg-me">로그인 계정</span>
                             <span th:if="${(emp.status == 'RESIGNED' or emp.status == '퇴사') and emp.empNo != #authentication.name}">-</span>
-                            <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and (emp.locked == 1 or emp.failCount >= 5) and emp.empNo != #authentication.name}" 
+                            
+                            <span th:if="${(emp.status != 'RESIGNED' and emp.status != '퇴사') and (emp.locked == 1 or emp.failCount ge 5) and emp.empNo != #authentication.name}" 
                                   class="badge bg-locked">잠김</span>
-                            <span th:if="${(emp.status == 'ACTIVE' or emp.status == '재직') and emp.locked == 0 and emp.failCount < 5 and emp.empNo != #authentication.name}"
+                                  
+                            <span th:if="${(emp.status != 'RESIGNED' and emp.status != '퇴사') and emp.locked == 0 and emp.failCount lt 5 and emp.empNo != #authentication.name}"
                                   class="badge bg-normal">정상</span>
                         </td>
                         <td>
-                            <button th:if="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}" 
+                            <!-- 🌟 2. 파라미터 name -> empName 으로 수정 -->
+                            <button th:if="${(emp.locked == 1 or emp.failCount ge 5) and emp.status != 'RESIGNED' and emp.status != '퇴사' and emp.empNo != #authentication.name}" 
                                     class="btn-reset" 
-                                    th:onclick="doReset([[${emp.empNo}]], [[${emp.empName}]])">
+                                    th:onclick="|doReset('${emp.empNo}', '${emp.empName}')|">
                                 계정 복구
                             </button>
-                            <span th:unless="${(emp.locked == 1 or emp.failCount >= 5) and emp.status != 'RESIGNED' and emp.empNo != #authentication.name}">-</span>
+                            
+                            <span th:unless="${(emp.locked == 1 or emp.failCount ge 5) and emp.status != 'RESIGNED' and emp.status != '퇴사' and emp.empNo != #authentication.name}">-</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
+
+            <div class="pagination" th:if="${employees.totalPages gt 0}">
+                <a th:href="@{/admin/management(page=0)}" th:classappend="${employees.first} ? 'disabled' : ''" class="page-icon">&laquo;</a>
+                <a th:href="@{/admin/management(page=${employees.number - 1})}" th:classappend="${employees.first} ? 'disabled' : ''" class="page-icon">&lsaquo;</a>
+                
+                <a th:each="pageNum : ${#numbers.sequence(0, employees.totalPages - 1)}"
+                   th:href="@{/admin/management(page=${pageNum})}"
+                   th:text="${pageNum + 1}"
+                   th:classappend="${pageNum == employees.number} ? 'active' : ''" class="page-link">1</a>
+                   
+                <a th:href="@{/admin/management(page=${employees.number + 1})}" th:classappend="${employees.last} ? 'disabled' : ''" class="page-icon">&rsaquo;</a>
+                <a th:href="@{/admin/management(page=${employees.totalPages - 1})}" th:classappend="${employees.last} ? 'disabled' : ''" class="page-icon">&raquo;</a>
+            </div>
         </div>
     </div>
 
     <script>
     function doReset(empNo, empName) {
         const message = `[${empName}] 사원의 계정을 복구하시겠습니까?\n(비밀번호가 '1234'로 초기화되며 잠금이 해제됩니다.)`;
-        
         if(!confirm(message)) return;
 
         const params = new URLSearchParams();

@@ -20,12 +20,19 @@ public class EvalType {
 
     @Column(name = "guideline")
     private String guideline;
+    
+    @Column(name = "has_weight")
+    private boolean hasWeight = true; 
+
     @Column(name = "created_by")
     private String createdBy;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
+    
     @Column(name = "updated_by", length = 50)
     private String updatedBy;
+    
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }

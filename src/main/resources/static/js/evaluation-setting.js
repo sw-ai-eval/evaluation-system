@@ -45,6 +45,7 @@ window.calculateTotal = function() {
     const inputs = document.querySelectorAll('.weight-input');
     const alertBox = document.getElementById('weightTotalAlert');
     const saveBtn = document.getElementById('btnSaveWeight');
+    const sumSpan = document.getElementById('weightTotalSum');
     
     if (!alertBox || !saveBtn) {
         return;
@@ -56,19 +57,17 @@ window.calculateTotal = function() {
         total += val;
     });
     
+    if (sumSpan) {
+        sumSpan.innerText = total;
+    }
+    
     if(total === 100) {
         alertBox.className = "weight-status status-ok";
-        alertBox.style.backgroundColor = "#dcfce7";
-        alertBox.style.color = "#166534";
-        alertBox.innerHTML = `✅ 합계: <span>${total}</span>%`;
         saveBtn.disabled = false;
         saveBtn.style.opacity = "1";
         saveBtn.style.cursor = "pointer";
     } else {
         alertBox.className = "weight-status status-err";
-        alertBox.style.backgroundColor = "#fee2e2";
-        alertBox.style.color = "#991b1b";
-        alertBox.innerHTML = `⚠️ 합계: <span>${total}</span>%`;
         saveBtn.disabled = true;
         saveBtn.style.opacity = "0.5";
         saveBtn.style.cursor = "not-allowed";
@@ -86,10 +85,10 @@ function saveWeightsToServer() {
     const weights = [];
     const inputs = document.querySelectorAll('.weight-input');
     
-    inputs.forEach((input, index) => {
+    inputs.forEach((input) => {
         weights.push({
             deptId: deptId,
-            typeId: index + 1, 
+            typeId: parseInt(input.getAttribute('data-typeid')),
             weight: parseInt(input.value)
         });
     });
@@ -146,15 +145,24 @@ function loadDeptSettings(deptId) {
     const gradeC = document.getElementById('gradeC');
     const gradeD = document.getElementById('gradeD');
 
-		weightInputs[0].value = 20; 
-	    weightInputs[1].value = 40; 
-	    weightInputs[2].value = 40;
+    weightInputs.forEach(input => {
+        const name = input.getAttribute('data-name');
+        if (name && name.includes("근태")) {
+            input.value = 20;
+        } else if (name && name.includes("성과")) {
+            input.value = 40;
+        } else if (name && name.includes("역량")) {
+            input.value = 40;
+        } else {
+            input.value = 0;
+        }
+    });
 
-	    gradeS.value = 10; 
-	    gradeA.value = 30; 
-	    gradeB.value = 70; 
-	    gradeC.value = 90; 
-	    gradeD.value = 100;
+    gradeS.value = 10; 
+    gradeA.value = 30; 
+    gradeB.value = 70; 
+    gradeC.value = 90; 
+    gradeD.value = 100;
     
     window.calculateTotal(); 
 }
@@ -206,6 +214,7 @@ window.openNewTypeModal = function() {
     document.getElementById('newTypeStartDate').value = todayStr;
     document.getElementById('newTypeEndDate').value = nextMonthStr;
     document.getElementById('newTypeStatus').value = 'true'; 
+    document.getElementById('newTypeHasWeight').value = 'true';
     
     window.updateMinEndDate(todayStr);
     
@@ -213,14 +222,15 @@ window.openNewTypeModal = function() {
     document.getElementById('typeModal').style.display = 'flex';
 };
 
-window.openEditTypeModal = function(id, name, year, startDate, endDate, statusStr, guideline) {
+window.openEditTypeModal = function(id, name, year, startDate, endDate, statusStr, guideline, hasWeight) {
     document.getElementById('typeId').value = id;
     document.getElementById('newTypeName').value = name;
     document.getElementById('newTypeYear').value = year;
     document.getElementById('newTypeStartDate').value = startDate;
     document.getElementById('newTypeEndDate').value = endDate;
     document.getElementById('newTypeStatus').value = statusStr; 
-    document.getElementById('newTypeGuideline').value = guideline && guideline !== 'null' ? guideline : ''; // 🌟 기존 가이드라인 로드
+    document.getElementById('newTypeGuideline').value = guideline && guideline !== 'null' ? guideline : ''; 
+    document.getElementById('newTypeHasWeight').value = hasWeight; 
     
     window.updateMinEndDate(startDate);
     
@@ -235,6 +245,7 @@ window.saveTypeToServer = function() {
     const startDate = document.getElementById('newTypeStartDate').value;
     const endDate = document.getElementById('newTypeEndDate').value;
     const status = document.getElementById('newTypeStatus').value === 'true';
+    const hasWeight = document.getElementById('newTypeHasWeight').value === 'true';
     const guideline = document.getElementById('newTypeGuideline').value;
 
     if (!name || !startDate || !endDate) {
@@ -248,6 +259,7 @@ window.saveTypeToServer = function() {
         startDate: startDate + "T00:00:00", 
         endDate: endDate + "T23:59:59",
         status: status,
+        hasWeight: hasWeight,
         guideline: guideline
     };
     
@@ -266,7 +278,7 @@ window.saveTypeToServer = function() {
             alert("✅ 저장되었습니다.");
             location.reload(); 
         } else {
-            alert("❌ 실패: " + data);
+            alert("❌ " + data);
         }
     })
     .catch(error => {
@@ -297,8 +309,6 @@ window.deleteTypeFromServer = function(id) {
         alert("서버 통신 중 오류가 발생했습니다.");
     });
 };
-
-// --- [평가 문항 관리] 관련 함수들 ---
 
 window.openNewItemModal = function() {
     document.getElementById('itemId').value = '';
@@ -334,7 +344,7 @@ window.saveItemToServer = function() {
     };
 
     if (!data.typeId) { alert("평가 유형을 선택해주세요."); return; }
-	if (!data.category) { alert("카테고리를 입력해주세요."); return; }
+    if (!data.category) { alert("카테고리를 입력해주세요."); return; }
     if (!data.content) { alert("문항 내용을 입력해주세요."); return; }
 
     fetch('/evaluation/save-item', {
