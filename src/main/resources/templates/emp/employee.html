@@ -167,9 +167,9 @@
                     </div> 
                     <div class="row-group"> 
                     	<div> 
-                    		<label>핸드폰</label> 
-                    		<input type="text" th:field="*{phone}" required /> 
-                    	</div> 
+                    		<label>핸드폰</label>
+							<input type="tel" pattern="010-[0-9]{4}-[0-9]{4}" placeholder="010-1234-5678" th:field="*{phone}" required />
+						</div>
                     	<div> 
                     		<label>부서</label> 
                     		<select th:field="*{deptId}" required> 

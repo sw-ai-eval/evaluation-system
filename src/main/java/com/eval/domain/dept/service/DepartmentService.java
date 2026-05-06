@@ -36,8 +36,9 @@ public class DepartmentService {
     public List<Department> findDepartmentNoDelete(){
     	return departmentRepository.findByDeleteYn(false);
     }
-    
-    
+
+    ////////////////////////////////// 사용하는 부서만 조회
+    public List<Department> findDepartmentUse(){return departmentRepository.findByUseYn(true);}
     
     ////////////////////////////////// 모든 부서 조회 용
     public List<Department> findAll() {
@@ -291,7 +292,7 @@ public class DepartmentService {
     
     @Transactional
     public void delete(String deptId) {
-    	departmentRepository.deleteByDeptId(deptId);
+        departmentRepository.deleteByDeptId(deptId);
     }
     ////////////////////////////////////////////////////////////// 부서 검색
     

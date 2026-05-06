@@ -1,0 +1,183 @@
+/* 전체 */
+body {
+    font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+    margin: 0;
+    background-color: #f7f9fc;
+    color: #333;
+}
+
+.container {
+    padding: 30px;
+}
+
+/* 제목 */
+h2 {
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* 상단 버튼 */
+.top-actions {
+    margin-bottom: 20px;
+}
+
+button {
+    padding: 10px 16px;
+    margin-right: 8px;
+    border: none;
+    cursor: pointer;
+    border-radius: 10px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+}
+
+.btn-primary { background-color: #4CAF50; color: white; }
+.btn-danger { background-color: #ef5350; color: white; }
+.btn-secondary { background-color: #607d8b; color: white; }
+
+/* 필터 영역 (카드 느낌) */
+.filter-box {
+    background: white;
+    padding: 18px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+
+.filter-box label {
+    font-size: 13px;
+    margin-right: 6px;
+    color: #666;
+}
+
+.filter-box select,
+.filter-box input {
+    padding: 8px 10px;
+    margin-right: 12px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fafafa;
+    transition: all 0.2s;
+}
+
+.filter-box select:focus,
+.filter-box input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    background: white;
+}
+
+/* 테이블 카드 */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* 헤더 */
+th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    font-size: 13px;
+    color: #666;
+    padding: 12px;
+}
+
+/* 셀 */
+td {
+    padding: 14px;
+    text-align: center;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+/* hover 효과 */
+tbody tr:hover {
+    background-color: #fafafa;
+}
+
+/* 상태 태그 */
+.tag {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tag-success {
+    background: #e6f4ea;
+    color: #2e7d32;
+}
+
+.tag-warning {
+    background: #fff8e1;
+    color: #f57c00;
+}
+
+/* 수정 버튼 */
+.edit-btn {
+    background-color: #2196F3;
+    color: white;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 13px;
+}
+
+.edit-btn:hover {
+    background-color: #1976d2;
+}
+
+/* 필터 내부 줄 나누기 */
+.filter-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+}
+
+/* 사원 영역 카드 */
+.employee-section {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+/* 검색 영역 */
+.search-box {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.search-box label {
+    font-size: 13px;
+    margin-right: 6px;
+    color: #666;
+}
+
+.search-box input {
+    padding: 8px 10px;
+    margin-right: 10px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    background: #fafafa;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    background: white;
+}
