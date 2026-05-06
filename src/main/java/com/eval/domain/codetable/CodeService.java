@@ -14,7 +14,6 @@ public class CodeService {
     private final CodeCommonRepository commonRepo;
 
     public List<CodeCommon> getCodes(String groupCode) {
-    	System.out.println("받은 groupCode = [" + groupCode + "]");
         CodeGroup group = groupRepo.findByGroupCode(groupCode)
                 .orElseThrow(() -> new RuntimeException("그룹 없음"));
 

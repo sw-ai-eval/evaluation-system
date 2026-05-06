@@ -14,7 +14,7 @@
     <link rel="stylesheet" th:href="@{/css/evaluator.css}" th:if="${pageType == 'evaluator/evaluator_mapping'}">
 </head>
 
-<body class="layout-body">
+<body class="layout-body" th:attr="data-error-message=${errorMessage}">
 
 
     <div th:replace="~{layout/sidebar :: sidebar}"></div>
@@ -43,6 +43,8 @@
     <script th:src="@{/js/department.js}" th:if="${pageType == 'dept/department'}"></script>
     <!-- 사원 페이지일 때만 사원 JS 로드 -->
     <script th:src="@{/js/employee.js}" th:if="${pageType == 'emp/employee'}"></script>
+    <!-- 평가자 관리 페이지일 때만 사원 JS 로드 -->
+    <script th:src="@{/js/evaluator.js}" th:if="${pageType == 'evaluator/evaluator_mapping'}"></script>
 
 </body>
 </html>
