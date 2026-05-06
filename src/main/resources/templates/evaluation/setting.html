@@ -110,7 +110,6 @@
                 background-color: #f9fafb; 
             }
             
-            /* 무채색 페이징 UI */
             .pagination { 
                 display: flex; 
                 justify-content: center; 
@@ -309,8 +308,9 @@
                 <thead>
                     <tr>
                         <th style="width: 15%;">유형명</th>
-                        <th style="width: 15%;">카테고리</th>
-                        <th style="width: 40%;">문항 내용</th>
+                        <th style="width: 10%;">카테고리</th>
+                        <th style="width: 35%;">문항 내용</th>
+                        <th style="width: 10%;">배점</th>
                         <th style="width: 10%;">답변 타입</th>
                         <th style="width: 10%;">공통</th>
                         <th style="width: 10%;">관리</th>
@@ -321,6 +321,7 @@
                         <td th:text="${item.evalType != null ? item.evalType.name : ''}"></td>
                         <td th:text="${item.category}"></td>
                         <td th:text="${item.content}"></td>
+                        <td th:text="${item.weight}"></td>
                         <td th:text="${item.answerType == 'SCORE' ? '점수형' : '서술형'}"></td>
                         <td th:text="${item.isCommon ? 'Y' : 'N'}"></td>
                         <td class="actions-cell">
@@ -329,6 +330,7 @@
                                     th:data-typeid="${item.evalType != null ? item.evalType.id : ''}"
                                     th:data-category="${item.category}"
                                     th:data-content="${item.content}"
+                                    th:data-weight="${item.weight}" 
                                     th:data-answertype="${item.answerType}"
                                     th:data-iscommon="${item.isCommon ? 'Y' : 'N'}"
                                     onclick="window.openEditItemModal(this)">수정</button>
@@ -337,26 +339,8 @@
                                     onclick="window.deleteItemFromServer(this.getAttribute('data-id'))">삭제</button>
                         </td>
                     </tr>
-                    <tr th:if="${itemPage.empty}">
-                        <td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">
-                            등록된 평가 문항이 없습니다.
-                        </td>
-                    </tr>
                 </tbody>
             </table>
-
-            <div class="pagination" th:if="${itemPage.totalPages > 0}">
-                <a th:href="@{/evaluation(typePage=${typePage.number}, itemPage=0)}" th:classappend="${itemPage.first} ? 'disabled' : ''" class="page-icon">&laquo;</a>
-                <a th:href="@{/evaluation(typePage=${typePage.number}, itemPage=${itemPage.number - 1})}" th:classappend="${itemPage.first} ? 'disabled' : ''" class="page-icon">&lsaquo;</a>
-                
-                <a th:each="pageNum : ${#numbers.sequence(0, itemPage.totalPages - 1)}"
-                   th:href="@{/evaluation(typePage=${typePage.number}, itemPage=${pageNum})}"
-                   th:text="${pageNum + 1}"
-                   th:classappend="${pageNum == itemPage.number} ? 'active' : ''" class="page-link">1</a>
-                   
-                <a th:href="@{/evaluation(typePage=${typePage.number}, itemPage=${itemPage.number + 1})}" th:classappend="${itemPage.last} ? 'disabled' : ''" class="page-icon">&rsaquo;</a>
-                <a th:href="@{/evaluation(typePage=${typePage.number}, itemPage=${itemPage.totalPages - 1})}" th:classappend="${itemPage.last} ? 'disabled' : ''" class="page-icon">&raquo;</a>
-            </div>
         </div>
 
         <!-- 3. 조직별 가중치/등급 설정 탭 -->
@@ -505,29 +489,34 @@
                 
                 <div class="form-group" style="margin-top: 10px;">
                     <label>카테고리</label>
-                    <input type="text" class="form-control" id="itemCategory" placeholder="예: 리더십">
+                    <input type="text" class="form-control" id="itemCategory" placeholder="예: 주요업무">
                 </div>
                 
                 <div class="form-group" style="margin-top: 10px;">
-                    <label>문항 내용</label>
+                    <label>문항 내용 (업무 목표)</label>
                     <textarea class="form-control" id="itemContent" rows="3" placeholder="평가할 문항 내용을 입력하세요."></textarea>
                 </div>
                 
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label>답변 타입</label>
-                        <select class="form-control" id="itemAnswerType">
+                        <select class="form-control" id="itemAnswerType" onchange="window.toggleWeightDisplay(this.value)">
                             <option value="SCORE">점수형</option>
                             <option value="TEXT">서술형</option>
                         </select>
                     </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label>공통 여부</label>
-                        <select class="form-control" id="itemIsCommon">
-                            <option value="Y">공통 (Y)</option>
-                            <option value="N">특수 (N)</option>
-                        </select>
+                    <div class="form-group" id="weightGroup" style="flex: 1;">
+                        <label>배점</label>
+                        <input type="number" class="form-control" id="itemWeight" placeholder="예: 30">
                     </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label>공통 여부</label>
+                    <select class="form-control" id="itemIsCommon">
+                        <option value="Y">공통 (Y)</option>
+                        <option value="N">특수 (N)</option>
+                    </select>
                 </div>
                 
                 <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="window.saveItemToServer()">저장</button>
