@@ -57,7 +57,7 @@
         .detail-table th { background-color: #f8f9fa; }
         .feedback-textarea { width: 100%; height: 120px; padding: 8px; box-sizing: border-box; resize: vertical; border: none; font-family: inherit; font-size: 12px; line-height: 1.5; outline: none; }
         .feedback-textarea:focus { background-color: #f8f9fa; }
-        .readonly-bg { background-color: #f8f9fa; color: #6c757d; }
+        .readonly-bg { background-color: #f8f9fa !important; color: #6c757d; cursor: not-allowed; }
         .score-input { width: 50px; text-align: center; border: 1px solid #ccc; padding: 4px; border-radius: 3px; outline: none; font-weight: bold; }
         
         .btn-save { background-color: #0d6efd; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
@@ -67,13 +67,13 @@
 <body>
     <div th:replace="~{layout/sidebar :: sidebar}"></div>
 
-    	<div class="main-content">
+    <div class="main-content">
         <h2>성과/업무평가 및 조회 
-    	<i class="far fa-question-circle" 
-      		style="color:#ccc; font-size:14px; cursor:pointer;" 
-       		title="평가 진행 순서: [본인 평가 작성 및 제출] ➡️ [부서장 1차 평가]">
-    	</i>
-		</h2>
+            <i class="far fa-question-circle" 
+                style="color:#ccc; font-size:14px; cursor:pointer;" 
+                title="평가 진행 순서: [본인 평가 작성 및 제출] ➡️ [부서장 1차 평가]">
+            </i>
+        </h2>
         
         <!-- 검색 영역 -->
         <div class="search-area">
@@ -88,14 +88,14 @@
                 </select>
             </div>
             <div class="search-item">
-    		<span>평가기간</span>
-    		<select id="searchPeriod">
-        	<option value="연간" th:selected="${selectedPeriod == null or selectedPeriod == '연간'}">연간</option>
-        	<option value="상반기" th:selected="${selectedPeriod == '상반기'}">상반기</option>
-        	<option value="하반기" th:selected="${selectedPeriod == '하반기'}">하반기</option>
-    		</select>
-			</div>
-			<button class="btn-search" onclick="searchEval()">조회</button>
+                <span>평가기간</span>
+                <select id="searchPeriod">
+                    <option value="연간" th:selected="${selectedPeriod == null or selectedPeriod == '연간'}">연간</option>
+                    <option value="상반기" th:selected="${selectedPeriod == '상반기'}">상반기</option>
+                    <option value="하반기" th:selected="${selectedPeriod == '하반기'}">하반기</option>
+                </select>
+            </div>
+            <button class="btn-search" onclick="searchEval()">조회</button>
         </div>
 
         <div class="split-container">
@@ -186,7 +186,7 @@
                                     <th>항목<br>(업무 목표)</th>
                                     <th>배점</th>
                                     <th>업무 수행 과정 및 결과 / 잘된 점 - 개선할 점</th>
-                                    <th>본인<br>평가</th>
+                                    <th>평가<br>점수</th>
                                 </tr>
                             </thead>
                             <!-- 자바스크립트로 문항 동적 렌더링 -->
@@ -203,7 +203,7 @@
     </div>
 
     <script>
-        // 현재 로그인 사번
+        // 현재 로그인 사번 (Thymeleaf 연동)
         const currentUserNo = '[[${#authentication.name}]]';
 
         function loadEvalDetail(rowElement, typeId, empNo) {
@@ -217,6 +217,7 @@
                 .then(data => {
                     document.getElementById('detailPanel').style.display = 'flex'; // 폼 열기
                     
+                    // 기본 정보 채우기
                     document.getElementById('infoDept').innerText = data.deptName;
                     document.getElementById('infoPos').innerText = data.position;
                     document.getElementById('infoEmpNo').innerText = data.empNo;
@@ -227,6 +228,7 @@
                     document.getElementById('currentTypeId').value = data.typeId;
                     document.getElementById('currentEmpNo').value = data.empNo;
 
+                    // 권한 및 상태 체크
                     const isMyDoc = (data.empNo === currentUserNo);
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
@@ -235,6 +237,7 @@
 
                     let tbodyHtml = '';
                     data.items.forEach(item => {
+                        // 1. 본인 평가 영역 (항상 노출, 권한에 따라 Readonly 처리)
                         const selfReadonly = canEditSelf ? '' : 'readonly';
                         const selfClass = canEditSelf ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
                         
@@ -254,15 +257,16 @@
                             </tr>
                         `;
 
-                        // 1차 평가(부서장) 영역 추가 (상태 진행 시)
+                        // 2. 1차 평가(부서장) 영역 추가 (상태가 본인평가중이 아닐 때만 등장)
                         if (data.status !== '본인평가중') {
                             const firstReadonly = canEditFirst ? '' : 'readonly';
                             const firstClass = canEditFirst ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
+                            
                             tbodyHtml += `
                                 <tr style="background-color: #f1f3f5;">
-                                    <td colspan="3" style="color:#0d6efd; font-weight:bold;">[부서장 피드백]</td>
+                                    <td colspan="3" style="color:#0d6efd; font-weight:bold; font-size:11px;">[부서장 피드백]</td>
                                     <td style="text-align:left; padding:0;">
-                                        <textarea name="firstFeedback_${item.questionId}" class="${firstClass}" ${firstReadonly}>${item.firstFeedback || ''}</textarea>
+                                        <textarea name="firstFeedback_${item.questionId}" class="${firstClass}" ${firstReadonly} placeholder="부서장 평가 의견을 입력하세요.">${item.firstFeedback || ''}</textarea>
                                     </td>
                                     <td>
                                         <input type="number" name="firstScore_${item.questionId}" value="${item.firstScore || ''}" ${firstReadonly} class="score-input ${firstReadonly ? 'readonly-bg' : ''}">
@@ -272,9 +276,10 @@
                         }
                     });
                     
+                    // 완성된 HTML을 테이블 몸통에 삽입
                     document.getElementById('evalItemBody').innerHTML = tbodyHtml;
 
-                    // 버튼 제어
+                    // 3. 버튼 동적 렌더링
                     let btnHtml = '';
                     if (canEditSelf) {
                         btnHtml = `<button type="button" class="btn-save" onclick="submitEval('SELF')">본인 평가 저장(제출)</button>`;
@@ -290,7 +295,7 @@
             if(!confirm("저장 및 제출하시겠습니까?")) return;
             
             const items = [];
-            const prefix = (step === 'SELF') ? 'self' : 'first';
+            const prefix = (step === 'SELF') ? 'self' : 'first'; // 'self' 인지 'first'인지에 따라 데이터 수집
             const scoreInputs = document.querySelectorAll(`input[name^="${prefix}Score_"]`);
             
             scoreInputs.forEach(input => {
@@ -321,7 +326,7 @@
             .then(result => {
                 if(result === 'success') {
                     alert("성공적으로 저장되었습니다.");
-                    location.reload();
+                    location.reload(); // 저장 완료 후 화면 새로고침
                 } else {
                     alert("저장 실패: " + result);
                 }

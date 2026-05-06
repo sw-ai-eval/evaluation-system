@@ -22,6 +22,9 @@ public class EvalItem {
     private String content;
 
     private String explanation;
+    
+    @Column(name = "weight", nullable = false, columnDefinition = "int default 0")
+    private int weight;
 
     @Column(name = "question_type") 
     private String answerType;

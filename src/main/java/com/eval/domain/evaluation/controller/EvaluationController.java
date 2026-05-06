@@ -148,6 +148,12 @@ public class EvaluationController {
             item.setAnswerType(params.get("answerType").toString()); 
             item.setCommon("Y".equals(params.get("isCommon").toString()));
             
+            if (params.get("weight") != null && !params.get("weight").toString().isEmpty()) {
+                item.setWeight(Integer.parseInt(params.get("weight").toString()));
+            } else {
+                item.setWeight(0);
+            }
+            
             String category = params.get("category").toString();
             item.setExplanation(category + " 항목에 대한 세부 평가 문항입니다.");
 
