@@ -26,10 +26,10 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     Optional<Department> findByIdForUpdate(String id);
     
     boolean existsByParentId(String parentId);
-    
+
     @Modifying
     @Transactional
-    @Query("update Department d set d.deleteYn = true where d.id = :id")
+    @Query("update Department d set d.deleteYn = true, d.useYn = false where d.id = :id")
     void deleteByDeptId(@Param("id") String id);
     
     @Query("""
@@ -52,5 +52,5 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     @Query("UPDATE Department d SET d.useYn = false WHERE d.id IN :ids")
     void disableAllByIds(@Param("ids") List<String> ids);
 
-    
+    List<Department> findByUseYn(boolean b);
 }

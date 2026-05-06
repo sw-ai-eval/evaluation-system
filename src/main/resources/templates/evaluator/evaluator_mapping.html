@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{layout/default :: layout}">
+<head>
+    <meta charset="UTF-8">
+    <title>평가자 관리</title>
+    <link rel="stylesheet" th:href="@{/css/evaluator.css}">
+</head>
+<body>
+<div th:fragment="content" class="dashboard-container">
+    <div class="layout">
+        <div class="container">
+
+            <h2>📊 평가자 관리 (Admin)</h2>
+
+            <!-- 필터 영역 -->
+            <div class="filter-box">
+                <div class="filter-row">
+                    <label>부서 선택:</label>
+                    <select name="deptId">
+                        <option th:each="dept : ${deptList}"
+                                th:value="${dept.id}"
+                                th:text="${dept.name}"
+                                th:selected="${dept.id == selectedDept}">
+                        </option>
+                    </select>
+
+                    <button class="btn-secondary">조회</button>
+                </div>
+                <div class="action-row">
+                    <button class="btn-primary">평가자 자동 생성</button>
+                </div>
+
+            </div>
+
+            <!-- 👇 사원 검색 + 리스트 영역 (분리된 카드) -->
+            <div class="employee-section">
+
+                <!-- 사원 검색 -->
+                <div class="search-box">
+                    <label>사원 검색:</label>
+                    <input type="text" placeholder="이름 / 사원번호 입력">
+                    <button class="btn-secondary">조회</button>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn-danger">선택 부서 초기화</button>
+                </div>
+            </div>
+
+            <!-- 평가자 테이블 0차 평가는 본인 -->
+            <table>
+                <thead>
+                <tr>
+                    <th>부서</th>
+                    <th>사원명</th>
+                    <th>직급</th>
+                    <th>1차 평가자</th>
+                    <th>최종 평가자</th>
+                    <th>상태</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr>
+                    <td>개발팀</td>
+                    <td>김개발</td>
+                    <td>사원</td>
+                    <td>이팀장</td>
+                    <td>박임원</td>
+                    <td><span class="tag tag-success">자동 생성</span></td>
+                    <td><button class="edit-btn">수정</button></td>
+                </tr>
+
+                <tr>
+                    <td>영업팀</td>
+                    <td>이영업</td>
+                    <td>대리</td>
+                    <td>최팀장</td>
+                    <td>박임원</td>
+                    <td><span class="tag tag-warning">수동 수정</span></td>
+                    <td><button class="edit-btn">수정</button></td>
+                </tr>
+
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
