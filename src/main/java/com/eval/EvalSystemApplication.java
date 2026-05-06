@@ -8,7 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @EnableJpaRepositories(basePackages = "com.eval.domain")
 @MapperScan(basePackages = {
 	    "com.eval.domain.employee.mapper",
-	    "com.eval.domain.dept.mapper"
+	    "com.eval.domain.dept.mapper",
+	    "com.eval.domain.performance.mapper"
 	})
 @SpringBootApplication
 public class EvalSystemApplication {
