@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	List<Employee> findByDeptId(String deptId);
 	
+	
 	boolean existsByDeptId(String deptId);
 	
 	
@@ -22,5 +23,10 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     @Query("update Employee e set e.position = :position where e.empNo = :empNo")
     void updatePosition(@Param("empNo") String empNo,
                         @Param("position") String position);
-
+    
+    @Query("SELECT d.leaderEmpNo FROM Department d WHERE d.id = :deptId")
+    String findDeptLeader(@Param("deptId") String deptId);
+    
+    
+    List<Employee> findByLevelId(int levelId);
 }

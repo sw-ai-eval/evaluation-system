@@ -69,9 +69,6 @@ public class EmployeeController {
 	     model.addAttribute("level", codeService.getCodes("POSITION_LEVEL"));
 	     model.addAttribute("jobCode", codeService.getCodes("JOB"));
 	     
-	     System.out.println("LEVEL = " + codeService.getCodes("POSITION_LEVEL"));
-	     System.out.println("JOB = " + codeService.getCodes("JOB"));
-	     
 	     // 검색조건 유지용 ⭐
 	     model.addAttribute("keyword", keyword != null ? keyword : "");
 	     model.addAttribute("deptId", deptId != null ? deptId : "");
