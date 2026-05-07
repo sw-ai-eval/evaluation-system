@@ -8,9 +8,11 @@ document.addEventListener("DOMContentLoaded", function() {
     switchTab(savedTab);
 
     // 2. 페이지 로드 시 가중치 합계 미리 계산
-    window.calculateTotal();
+    if(typeof window.calculateTotal === 'function') {
+        window.calculateTotal();
+    }
 
-    // 3. 버튼들에 클릭 이벤트 리스너 직접 연결합
+    // 3. 버튼들에 클릭 이벤트 리스너 직접 연결
     const saveWeightBtn = document.getElementById('btnSaveWeight');
     if (saveWeightBtn) {
         saveWeightBtn.onclick = saveWeightsToServer;
@@ -42,7 +44,7 @@ function switchTab(tabId) {
         activeContent.classList.add('active');
     }
     
-    // 현재 보고 있는 탭을 세션에 저장하여 새로고침 시 유지되게 합니다.
+    // 현재 보고 있는 탭을 세션에 저장하여 새로고침 시 유지
     sessionStorage.setItem('activeEvalTab', tabId);
 }
 
@@ -51,7 +53,6 @@ window.toggleWeightDisplay = function(type) {
     const weightGroup = document.getElementById('weightGroup');
     if (!weightGroup) return;
     
-    // 서술형(TEXT)이면 배점 입력란을 아예 숨기고 값을 0으로 초기화합니다.
     if (type === 'TEXT') {
         weightGroup.style.display = 'none';
         document.getElementById('itemWeight').value = 0; 
@@ -79,7 +80,6 @@ window.calculateTotal = function() {
         sumSpan.innerText = total;
     }
     
-    // 합계가 정확히 100%일 때만 저장 버튼을 활성화
     if(total === 100) {
         alertBox.className = "weight-status status-ok";
         saveBtn.disabled = false;
@@ -112,7 +112,9 @@ function saveWeightsToServer() {
         });
     });
 
-    fetch('/evaluation/save-weights', {
+    const applyToChildren = document.getElementById('applyToChildren').checked;
+
+    fetch(`/evaluation/save-weights?applyToChildren=${applyToChildren}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(weights)
@@ -131,9 +133,10 @@ function saveWeightsToServer() {
     });
 }
 
-// [등급] 조직별 등급 기준 저장
+// [등급] 조직별 등급 기준 DB 저장
 function saveGradesToServer() {
     const deptId = document.getElementById('deptSelect').value;
+    
     if (!deptId) {
         alert("대상 부서를 먼저 선택해주세요.");
         return;
@@ -141,44 +144,85 @@ function saveGradesToServer() {
 
     const grades = {
         deptId: deptId,
-        gradeS: document.getElementById('gradeS').value,
-        gradeA: document.getElementById('gradeA').value,
-        gradeB: document.getElementById('gradeB').value,
-        gradeC: document.getElementById('gradeC').value,
-        gradeD: document.getElementById('gradeD').value
+        gradeS: parseInt(document.getElementById('gradeS').value),
+        gradeA: parseInt(document.getElementById('gradeA').value),
+        gradeB: parseInt(document.getElementById('gradeB').value),
+        gradeC: parseInt(document.getElementById('gradeC').value),
+        gradeD: parseInt(document.getElementById('gradeD').value)
     };
 
-    console.log("저장될 등급 데이터:", grades);
-    alert("✅ [" + deptId + "] 부서의 등급 기준이 성공적으로 저장되었습니다.");
+    const applyToChildren = document.getElementById('applyGradeToChildren').checked;
+
+    fetch(`/evaluation/save-grades?applyToChildren=${applyToChildren}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(grades)
+    })
+    .then(response => response.text())
+    .then(data => {
+        if (data === "success") {
+            alert("✅ 등급 기준 설정이 성공적으로 저장되었습니다.");
+        } else {
+            alert("❌ 저장 실패: " + data);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert("서버 통신 중 오류가 발생했습니다.");
+    });
 }
 
-// [부서] 부서 선택 시 기본값 자동 로드
+// [부서] 부서 선택 시 가중치 및 등급 기준 DB 로드
 function loadDeptSettings(deptId) {
-    if(!deptId) return;
-    
     const weightInputs = document.querySelectorAll('.weight-input');
-    weightInputs.forEach(input => {
-        const name = input.getAttribute('data-name');
-        // 부서 명칭에 따른 기본 가중치 자동 할당 로직
-        if (name && name.includes("근태")) {
-            input.value = 20;
-        } else if (name && name.includes("성과")) {
-            input.value = 40;
-        } else if (name && name.includes("역량")) {
-            input.value = 40;
-        } else {
-            input.value = 0;
-        }
-    });
 
-    // 기본 등급 비율 세팅
-    document.getElementById('gradeS').value = 10; 
-    document.getElementById('gradeA').value = 30; 
-    document.getElementById('gradeB').value = 70; 
-    document.getElementById('gradeC').value = 90; 
-    document.getElementById('gradeD').value = 100;
+    if(!deptId) {
+        weightInputs.forEach(input => input.value = 0);
+        if(typeof window.calculateTotal === 'function') window.calculateTotal();
+        resetGradeInputs();
+        return;
+    }
     
-    window.calculateTotal(); 
+    fetch('/evaluation/weights/' + deptId)
+        .then(response => response.json())
+        .then(savedWeights => {
+            weightInputs.forEach(input => {
+                const typeId = parseInt(input.getAttribute('data-typeid'));
+                const matched = savedWeights.find(w => w.typeId === typeId);
+                input.value = matched ? matched.weight : 0;
+            });
+            if(typeof window.calculateTotal === 'function') window.calculateTotal();
+        })
+        .catch(error => console.error('가중치 로드 에러:', error));
+
+    fetch('/evaluation/grades/' + deptId)
+        .then(response => {
+            if (response.ok) return response.json();
+            return null;
+        })
+        .then(gradeData => {
+            if (gradeData && Object.keys(gradeData).length > 0) {
+                document.getElementById('gradeS').value = gradeData.gradeS;
+                document.getElementById('gradeA').value = gradeData.gradeA;
+                document.getElementById('gradeB').value = gradeData.gradeB;
+                document.getElementById('gradeC').value = gradeData.gradeC;
+                document.getElementById('gradeD').value = gradeData.gradeD;
+            } else {
+                resetGradeInputs();
+            }
+        })
+        .catch(error => {
+            console.error("등급 로드 에러:", error);
+            resetGradeInputs();
+        });
+}
+
+function resetGradeInputs() {
+    document.getElementById('gradeS').value = 10;
+    document.getElementById('gradeA').value = 30;
+    document.getElementById('gradeB').value = 70;
+    document.getElementById('gradeC').value = 90;
+    document.getElementById('gradeD').value = 100;
 }
 
 // [공통] 모달 열기/닫기
@@ -191,7 +235,6 @@ window.closeModal = function(modalId) {
     if (modal) modal.style.display = 'none';
 };
 
-// [날짜] yyyy-MM-dd 형식 변환
 function getFormattedDate(dateObj) {
     const yyyy = dateObj.getFullYear();
     const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -199,7 +242,6 @@ function getFormattedDate(dateObj) {
     return `${yyyy}-${mm}-${dd}`;
 }
 
-// [날짜] 시작일에 따른 종료일 최소값 제한
 window.updateMinEndDate = function(startDate) {
     const endDateInput = document.getElementById('newTypeEndDate');
     if (endDateInput) {
@@ -332,12 +374,24 @@ window.openNewItemModal = function() {
     document.getElementById('itemId').value = '';
     document.getElementById('itemCategory').value = '';
     document.getElementById('itemContent').value = '';
+    
+    if(document.getElementById('itemExplanation')) {
+        document.getElementById('itemExplanation').value = '';
+    }
+
     document.getElementById('itemAnswerType').value = 'SCORE';
     document.getElementById('itemIsCommon').value = 'Y';
     
-    // 새 문항일 때 배점 초기화 및 표시
     document.getElementById('itemWeight').value = '';
     window.toggleWeightDisplay('SCORE');
+    
+    // 특수문항 타겟 UI 초기화 (새로운 트리 구조 대응)
+    if(typeof window.toggleTargetDisplay === 'function') {
+        window.toggleTargetDisplay('Y');
+        document.getElementById('targetDeptSelect').value = '';
+        document.getElementById('targetEmpArea').style.display = 'none';
+        document.getElementById('finalTargetList').innerHTML = ''; // 최종 리스트 싹 지우기
+    }
     
     document.getElementById('itemModalTitle').innerText = '➕ 평가 문항 추가';
     window.openModal('questionModal');
@@ -348,21 +402,29 @@ window.openEditItemModal = function(btn) {
     const typeId = btn.getAttribute('data-typeid');
     const category = btn.getAttribute('data-category');
     const content = btn.getAttribute('data-content');
-    const weight = btn.getAttribute('data-weight') || 0; // 🌟 배점 데이터 읽기
+    const weight = btn.getAttribute('data-weight') || 0; 
     const answerType = btn.getAttribute('data-answertype');
     const isCommon = btn.getAttribute('data-iscommon');
+    const explanation = btn.getAttribute('data-explanation'); 
 
-    // 모달창 필드에 값 세팅
     document.getElementById('itemId').value = id;
     document.getElementById('itemTypeId').value = typeId;
     document.getElementById('itemCategory').value = category;
     document.getElementById('itemContent').value = content;
     document.getElementById('itemAnswerType').value = answerType;
-    document.getElementById('itemWeight').value = weight; // 🌟 배점 입력칸에 꽂기
+    document.getElementById('itemWeight').value = weight; 
     document.getElementById('itemIsCommon').value = isCommon;
     
-    // 답변 타입에 따라 배점 칸 숨김/표시 처리
+    if(document.getElementById('itemExplanation')) {
+        document.getElementById('itemExplanation').value = (explanation && explanation !== 'null') ? explanation : '';
+    }
+    
     window.toggleWeightDisplay(answerType);
+    
+    if(typeof window.toggleTargetDisplay === 'function') {
+        window.toggleTargetDisplay(isCommon);
+        // 향후: 기존에 저장된 타겟 데이터를 불러와서 finalTargetList에 그려주는 로직이 필요합니다.
+    }
     
     document.getElementById('itemModalTitle').innerText = '✏️ 평가 문항 수정';
     window.openModal('questionModal');
@@ -371,6 +433,30 @@ window.openEditItemModal = function(btn) {
 window.saveItemToServer = function() {
     const answerType = document.getElementById('itemAnswerType').value;
     const weightVal = document.getElementById('itemWeight').value;
+    const isCommonVal = document.getElementById('itemIsCommon').value;
+    
+    let explanationValue = null;
+    if(document.getElementById('itemExplanation')) {
+        const text = document.getElementById('itemExplanation').value.trim();
+        if(text !== "") explanationValue = text;
+    }
+
+    // 🌟 새로운 방식의 타겟 데이터 수집
+    let targets = [];
+    if (isCommonVal === 'N') {
+        const listItems = document.querySelectorAll('#finalTargetList li');
+        listItems.forEach(li => {
+            targets.push({
+                targetType: li.getAttribute('data-type'),
+                targetValue: li.getAttribute('data-value')
+            });
+        });
+        
+        if (targets.length === 0) {
+            alert('특수 문항을 적용할 대상(부서 전체 또는 특정 사원)을 최소 1개 이상 아래 리스트에 추가해주세요.');
+            return;
+        }
+    }
 
     const data = {
         id: document.getElementById('itemId').value,
@@ -378,17 +464,17 @@ window.saveItemToServer = function() {
         category: document.getElementById('itemCategory').value,
         content: document.getElementById('itemContent').value,
         answerType: answerType,
-        isCommon: document.getElementById('itemIsCommon').value,
-        // 서술형(TEXT)이면 무조건 0점, 점수형이면 입력값 사용
-        weight: (answerType === 'TEXT') ? 0 : (parseInt(weightVal) || 0)
+        isCommon: isCommonVal,
+        weight: (answerType === 'TEXT') ? 0 : (parseInt(weightVal) || 0),
+        
+        explanation: explanationValue,
+        targets: targets // 배열 통째로 전송
     };
 
-    // 유효성 검사
     if (!data.typeId) { alert("평가 유형을 선택해주세요."); return; }
     if (!data.category) { alert("카테고리를 입력해주세요."); return; }
     if (!data.content) { alert("문항 내용을 입력해주세요."); return; }
     
-    // 점수형인데 배점을 입력 안 했을 경우 체크
     if (answerType === 'SCORE' && data.weight <= 0) {
         alert("점수형 문항은 1점 이상의 배점을 입력해야 합니다.");
         document.getElementById('itemWeight').focus();
@@ -434,4 +520,94 @@ window.deleteItemFromServer = function(id) {
         console.error('Error:', error);
         alert("서버 통신 중 오류가 발생했습니다.");
     });
+};
+
+// ==============================================
+// 3. 새로운 트리 계층 구조 타겟 설정 함수들
+// ==============================================
+
+window.toggleTargetDisplay = function(isCommon) {
+    const targetDiv = document.getElementById('targetSettingsDiv');
+    if(targetDiv) {
+        targetDiv.style.display = (isCommon === 'N') ? 'block' : 'none';
+    }
+};
+
+window.loadDeptEmployees = function(deptId) {
+    const empArea = document.getElementById('targetEmpArea');
+    const checklist = document.getElementById('empChecklist');
+    document.getElementById('selectAllEmp').checked = false;
+
+    if (!deptId) {
+        empArea.style.display = 'none';
+        return;
+    }
+
+    fetch('/evaluation/employees/' + deptId)
+        .then(res => res.json())
+        .then(emps => {
+            empArea.style.display = 'block';
+            checklist.innerHTML = ''; 
+
+            if (emps.length === 0) {
+                checklist.innerHTML = '<span style="color:#9ca3af; font-size:13px; padding:5px;">소속된 사원이 없습니다.</span>';
+                return;
+            }
+
+            emps.forEach(emp => {
+                checklist.innerHTML += `
+                    <label style="cursor: pointer; font-weight: normal; margin: 0; padding: 4px 8px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" class="emp-checkbox" value="${emp.empNo}" data-name="${emp.name}"> 
+                        👤 ${emp.name} (${emp.empNo})
+                    </label>
+                `;
+            });
+        })
+        .catch(err => {
+            console.error('사원 로드 에러:', err);
+            alert("사원 목록을 불러오는 중 오류가 발생했습니다.");
+        });
+};
+
+window.toggleAllEmps = function(checkbox) {
+    const empCheckboxes = document.querySelectorAll('.emp-checkbox');
+    empCheckboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+        cb.disabled = checkbox.checked; 
+    });
+};
+
+window.addTargetToList = function() {
+    const deptSelect = document.getElementById('targetDeptSelect');
+    const deptId = deptSelect.value;
+    const deptName = deptSelect.options[deptSelect.selectedIndex].text;
+    const isAll = document.getElementById('selectAllEmp').checked;
+    const list = document.getElementById('finalTargetList');
+
+    if (isAll) {
+        if (!list.querySelector(`li[data-value="${deptId}"]`)) {
+            list.innerHTML += `<li data-type="DEPT" data-value="${deptId}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#eff6ff; margin-bottom:5px; border-radius:4px; font-size:13px;">
+                <span>🏢 <b>${deptName}</b> (부서 전체 적용)</span>
+                <button type="button" onclick="this.parentElement.remove()" style="border:none; background:none; color:#dc2626; cursor:pointer; font-size:16px;">&times;</button>
+            </li>`;
+        }
+    } else {
+        const checkedEmps = document.querySelectorAll('.emp-checkbox:checked');
+        if (checkedEmps.length === 0) {
+            alert('추가할 사원을 체크하거나, 부서 전체 적용을 체크해주세요.');
+            return;
+        }
+        checkedEmps.forEach(cb => {
+            if (!list.querySelector(`li[data-value="${cb.value}"]`)) {
+                list.innerHTML += `<li data-type="EMP" data-value="${cb.value}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f3f4f6; margin-bottom:5px; border-radius:4px; font-size:13px;">
+                    <span>👤 ${cb.getAttribute('data-name')} (${cb.value}) - <span style="color:#6b7280;">${deptName}</span></span>
+                    <button type="button" onclick="this.parentElement.remove()" style="border:none; background:none; color:#dc2626; cursor:pointer; font-size:16px;">&times;</button>
+                </li>`;
+            }
+        });
+    }
+    
+    document.getElementById('selectAllEmp').checked = false;
+    window.toggleAllEmps(document.getElementById('selectAllEmp'));
+    document.querySelectorAll('.emp-checkbox').forEach(cb => cb.checked = false);
 };

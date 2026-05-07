@@ -42,6 +42,14 @@ public class EmployeeService {
 	this.employeeRepository = employeeRepository;
 	this.departmentRepository=departmentRepository;
 	}
+    
+    /**
+     * [평가 기능용 추가] 부서별 사원 목록 조회
+     */
+    public List<Employee> getEmployeesByDept(String deptId) {
+        return employeeRepository.findByDeptId(deptId);
+    }
+
     /**
      * 신규 사원 등록
      */
@@ -68,7 +76,7 @@ public class EmployeeService {
     }
 
     /**
-     *  로그인 실패 횟수 증가 및 자동 잠금 로직
+     * 로그인 실패 횟수 증가 및 자동 잠금 로직
      */
     @Transactional
     public int increaseFailCount(String empNo) {

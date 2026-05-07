@@ -142,11 +142,12 @@
             }
 
             .weight-card { 
-                max-width: 450px; 
+                width: 100%; 
                 background: #f8fafc; 
                 border-radius: 12px; 
                 padding: 20px; 
                 border: 1px dashed #cbd5e1; 
+                box-sizing: border-box;
             }
             .form-group label { 
                 display: block; 
@@ -175,51 +176,23 @@
                 font-weight: bold; 
                 transition: all 0.2s;
             }
-            .status-ok { 
-                background-color: #dcfce7; 
-                color: #166534; 
-            }
-            .status-err { 
-                background-color: #fee2e2; 
-                color: #991b1b; 
-            }
+            .status-ok { background-color: #dcfce7; color: #166534; }
+            .status-err { background-color: #fee2e2; color: #991b1b; }
 
             .modal-overlay { 
                 display: none; 
                 position: fixed; 
-                top: 0; 
-                left: 0; 
-                width: 100%; 
-                height: 100%; 
+                top: 0; left: 0; width: 100%; height: 100%; 
                 background: rgba(0,0,0,0.5); 
                 z-index: 1000; 
-                justify-content: center; 
-                align-items: center; 
+                justify-content: center; align-items: center; 
             }
             .modal-content { 
-                background: #fff; 
-                padding: 24px; 
-                border-radius: 8px; 
-                width: 450px; 
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-                box-sizing: border-box; 
+                background: #fff; padding: 24px; border-radius: 8px; width: 450px; 
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1); box-sizing: border-box; 
             }
-            .modal-header { 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
-                margin-bottom: 20px; 
-                font-size: 18px; 
-                font-weight: bold; 
-            }
-            .modal-close { 
-                cursor: pointer; 
-                border: none; 
-                background: none; 
-                font-size: 24px; 
-                color: #888; 
-                padding: 0; 
-            }
+            .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 18px; font-weight: bold; }
+            .modal-close { cursor: pointer; border: none; background: none; font-size: 24px; color: #888; padding: 0; }
         </style>
 
         <div class="tab-container">
@@ -228,7 +201,6 @@
             <div class="tab-item" onclick="switchTab('weight')">조직별 가중치/등급 설정</div>
         </div>
         
-        <!-- 1. 평가 유형 관리 탭 -->
         <div id="tab-type" class="tab-content active panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin:0;">평가 유형 관리</h3>
@@ -275,30 +247,22 @@
                             </button>
                         </td>
                     </tr>
-                    
                     <tr th:if="${typePage.empty}">
-                        <td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">
-                            등록된 평가 유형이 없습니다.
-                        </td>
+                        <td colspan="6" style="text-align: center; color: #9ca3af; padding: 20px;">등록된 평가 유형이 없습니다.</td>
                     </tr>
                 </tbody>
             </table>
-
             <div class="pagination" th:if="${typePage.totalPages > 0}">
                 <a th:href="@{/evaluation(typePage=0, itemPage=${itemPage.number})}" th:classappend="${typePage.first} ? 'disabled' : ''" class="page-icon">&laquo;</a>
                 <a th:href="@{/evaluation(typePage=${typePage.number - 1}, itemPage=${itemPage.number})}" th:classappend="${typePage.first} ? 'disabled' : ''" class="page-icon">&lsaquo;</a>
-                
                 <a th:each="pageNum : ${#numbers.sequence(0, typePage.totalPages - 1)}"
                    th:href="@{/evaluation(typePage=${pageNum}, itemPage=${itemPage.number})}"
-                   th:text="${pageNum + 1}"
-                   th:classappend="${pageNum == typePage.number} ? 'active' : ''" class="page-link">1</a>
-                   
+                   th:text="${pageNum + 1}" th:classappend="${pageNum == typePage.number} ? 'active' : ''" class="page-link"></a>
                 <a th:href="@{/evaluation(typePage=${typePage.number + 1}, itemPage=${itemPage.number})}" th:classappend="${typePage.last} ? 'disabled' : ''" class="page-icon">&rsaquo;</a>
                 <a th:href="@{/evaluation(typePage=${typePage.totalPages - 1}, itemPage=${itemPage.number})}" th:classappend="${typePage.last} ? 'disabled' : ''" class="page-icon">&raquo;</a>
             </div>
         </div>
 
-        <!-- 2. 평가 문항 관리 탭 -->
         <div id="tab-question" class="tab-content panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h3 style="margin:0;">세부 평가 지표</h3>
@@ -330,20 +294,28 @@
                                     th:data-typeid="${item.evalType != null ? item.evalType.id : ''}"
                                     th:data-category="${item.category}"
                                     th:data-content="${item.content}"
+                                    th:data-explanation="${item.explanation}"
                                     th:data-weight="${item.weight}" 
                                     th:data-answertype="${item.answerType}"
                                     th:data-iscommon="${item.isCommon ? 'Y' : 'N'}"
                                     onclick="window.openEditItemModal(this)">수정</button>
-                            <button class="btn-outline" style="color: #dc2626; border-color: #fca5a5; margin-left: 5px;" 
-                                    th:data-id="${item.id}"
-                                    onclick="window.deleteItemFromServer(this.getAttribute('data-id'))">삭제</button>
+                            <button class="btn-outline" style="color: #dc2626;" th:data-id="${item.id}" onclick="window.deleteItemFromServer(this.getAttribute('data-id'))">삭제</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            
+            <div class="pagination" th:if="${itemPage.totalPages > 0}">
+                <a th:href="@{/evaluation(itemPage=0, typePage=${typePage.number})}" th:classappend="${itemPage.first} ? 'disabled' : ''" class="page-icon">&laquo;</a>
+                <a th:href="@{/evaluation(itemPage=${itemPage.number - 1}, typePage=${typePage.number})}" th:classappend="${itemPage.first} ? 'disabled' : ''" class="page-icon">&lsaquo;</a>
+                <a th:each="pageNum : ${#numbers.sequence(0, itemPage.totalPages - 1)}"
+                   th:href="@{/evaluation(itemPage=${pageNum}, typePage=${typePage.number})}"
+                   th:text="${pageNum + 1}" th:classappend="${pageNum == itemPage.number} ? 'active' : ''" class="page-link"></a>
+                <a th:href="@{/evaluation(itemPage=${itemPage.number + 1}, typePage=${typePage.number})}" th:classappend="${itemPage.last} ? 'disabled' : ''" class="page-icon">&rsaquo;</a>
+                <a th:href="@{/evaluation(itemPage=${itemPage.totalPages - 1}, typePage=${typePage.number})}" th:classappend="${itemPage.last} ? 'disabled' : ''" class="page-icon">&raquo;</a>
+            </div>
         </div>
 
-        <!-- 3. 조직별 가중치/등급 설정 탭 -->
         <div id="tab-weight" class="tab-content panel">
             <h3 style="margin-bottom: 20px;">조직별 맞춤 설정 (가중치 & 등급)</h3>
             
@@ -357,24 +329,29 @@
                 </select>
             </div>
 
-            <div style="display: flex; gap: 40px;">
+            <div style="display: flex; gap: 40px; align-items: flex-start;">
+                
                 <div style="flex: 1;">
                     <h4 style="margin-bottom: 15px;">평가 유형 가중치</h4>
                     <div class="weight-card" id="weightContainer">
-                        
                         <div th:each="wType : ${weightTypes}" class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                             <label style="margin:0;" th:text="${wType.name} + ' (%)'"></label>
-                            <input type="number" class="form-control weight-input" th:data-name="${wType.name}" th:data-typeid="${wType.id}" style="width: 100px; text-align: right;" value="0" oninput="window.calculateTotal()">
+                            <input type="number" class="form-control weight-input" th:data-typeid="${wType.id}" style="width: 100px; text-align: right;" value="0" oninput="window.calculateTotal()">
                         </div>
 
-                        <div th:if="${#lists.isEmpty(weightTypes)}" style="text-align: center; color: #9ca3af; margin-bottom: 15px;">
-                            가중치를 반영할 평가 유형이 없습니다.
-                        </div>
+                        <div th:if="${#lists.isEmpty(weightTypes)}" style="text-align: center; color: #9ca3af; margin-bottom: 15px;">가중치를 반영할 평가 유형이 없습니다.</div>
                         
                         <div id="weightTotalAlert" class="weight-status status-err">
-                            합계: <span id="weightTotalSum">0</span>%
+    					    합계: <span id="weightTotalSum">0</span>%
                         </div>
-                        <button class="btn-primary" id="btnSaveWeight" style="width: 100%; margin-top: 15px;" disabled>가중치 저장</button>
+
+                        <div style="display: flex; align-items: center; margin-top: 10px; gap: 12px;">
+                            <label style="margin: 0; font-size: 13px; color: #4b5563; cursor: pointer; display: flex; align-items: center; flex-shrink: 0;">
+                                <input type="checkbox" id="applyToChildren" style="margin-right: 6px; width: 14px; height: 14px;">
+                                하위 조직 일괄 적용
+                            </label>
+                            <button class="btn-primary" id="btnSaveWeight" style="flex-grow: 1; padding: 10px 0; margin: 0;" disabled onclick="window.saveWeightsToServer()">가중치 저장</button>
+                        </div>
                     </div>
                 </div>
 
@@ -410,30 +387,29 @@
                             </tr>
                         </tbody>
                     </table>
-                    <button id="btnSaveGrade" class="btn-primary" style="width: 100%; margin-top: 15px;">등급 기준 저장</button>
-                </div>
-            </div>
-        </div>
 
-        <div id="typeModal" class="modal-overlay">
+                    <div style="display: flex; align-items: center; margin-top: 15px; gap: 12px;">
+                        <label style="margin: 0; font-size: 13px; color: #4b5563; cursor: pointer; display: flex; align-items: center; flex-shrink: 0;">
+                            <input type="checkbox" id="applyGradeToChildren" style="margin-right: 6px; width: 14px; height: 14px;">
+                            하위 조직 일괄 적용
+                        </label>
+                        <button id="btnSaveGrade" class="btn-primary" style="flex-grow: 1; padding: 10px 0; margin: 0;" onclick="window.saveGradesToServer()">등급 기준 저장</button>
+                    </div>
+                </div> </div> </div> <div id="typeModal" class="modal-overlay">
             <div class="modal-content">
                 <div class="modal-header">
                     <span id="typeModalTitle">➕ 평가 유형 등록</span>
                     <button class="modal-close" onclick="window.closeModal('typeModal')">&times;</button>
                 </div>
-                
                 <input type="hidden" id="typeId">
-                
                 <div class="form-group">
                     <label>유형명</label>
                     <input type="text" class="form-control" id="newTypeName" placeholder="예: 성과평가">
                 </div>
-                
                 <div class="form-group" style="margin-top: 10px;">
                     <label>평가 연도</label>
                     <input type="number" class="form-control" id="newTypeYear" value="2026">
                 </div>
-                
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label>시작일</label>
@@ -444,7 +420,6 @@
                         <input type="date" class="form-control" id="newTypeEndDate">
                     </div>
                 </div>
-
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label>운영 상태</label>
@@ -461,12 +436,10 @@
                         </select>
                     </div>
                 </div>
-
                 <div class="form-group" style="margin-top: 15px;">
                     <label>평가/면담 가이드라인 (선택)</label>
-                    <textarea class="form-control" id="newTypeGuideline" rows="4" placeholder="평가자들에게 안내할 주의사항이나 매뉴얼을 입력하세요."></textarea>
+                    <textarea class="form-control" id="newTypeGuideline" rows="4" placeholder="안내할 주의사항이나 매뉴얼을 입력하세요."></textarea>
                 </div>
-                
                 <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="window.saveTypeToServer()">저장</button>
             </div>
         </div>
@@ -477,26 +450,25 @@
                     <span id="itemModalTitle">➕ 평가 문항 추가</span>
                     <button class="modal-close" onclick="window.closeModal('questionModal')">&times;</button>
                 </div>
-                
                 <input type="hidden" id="itemId">
-                
                 <div class="form-group">
                     <label>대상 유형</label>
                     <select class="form-control" id="itemTypeId">
                         <option th:each="type : ${typeList}" th:value="${type.id}" th:text="${type.name}"></option>
                     </select>
                 </div>
-                
                 <div class="form-group" style="margin-top: 10px;">
                     <label>카테고리</label>
-                    <input type="text" class="form-control" id="itemCategory" placeholder="예: 주요업무">
+                    <input type="text" class="form-control" id="itemCategory" placeholder="예: 공통역량">
                 </div>
-                
                 <div class="form-group" style="margin-top: 10px;">
-                    <label>문항 내용 (업무 목표)</label>
-                    <textarea class="form-control" id="itemContent" rows="3" placeholder="평가할 문항 내용을 입력하세요."></textarea>
+                    <label>문항 내용</label>
+                    <textarea class="form-control" id="itemContent" rows="2" placeholder="평가 문항 내용을 입력하세요."></textarea>
                 </div>
-                
+                <div class="form-group" style="margin-top: 10px;">
+   					<label>평가 가이드라인 (선택)</label>
+    				<textarea class="form-control" id="itemExplanation" rows="3" placeholder="평가 시 참고할 기준이나 안내사항을 적어주세요."></textarea>
+				</div>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                     <div class="form-group" style="flex: 1;">
                         <label>답변 타입</label>
@@ -510,15 +482,40 @@
                         <input type="number" class="form-control" id="itemWeight" placeholder="예: 30">
                     </div>
                 </div>
-
                 <div class="form-group" style="margin-top: 10px;">
                     <label>공통 여부</label>
-                    <select class="form-control" id="itemIsCommon">
+                    <select class="form-control" id="itemIsCommon" onchange="window.toggleTargetDisplay(this.value)">
                         <option value="Y">공통 (Y)</option>
                         <option value="N">특수 (N)</option>
                     </select>
                 </div>
-                
+
+                <div id="targetSettingsDiv" style="display: none; margin-top: 15px; padding: 15px; background: #f8fafc; border-radius: 8px; border: 1px dashed #cbd5e1;">
+    <h5 style="margin-top: 0; margin-bottom: 10px; color: #334155;">🎯 평가 대상자 지정</h5>
+    
+    <div style="margin-bottom: 10px;">
+        <select class="form-control" id="targetDeptSelect" onchange="window.loadDeptEmployees(this.value)">
+            <option value="">-- 부서 선택 --</option>
+            <option th:each="dept : ${deptList}" th:value="${dept.id}" th:text="${dept.name}"></option>
+        </select>
+    </div>
+
+    <div id="targetEmpArea" style="display: none; border: 1px solid #d1d5db; border-radius: 6px; background: #fff; padding: 10px; margin-bottom: 10px;">
+        <label style="display: block; font-weight: bold; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; margin-bottom: 8px; cursor: pointer; color: #2563eb;">
+            <input type="checkbox" id="selectAllEmp" onchange="window.toggleAllEmps(this)"> 해당 부서 전체 적용
+        </label>
+        
+        <div id="empChecklist" style="max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 5px;">
+            </div>
+        
+        <button type="button" class="btn-outline" style="width: 100%; margin-top: 10px; background: #f9fafb;" onclick="window.addTargetToList()">+ 아래 목록에 추가하기</button>
+    </div>
+
+    <label style="font-size: 13px; font-weight: 600; color: #334155;">적용 대상</label>
+    <ul id="finalTargetList" style="list-style: none; padding: 5px; margin: 0; border: 1px solid #d1d5db; border-radius: 6px; min-height: 45px; max-height: 120px; overflow-y: auto; background: #fff;">
+        </ul>
+</div>
+
                 <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="window.saveItemToServer()">저장</button>
             </div>
         </div>
