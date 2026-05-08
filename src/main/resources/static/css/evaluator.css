@@ -222,3 +222,207 @@ tbody tr:hover {
     margin-top: 20px;
     border-radius: 8px;
 }
+/* 전체 오버레이 */
+.modal-drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 1000;
+}
+
+/* 오른쪽 패널 */
+.drawer-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 480px;
+    height: 100%;
+    background: #fff;
+    box-shadow: -4px 0 20px rgba(0,0,0,0.15);
+    padding: 20px;
+    overflow-y: auto;
+
+    animation: slideIn 0.25s ease-out;
+}
+
+/* 슬라이드 애니메이션 */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+/* 헤더 */
+.drawer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* 기존 스타일 재사용 가능 */
+.section {
+    margin-bottom: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.field {
+    display: flex;
+    flex-direction: column;
+}
+
+.field label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+input, textarea {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+.button-area {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+/* 태그들을 감싸는 영역 */
+.tag-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* 평가자 태그 */
+.tag-eval {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    background: #e6f0ff;
+    color: #2c5aa0;
+
+    padding: 6px 10px;
+    border-radius: 20px;
+
+    font-size: 13px;
+    font-weight: 500;
+}
+
+/* X 버튼 */
+.tag-eval-button {
+    padding: 0;
+    margin: 0;
+
+    width: 18px;
+    height: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: rgba(0,0,0,0.08);
+    color: #555;
+
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+/* hover */
+.tag-eval-button:hover {
+    background: rgba(0,0,0,0.18);
+    color: #000;
+}
+/* 평가자 추가 영역 */
+.evaluator-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+    margin-bottom: 10px;
+}
+
+/* select 디자인 */
+#availableEvaluatorSelect,
+#finalEvaluatorSelect  {
+    flex: 1;
+
+    height: 42px;
+    padding: 0 14px;
+
+    border: 1px solid #dbe3ec;
+    border-radius: 12px;
+
+    background: #fafcff;
+    color: #333;
+
+    font-size: 14px;
+    font-weight: 500;
+
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+#availableEvaluatorSelect:focus,
+#finalEvaluatorSelect:focus {
+    border-color: #4CAF50;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(76,175,80,0.12);
+}
+
+/* 평가자 추가 버튼 */
+.add-evaluator-btn {
+    height: 42px;
+    padding: 0 18px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: linear-gradient(135deg, #4CAF50, #43a047);
+    color: white;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    white-space: nowrap;
+
+    transition: all 0.2s ease;
+}
+
+.add-evaluator-btn:hover {
+    background: linear-gradient(135deg, #43a047, #388e3c);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(76,175,80,0.25);
+}

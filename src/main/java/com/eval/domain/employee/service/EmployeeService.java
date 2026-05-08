@@ -252,4 +252,7 @@ public class EmployeeService {
         }
         
     }
+    public List<Employee> findExecutive() {
+        return employeeRepository.findByLevelId(6);
+    }
 }
