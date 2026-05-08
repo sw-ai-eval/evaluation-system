@@ -65,11 +65,17 @@
 			            <button class="btn-secondary">조회</button>
 			        </div>
 			
-			        <button class="btn-danger">평가자 초기화</button>
-			
+			        <button type="button" class="btn-danger"
+					        onclick="submitResetForm()">
+					    평가자 초기화
+					</button>
+			        
 			    </div>
 			
 			</div>
+			<form id="resetForm" method="post" action="/evaluator/reset" >
+			    <input type="hidden" name="deptId" id="resetDeptId">
+			</form>
 
             <!-- 평가자 테이블 0차 평가는 본인 -->
 			<table th:if="${evalList != null and !evalList.isEmpty()}">
@@ -80,7 +86,7 @@
 			        <th>직급</th>
 			        <th>1차 평가자</th>
 			        <th>최종 평가자</th>
-			        <th>생성 방식</th>
+			        <th>상태</th>
 			        <th>관리</th>
 			    </tr>
 			    </thead>
@@ -90,15 +96,18 @@
 			        <td th:text="${eval.deptName}"></td>
 			        <td th:text="${eval.empName}"></td>
 			        <td th:text="${eval.position}"></td>
-			        <td th:text="${eval.firstEvaluators}"></td>
-			        <td th:text="${eval.finalEvaluator}"></td>
+			        <td th:text="${eval.firstEvaluatorNames}"></td>
+			        <td th:text="${eval.finalEvaluatorName}"></td>
 			        <td>
-			            <span th:class="${eval.updateBy != null} ? 'tag tag-warning' : 'tag tag-success'"
-			                  th:text="${eval.updateBy != null} ? '수동' : '자동'">
+			            <span th:class="${eval.systemType == 'MANUAL'} ? 'tag tag-warning' : 'tag tag-success'"
+			                  th:text="${eval.systemType == 'MANUAL'} ? '수정' : '자동'">
 			            </span>
 			        </td>
 			        <td>
-			            <button class="edit-btn">수정</button>
+			            <button class="edit-btn"
+						        th:data-emp-no="${eval.empNo}">
+						    수정
+						</button>
 			        </td>
 			    </tr>
 			    </tbody>
@@ -111,7 +120,108 @@
 			</div>
 
         </div>
+		<div id="editModal" class="modal-drawer" style="display:none;">
+		    <div class="drawer-content">
+		
+		        <form method="post" action="/evaluator/update">
+		
+		            <div class="drawer-header">
+		                <h2>평가자 수정</h2>
+		                <button type="button" class="close-btn" onclick="closeModal()">✕</button>
+		            </div>
+		
+		            <!-- 피평가자 정보 -->
+		            <div class="section">
+		                <h3>피평가자 정보</h3>
+		
+		                <div class="grid">
+		                    <div class="field">
+		                        <label>부서</label>
+		                        <input type="text" id="deptName" readonly>
+		                        <input type="hidden" name="deptId" id="deptId">
+		                    </div>
+		
+		                    <div class="field">
+		                        <label>사원번호</label>
+		                        <input type="text" id="empNo" name="empNo" readonly>
+		                    </div>
+		
+		                    <div class="field">
+		                        <label>이름</label>
+		                        <input type="text" id="empName" readonly>
+		                    </div>
+		
+		                    <div class="field">
+		                        <label>직급</label>
+		                        <input type="text" id="position" readonly>
+		                    </div>
+		                </div>
+		            </div>
+		
+		            <!-- 평가자 -->
+		            <div class="section">
+		                <h3>평가자 정보</h3>
+						
+						<div style="display: flex; flex-direction: column; gap: 8px;">
+		                <div class="field">
+						    <label>1차 평가자</label>
+						
+						    <div class="evaluator-toolbar">
+						        <select id="availableEvaluatorSelect">
+						            <option value="">평가자 선택</option>
+						        </select>
+						
+						        <button type="button"
+						                class="add-evaluator-btn"
+						                onclick="addEvaluator()">
+						            + 평가자 추가
+						        </button>
+						    </div>
+						
+						    <div id="firstEvaluatorsBox" class="tag-box"></div>
+						
+						    <input type="hidden"
+						           name="firstEvaluators"
+						           id="firstEvaluatorsInput">
+						</div>
+		
+		                <div class="field">
+						    <label>2차 평가자</label>
+						
+						    <div class="evaluator-toolbar">
+						        <select id="finalEvaluatorSelect" name="finalEvaluator">
+									<option value="">최종 평가자를 선택하세요</option>
+						            <option th:each="executive : ${executiveList}"
+						                    th:value="${executive.empNo}"
+						                    th:text="${executive.name}">
+						            </option>
+						
+						        </select>
+						    </div>
+						</div>
+						</div>
+<!-- 		                <div class="field checkbox">
+		                    <label>
+		                        <input type="checkbox" name="excluded">
+		                        평가 대상 제외
+		                    </label>
+		                </div> -->
+		            </div>
+					
+					<div style="display: flex; justify-content: space-between; align-items: center;">
+					    <button type="button" class="btn-danger" onclick="delate(empNo)">삭제</button>
+					
+					    <div class="button-area">
+					        <button type="submit" class="btn-primary">저장</button>
+					        <button type="button" class="btn" onclick="closeModal()">닫기</button>
+					    </div>
+					</div>
+		
+		        </form>
+		    </div>
+		</div>
     </div>
 </div>
+
 </body>
 </html>
