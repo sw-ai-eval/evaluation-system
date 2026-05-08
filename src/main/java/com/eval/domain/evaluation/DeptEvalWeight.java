@@ -7,8 +7,9 @@ import java.io.Serializable;
 @Entity
 @Table(name = "dept_eval_weight_52")
 @Getter @Setter @NoArgsConstructor
-@IdClass(DeptEvalWeightId.class) // 복합키 설정
+@IdClass(DeptEvalWeight.DeptEvalWeightId.class) 
 public class DeptEvalWeight {
+
     @Id
     @Column(name = "dept_id")
     private String deptId;
@@ -17,11 +18,12 @@ public class DeptEvalWeight {
     @Column(name = "type_id")
     private Integer typeId;
 
+    @Column(name = "weight")
     private Integer weight;
-}
 
-@Data @NoArgsConstructor @AllArgsConstructor
-class DeptEvalWeightId implements Serializable {
-    private String deptId;
-    private Integer typeId;
+    @Data @NoArgsConstructor @AllArgsConstructor
+    public static class DeptEvalWeightId implements Serializable {
+        private String deptId;
+        private Integer typeId;
+    }
 }

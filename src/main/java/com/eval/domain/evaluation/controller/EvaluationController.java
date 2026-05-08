@@ -1,10 +1,11 @@
 package com.eval.domain.evaluation.controller;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -18,13 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.eval.domain.evaluation.EvalType;
-import com.eval.domain.evaluation.EvalItem;
 import com.eval.domain.dept.Department;
 import com.eval.domain.dept.repository.DepartmentRepository;
+import com.eval.domain.employee.Employee;
+import com.eval.domain.employee.service.EmployeeService;
+import com.eval.domain.evaluation.DeptEvalGrade;
 import com.eval.domain.evaluation.DeptEvalWeight;
-import com.eval.domain.evaluation.repository.EvalTypeRepository;
+import com.eval.domain.evaluation.EvalItem;
+import com.eval.domain.evaluation.EvalType;
 import com.eval.domain.evaluation.repository.EvalItemRepository;
+import com.eval.domain.evaluation.repository.EvalTypeRepository;
 import com.eval.domain.evaluation.service.EvaluationService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -38,15 +42,18 @@ public class EvaluationController {
     private final EvaluationService evaluationService;
     private final EvalTypeRepository evalTypeRepository;
     private final EvalItemRepository evalItemRepository;
+    private final EmployeeService employeeService;
 
     public EvaluationController(DepartmentRepository departmentRepository, 
                                 EvaluationService evaluationService,
                                 EvalTypeRepository evalTypeRepository,
-                                EvalItemRepository evalItemRepository) {
+                                EvalItemRepository evalItemRepository,
+                                EmployeeService employeeService) {
         this.departmentRepository = departmentRepository;
         this.evaluationService = evaluationService;
         this.evalTypeRepository = evalTypeRepository;
         this.evalItemRepository = evalItemRepository;
+        this.employeeService = employeeService;
     }
 
     @GetMapping
@@ -55,26 +62,22 @@ public class EvaluationController {
             @RequestParam(value = "itemPage", defaultValue = "0") int itemPageNum,
             Model model) {
         
-        // 1. 부서 목록 (가중치 설정용)
         List<Department> deptList = departmentRepository.findAll();
         model.addAttribute("deptList", deptList);
         
-        // 2. 모달창 내 '대상 유형' 셀렉트 박스용 전체 목록
-        List<EvalType> typeList = evalTypeRepository.findAll();
+        List<EvalType> typeList = evalTypeRepository.findAll().stream()
+                                    .filter(EvalType::isStatus)
+                                    .collect(Collectors.toList());
         model.addAttribute("typeList", typeList);
         
-        // 3. 가중치 탭용 동적 목록 (운영 상태 '활성' + 가중치 반영 'Y'만 가져옴)
         List<EvalType> weightTypes = evalTypeRepository.findByStatusTrueAndHasWeightTrue();
         model.addAttribute("weightTypes", weightTypes);
         
         int pageSize = 10;
-        
-        // 4. 평가 유형 페이징 목록 (표 출력용, 등록순 ASC)
         PageRequest typePageReq = PageRequest.of(typePageNum, pageSize, Sort.by(Sort.Direction.ASC, "id"));
         Page<EvalType> typePage = evalTypeRepository.findAll(typePageReq);
         model.addAttribute("typePage", typePage);
         
-        // 5. 평가 문항 페이징 목록 (표 출력용, 등록순 ASC)
         PageRequest itemPageReq = PageRequest.of(itemPageNum, pageSize, Sort.by(Sort.Direction.ASC, "id"));
         Page<EvalItem> itemPage = evalItemRepository.findAll(itemPageReq);
         model.addAttribute("itemPage", itemPage);
@@ -82,59 +85,32 @@ public class EvaluationController {
         return "evaluation/setting";
     }
 
-    // --- 평가 유형 저장 ---
-    @PostMapping("/save-type")
+    @GetMapping("/employees/{deptId}")
     @ResponseBody
-    public String saveEvalType(@RequestBody EvalType evalType) {
-        try {
-            boolean isDuplicate = false;
-            
-            if (evalType.getId() == null) {
-                // 신규 등록 시 연도+이름 중복 체크
-                isDuplicate = evalTypeRepository.existsByYearAndName(evalType.getYear(), evalType.getName());
-            } else {
-                // 수정 시 기존 연도나 이름과 달라졌을 때만 중복 체크
-                EvalType existing = evalTypeRepository.findById(evalType.getId()).orElseThrow();
-                if (!existing.getName().equals(evalType.getName()) || !existing.getYear().equals(evalType.getYear())) {
-                    isDuplicate = evalTypeRepository.existsByYearAndName(evalType.getYear(), evalType.getName());
-                }
-            }
-
-            if (isDuplicate) {
-                return "error: 이미 해당 연도에 [" + evalType.getName() + "] 평가 유형이 존재합니다.";
-            }
-
-            if (evalType.getId() != null) {
-                EvalType existing = evalTypeRepository.findById(evalType.getId()).orElseThrow();
-                existing.setName(evalType.getName());
-                existing.setYear(evalType.getYear());
-                existing.setStartDate(evalType.getStartDate());
-                existing.setEndDate(evalType.getEndDate());
-                existing.setStatus(evalType.isStatus());
-                existing.setGuideline(evalType.getGuideline());
-                existing.setHasWeight(evalType.isHasWeight()); // 가중치 반영 여부 업데이트
-                existing.setUpdatedBy("ADMIN");
-                existing.setUpdatedAt(LocalDateTime.now());
-                evalTypeRepository.save(existing);
-            } else {
-                evalType.setCreatedBy("ADMIN");
-                evalType.setCreatedAt(LocalDateTime.now());
-                evalTypeRepository.save(evalType);
-            }
-            return "success";
-        } catch (Exception e) {
-            log.error("❌ 유형 저장 오류: ", e);
-            return "error: " + e.getMessage();
-        }
+    public List<Map<String, Object>> getEmployeesByDept(@PathVariable("deptId") String deptId) {
+        List<Employee> empList = employeeService.getEmployeesByDept(deptId);
+        
+        return empList.stream().map(emp -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("empNo", emp.getEmpNo());
+            map.put("name", emp.getName());
+            return map;
+        }).collect(Collectors.toList());
     }
 
-    // --- 평가 문항 저장 ---
+    
+    @GetMapping("/items/{itemId}/targets")
+    @ResponseBody
+    public List<Map<String, Object>> getItemTargets(@PathVariable("itemId") Integer itemId) {
+        return evaluationService.getItemTargets(itemId);
+    }
+
     @PostMapping("/save-item")
     @ResponseBody
+    @SuppressWarnings("unchecked")
     public String saveEvalItem(@RequestBody Map<String, Object> params) {
         try {
             EvalItem item = new EvalItem();
-            
             if (params.get("id") != null && !params.get("id").toString().isEmpty()) {
                 item = evalItemRepository.findById(Integer.parseInt(params.get("id").toString())).orElseThrow();
             }
@@ -147,24 +123,25 @@ public class EvaluationController {
             item.setContent(params.get("content").toString()); 
             item.setAnswerType(params.get("answerType").toString()); 
             item.setCommon("Y".equals(params.get("isCommon").toString()));
+            item.setWeight(params.get("weight") != null ? Integer.parseInt(params.get("weight").toString()) : 0);
             
-            if (params.get("weight") != null && !params.get("weight").toString().isEmpty()) {
-                item.setWeight(Integer.parseInt(params.get("weight").toString()));
+            if (params.get("explanation") != null && !params.get("explanation").toString().trim().isEmpty()) {
+                item.setExplanation(params.get("explanation").toString().trim());
             } else {
-                item.setWeight(0);
-            }
-            
-            String category = params.get("category").toString();
-            item.setExplanation(category + " 항목에 대한 세부 평가 문항입니다.");
-
-            if (item.getId() == null) {
-                item.setCreatedBy("ADMIN");
-            } else {
-                item.setUpdatedBy("ADMIN");
-                item.setUpdatedAt(LocalDateTime.now());
+                item.setExplanation(params.get("category").toString() + " 항목에 대한 세부 평가 문항입니다.");
             }
 
-            evalItemRepository.save(item);
+            if (item.getId() == null) item.setCreatedBy("ADMIN");
+            else { item.setUpdatedBy("ADMIN"); item.setUpdatedAt(LocalDateTime.now()); }
+
+            item = evalItemRepository.save(item);
+            
+            if (!item.isCommon() && params.get("targets") != null) {
+                List<Map<String, String>> targets = (List<Map<String, String>>) params.get("targets");
+                evaluationService.saveItemTargets(item.getId(), targets);
+            } else {
+                evaluationService.saveItemTargets(item.getId(), null);
+            }
             return "success";
         } catch (Exception e) {
             log.error("❌ 문항 저장 오류: ", e);
@@ -172,50 +149,57 @@ public class EvaluationController {
         }
     }
 
-    // --- 평가 문항 삭제 ---
-    @PostMapping("/delete-item/{id}")
+    @PostMapping("/save-type")
     @ResponseBody
-    public String deleteEvalItem(@PathVariable("id") Integer id) {
+    public String saveEvalType(@RequestBody EvalType evalType) {
         try {
-            evalItemRepository.deleteById(id);
+            if (evalType.getId() != null) {
+                EvalType existing = evalTypeRepository.findById(evalType.getId()).orElseThrow();
+                existing.setName(evalType.getName());
+                existing.setYear(evalType.getYear());
+                existing.setStartDate(evalType.getStartDate());
+                existing.setEndDate(evalType.getEndDate());
+                existing.setStatus(evalType.isStatus());
+                existing.setGuideline(evalType.getGuideline());
+                existing.setHasWeight(evalType.isHasWeight());
+                existing.setUpdatedBy("ADMIN");
+                existing.setUpdatedAt(LocalDateTime.now());
+                evalTypeRepository.save(existing);
+            } else {
+                evalType.setCreatedBy("ADMIN");
+                evalType.setCreatedAt(LocalDateTime.now());
+                evalTypeRepository.save(evalType);
+            }
             return "success";
         } catch (Exception e) {
-            log.error("❌ 문항 삭제 오류: ", e);
             return "error: " + e.getMessage();
         }
     }
 
-    // --- 평가 유형 삭제 ---
-    @PostMapping("/delete-type/{id}")
+    @PostMapping("/delete-item/{id}")
     @ResponseBody
-    public String deleteEvalType(@PathVariable("id") Integer id) {
-        try {
-            evalTypeRepository.deleteById(id);
-            return "success";
-        } catch (DataIntegrityViolationException e) {
-            return "error: 사용 중인 유형은 삭제할 수 없습니다.";
-        } catch (Exception e) {
-            return "error: 서버 오류";
-        }
+    public String deleteEvalItem(@PathVariable("id") Integer id) {
+        evalItemRepository.deleteById(id);
+        return "success";
     }
-    
-    // --- 부서 가중치 저장 ---
+
     @PostMapping("/save-weights")
     @ResponseBody
-    public String saveWeights(@RequestBody List<DeptEvalWeight> weights) {
-        try {
-            if (weights == null || weights.isEmpty()) {
-                return "error: 데이터 없음";
-            }
-            int totalWeight = weights.stream().mapToInt(DeptEvalWeight::getWeight).sum();
-            if (totalWeight != 100) {
-                return "error: 가중치 합계가 100%가 아닙니다. (현재 서버에서 계산된 합계: " + totalWeight + "%)";
-            }
-            evaluationService.saveDeptWeights(weights.get(0).getDeptId(), weights);
-            return "success";
-        } catch (Exception e) {
-            log.error("❌ 가중치 저장 오류: ", e);
-            return "error: " + e.getMessage();
-        }
+    public String saveWeights(@RequestBody List<DeptEvalWeight> weights, @RequestParam(defaultValue = "false") boolean applyToChildren) {
+        evaluationService.saveDeptWeights(weights.get(0).getDeptId(), weights, applyToChildren);
+        return "success";
+    }
+
+    @GetMapping("/grades/{deptId}")
+    @ResponseBody
+    public DeptEvalGrade getDeptGrades(@PathVariable("deptId") String deptId) {
+        return evaluationService.getDeptGrades(deptId);
+    }
+
+    @PostMapping("/save-grades")
+    @ResponseBody
+    public String saveGrades(@RequestBody DeptEvalGrade grade, @RequestParam(defaultValue = "false") boolean applyToChildren) {
+        evaluationService.saveDeptGrades(grade, applyToChildren);
+        return "success";
     }
 }

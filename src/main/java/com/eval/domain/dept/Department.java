@@ -50,4 +50,7 @@ public class Department {
 
     @Transient
     private List<Department> children;
+    
+    @Column(name = "parent_id", insertable = false, updatable = false) 
+    private String parentId;
 }

@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,6 +43,26 @@ public class EmployeeService {
 	this.employeeRepository = employeeRepository;
 	this.departmentRepository=departmentRepository;
 	}
+
+    public List<Employee> getEmployeesByDept(String deptId) {
+        List<String> allDeptIds = new java.util.ArrayList<>();
+        getAllSubDepartmentIds(deptId, allDeptIds);
+        
+        // 하위 부서원까지 싹 다 조회 (단, 퇴사자는 제외)
+        return employeeRepository.findByDeptIdInAndStatusNot(allDeptIds, "RESIGNED");
+    }
+
+    private void getAllSubDepartmentIds(String parentId, List<String> list) {
+        list.add(parentId); 
+        List<String> childIds = departmentRepository.findChildIds(parentId);
+        
+        if (childIds != null && !childIds.isEmpty()) {
+            for (String childId : childIds) {
+                getAllSubDepartmentIds(childId, list); 
+            }
+        }
+    }
+
     /**
      * 신규 사원 등록
      */
@@ -68,7 +89,7 @@ public class EmployeeService {
     }
 
     /**
-     *  로그인 실패 횟수 증가 및 자동 잠금 로직
+     * 로그인 실패 횟수 증가 및 자동 잠금 로직
      */
     @Transactional
     public int increaseFailCount(String empNo) {
