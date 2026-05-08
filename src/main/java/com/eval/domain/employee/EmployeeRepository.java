@@ -8,13 +8,16 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
+	
 	List<Employee> findByDeptId(String deptId);
 	
+	List<Employee> findByDeptIdIn(List<String> deptIds);
 	
 	boolean existsByDeptId(String deptId);
 	
-	
 	List<Employee> findByDeptIdAndStatus(String deptId, String status);
+	
+	List<Employee> findByDeptIdInAndStatusNot(List<String> deptIds, String status);
 	
 	@Query(value = "SELECT NEXT VALUE FOR dbo.emp_seq_52", nativeQuery = true) // 사번 증가 
 	Long getNextEmpNo();
@@ -26,7 +29,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     
     @Query("SELECT d.leaderEmpNo FROM Department d WHERE d.id = :deptId")
     String findDeptLeader(@Param("deptId") String deptId);
-    
     
     List<Employee> findByLevelId(int levelId);
 }

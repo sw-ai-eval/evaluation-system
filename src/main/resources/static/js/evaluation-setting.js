@@ -385,12 +385,12 @@ window.openNewItemModal = function() {
     document.getElementById('itemWeight').value = '';
     window.toggleWeightDisplay('SCORE');
     
-    // 특수문항 타겟 UI 초기화 (새로운 트리 구조 대응)
+    // 특수문항 타겟 UI 초기화
     if(typeof window.toggleTargetDisplay === 'function') {
         window.toggleTargetDisplay('Y');
         document.getElementById('targetDeptSelect').value = '';
         document.getElementById('targetEmpArea').style.display = 'none';
-        document.getElementById('finalTargetList').innerHTML = ''; // 최종 리스트 싹 지우기
+        document.getElementById('finalTargetList').innerHTML = ''; 
     }
     
     document.getElementById('itemModalTitle').innerText = '➕ 평가 문항 추가';
@@ -423,7 +423,30 @@ window.openEditItemModal = function(btn) {
     
     if(typeof window.toggleTargetDisplay === 'function') {
         window.toggleTargetDisplay(isCommon);
-        // 향후: 기존에 저장된 타겟 데이터를 불러와서 finalTargetList에 그려주는 로직이 필요합니다.
+        
+        const list = document.getElementById('finalTargetList');
+        if (list) list.innerHTML = ''; // 초기화
+
+        // 특수문항인 경우 서버에서 기존 저장된 타겟 데이터 로드
+        if (isCommon === 'N') {
+            fetch('/evaluation/items/' + id + '/targets')
+                .then(res => res.json())
+                .then(targets => {
+                    targets.forEach(t => {
+                        const typeLabel = t.targetType === 'DEPT' ? '🏢' : '👤';
+                        // 백엔드 구조에 맞춰 이름 혹은 ID 표시
+                        const name = t.targetName ? t.targetName : t.targetValue; 
+                        const targetText = t.targetType === 'DEPT' ? `<b>${name}</b> (부서 전체 적용)` : `${name} (${t.targetValue})`;
+                        
+                        list.innerHTML += `
+                            <li data-type="${t.targetType}" data-value="${t.targetValue}" style="display:flex; justify-content:space-between; align-items:center; padding:6px 10px; background:#f3f4f6; margin-bottom:5px; border-radius:4px; font-size:13px;">
+                                <span>${typeLabel} ${targetText}</span>
+                                <button type="button" onclick="this.parentElement.remove()" style="border:none; background:none; color:#dc2626; cursor:pointer; font-size:16px;">&times;</button>
+                            </li>`;
+                    });
+                })
+                .catch(err => console.error('타겟 데이터 로드 에러:', err));
+        }
     }
     
     document.getElementById('itemModalTitle').innerText = '✏️ 평가 문항 수정';
@@ -441,7 +464,7 @@ window.saveItemToServer = function() {
         if(text !== "") explanationValue = text;
     }
 
-    // 🌟 새로운 방식의 타겟 데이터 수집
+    // 새로운 방식의 타겟 데이터 수집
     let targets = [];
     if (isCommonVal === 'N') {
         const listItems = document.querySelectorAll('#finalTargetList li');
@@ -468,7 +491,7 @@ window.saveItemToServer = function() {
         weight: (answerType === 'TEXT') ? 0 : (parseInt(weightVal) || 0),
         
         explanation: explanationValue,
-        targets: targets // 배열 통째로 전송
+        targets: targets
     };
 
     if (!data.typeId) { alert("평가 유형을 선택해주세요."); return; }

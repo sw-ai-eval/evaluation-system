@@ -1,13 +1,16 @@
 package com.eval.domain.evaluation.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.eval.domain.dept.Department;
 import com.eval.domain.dept.repository.DepartmentRepository;
+import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.evaluation.DeptEvalGrade;
 import com.eval.domain.evaluation.DeptEvalWeight;
 import com.eval.domain.evaluation.EvalItemTarget;
@@ -26,6 +29,7 @@ public class EvaluationService {
     private final DeptEvalGradeRepository gradeRepository;
     private final DepartmentRepository departmentRepository;
     private final EvalItemTargetRepository targetRepository;
+    private final EmployeeRepository employeeRepository; // 🌟 추가됨
 
     // --- [가중치 영역] ---
 
@@ -130,5 +134,33 @@ public class EvaluationService {
                 targetRepository.save(target);
             }
         }
+    }
+    
+    public List<Map<String, Object>> getItemTargets(Integer questionId) {
+        List<EvalItemTarget> targets = targetRepository.findByQuestionId(questionId);
+        
+        return targets.stream().map(t -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("targetType", t.getTargetType());
+            map.put("targetValue", t.getTargetValue());
+            
+            // 기본값은 사번이나 부서 ID로 세팅
+            String displayName = t.getTargetValue(); 
+            
+            if ("DEPT".equals(t.getTargetType())) {
+                // 부서인 경우: DepartmentRepository에서 부서명을 찾아옴
+                departmentRepository.findById(t.getTargetValue())
+                    .ifPresent(dept -> map.put("targetName", dept.getName()));
+            } else if ("EMP".equals(t.getTargetType())) {
+                // 사원인 경우: EmployeeRepository에서 사원명을 찾아옴
+                employeeRepository.findById(t.getTargetValue())
+                    .ifPresent(emp -> map.put("targetName", emp.getName())); // 엔티티의 이름을 꺼내옴
+            }
+            
+            // 만약 퇴사했거나 삭제된 부서라서 이름을 못 찾았다면 그냥 원래 ID를 보여줌
+            map.putIfAbsent("targetName", displayName);
+
+            return map;
+        }).collect(Collectors.toList());
     }
 }

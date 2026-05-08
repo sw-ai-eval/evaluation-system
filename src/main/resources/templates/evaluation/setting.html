@@ -193,6 +193,33 @@
             }
             .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 18px; font-weight: bold; }
             .modal-close { cursor: pointer; border: none; background: none; font-size: 24px; color: #888; padding: 0; }
+            
+            /* 모달 창 전체 높이 제한 및 내부 스크롤 */
+			#questionModal .modal-content {
+    		max-height: 90vh; /* 화면 높이의 90%까지만 허용 */
+    		overflow-y: auto; /* 내용이 길어지면 내부 세로 스크롤 생성 */
+    		display: flex;
+    		flex-direction: column;
+			}
+
+			/* 타겟 설정 영역이 너무 늘어나지 않도록 내부 리스트 공간 제한 */
+			#finalTargetList {
+    		max-height: 150px;
+    		overflow-y: auto;
+    		border: 1px solid #e5e7eb;
+    		padding: 10px;
+    		background: #fafafa;
+    		border-radius: 4px;
+			}
+
+			/* 모달 하단 버튼 영역 고정 */
+			.modal-footer {
+    		position: sticky;
+    		bottom: 0;
+    		background: white;
+    		padding-top: 15px;
+    		border-top: 1px solid #eee;
+			}
         </style>
 
         <div class="tab-container">

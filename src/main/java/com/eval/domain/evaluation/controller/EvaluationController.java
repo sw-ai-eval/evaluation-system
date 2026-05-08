@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -86,7 +85,6 @@ public class EvaluationController {
         return "evaluation/setting";
     }
 
-    // 🌟 사원 조회: getEmpName() 사용
     @GetMapping("/employees/{deptId}")
     @ResponseBody
     public List<Map<String, Object>> getEmployeesByDept(@PathVariable("deptId") String deptId) {
@@ -98,6 +96,13 @@ public class EvaluationController {
             map.put("name", emp.getName());
             return map;
         }).collect(Collectors.toList());
+    }
+
+    
+    @GetMapping("/items/{itemId}/targets")
+    @ResponseBody
+    public List<Map<String, Object>> getItemTargets(@PathVariable("itemId") Integer itemId) {
+        return evaluationService.getItemTargets(itemId);
     }
 
     @PostMapping("/save-item")
@@ -144,7 +149,6 @@ public class EvaluationController {
         }
     }
 
-    // ... (유형 저장, 삭제, 가중치, 등급 기준 저장 등 원본 로직 전체 유지) ...
     @PostMapping("/save-type")
     @ResponseBody
     public String saveEvalType(@RequestBody EvalType evalType) {
