@@ -8,7 +8,6 @@
         ORDER BY year DESC
     </select>
 
-    <!-- 🌟 평가 목록 조회 (period 검색 조건 추가!) -->
     <select id="selectEvalList" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
         SELECT 
             tr.type_id AS typeId,
@@ -23,17 +22,22 @@
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 et ON tr.type_id = et.id
         WHERE 1=1
-        <!-- 1. 기준년도 필터링 -->
         <if test="year != null">
             AND et.year = #{year}
         </if>
-        <!-- 2. 🌟 평가기간(연간/상반기/하반기) 텍스트 필터링 추가 -->
         <if test="period != null and period != ''">
-            AND et.name LIKE CONCAT('%', #{period}, '%')
+            <choose>
+                <when test="period == '상반기'">
+                    AND MONTH(et.start_date) BETWEEN 1 AND 6
+                </when>
+                <when test="period == '하반기'">
+                    AND MONTH(et.start_date) BETWEEN 7 AND 12
+                </when>
+            </choose>
         </if>
+        AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
     </select>
 
-    <!-- 상세 기본 정보 조회 (부서장 사번 포함) -->
     <select id="selectEvalInfo" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
         SELECT 
             tr.type_id AS typeId,
@@ -47,51 +51,61 @@
         FROM type_result_52 tr
         JOIN employee_52 e ON tr.emp_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
-        LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no AND fr.year = (SELECT year FROM eval_type_52 WHERE id = #{typeId})
+        LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no 
+            AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = #{typeId})
         WHERE tr.type_id = #{typeId} AND tr.emp_no = #{empNo}
     </select>
 
-    <!-- 상세 문항 및 답변 조회 -->
     <select id="selectEvalItems" resultType="com.eval.domain.performance.dto.PerformanceDTO$Item">
         SELECT 
             q.id AS questionId,
             q.category AS categoryName,
             q.question AS goalDesc,
+            q.weight AS weight, 
             a1.content AS selfFeedback,
             a1.score AS selfScore,
             a2.content AS firstFeedback,
             a2.score AS firstScore
         FROM eval_question_52 q
         LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
-            AND a1.mapping_id = (SELECT id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND step = 'SELF')
+            AND a1.mapping_id = (
+                SELECT id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                AND CAST(step AS VARCHAR) = 'SELF'
+            )
         LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
-            AND a2.mapping_id = (SELECT id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND step = 'FIRST')
+            AND a2.mapping_id = (
+                SELECT id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                AND CAST(step AS VARCHAR) = 'FIRST'
+            )
         WHERE q.type_id = #{typeId}
     </select>
     
-    <!-- 본인 평가 업데이트 -->
     <update id="updateSelfAnswer">
         UPDATE eval_answer_52
         SET content = #{item.selfFeedback}, 
-            score = #{item.selfScore}, 
-            updated_at = GETDATE()
+            score = #{item.selfScore}
         WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT id FROM eval_target_mapping_52 
-                            WHERE evaluatee_no = #{empNo} AND step = 'SELF')
+          AND mapping_id = (
+                SELECT id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                AND CAST(step AS VARCHAR) = 'SELF'
+          )
     </update>
 
-    <!-- 1차 평가(부서장) 업데이트 -->
     <update id="updateFirstAnswer">
         UPDATE eval_answer_52
         SET content = #{item.firstFeedback}, 
-            score = #{item.firstScore}, 
-            updated_at = GETDATE()
+            score = #{item.firstScore}
         WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT id FROM eval_target_mapping_52 
-                            WHERE evaluatee_no = #{empNo} AND step = 'FIRST')
+          AND mapping_id = (
+                SELECT id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                AND CAST(step AS VARCHAR) = 'FIRST'
+          )
     </update>
 
-    <!-- 문서 진행 상태 업데이트 -->
     <update id="updateEvalStatus">
         UPDATE type_result_52
         SET status = #{status},

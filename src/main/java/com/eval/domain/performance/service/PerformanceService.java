@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.util.List;
 
 @Service
@@ -19,12 +22,18 @@ public class PerformanceService {
         return mapper.selectEvalYears();
     }
 
-    // 2. 평가 목록 조회 (Integer typeId -> String period 로 변경!)
+    // ====================================================================
+    // 2. 평가 목록 조회
+    // ====================================================================
     public List<PerformanceDTO.Info> getEvalList(Integer year, String period) {
-        return mapper.selectEvalList(year, period);
+        // 현재 로그인한 사원의 사번 가져오기
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmpNo = auth.getName(); 
+        
+        return mapper.selectEvalList(year, period, currentEmpNo);
     }
 
-    // 3. 상세 정보 조회 (기존 로직 유지)
+    // 3. 상세 정보 조회
     public PerformanceDTO.Info getEvalDetail(Integer typeId, String empNo) {
         PerformanceDTO.Info info = mapper.selectEvalInfo(typeId, empNo);
         if (info != null) {
@@ -38,19 +47,15 @@ public class PerformanceService {
     @Transactional
     public void saveEvaluation(PerformanceDTO.SaveReq req) {
         if ("SELF".equals(req.getStep())) {
-            // 본인 평가 저장
             for (PerformanceDTO.Item item : req.getItems()) { 
                 mapper.updateSelfAnswer(req.getEmpNo(), item); 
             }
-            // 상태 변경: 본인평가중(0) -> 1차평가대기(1)
             mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1); 
             
         } else if ("FIRST".equals(req.getStep())) {
-            // 1차 평가(부서장) 저장
             for (PerformanceDTO.Item item : req.getItems()) { 
                 mapper.updateFirstAnswer(req.getEmpNo(), item); 
             }
-            // 상태 변경: 1차평가대기(1) -> 1차평가완료(2)
             mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
         }
     }

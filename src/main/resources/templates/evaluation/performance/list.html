@@ -58,7 +58,8 @@
         .feedback-textarea { width: 100%; height: 120px; padding: 8px; box-sizing: border-box; resize: vertical; border: none; font-family: inherit; font-size: 12px; line-height: 1.5; outline: none; }
         .feedback-textarea:focus { background-color: #f8f9fa; }
         .readonly-bg { background-color: #f8f9fa !important; color: #6c757d; cursor: not-allowed; }
-        .score-input { width: 50px; text-align: center; border: 1px solid #ccc; padding: 4px; border-radius: 3px; outline: none; font-weight: bold; }
+        
+        .score-input { width: 50px; text-align: center; border: 1px solid #ccc; padding: 4px; border-radius: 3px; outline: none; font-weight: normal; }
         
         .btn-save { background-color: #0d6efd; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
         .btn-save:hover { background-color: #0b5ed7; }
@@ -75,7 +76,6 @@
             </i>
         </h2>
         
-        <!-- 검색 영역 -->
         <div class="search-area">
             <div class="search-item">
                 <span>기준년도</span>
@@ -99,7 +99,6 @@
         </div>
 
         <div class="split-container">
-            <!-- 1. 좌측 패널 (목록) -->
             <div class="left-panel">
                 <ul class="tabs">
                     <li class="active">진행 문서</li>
@@ -118,7 +117,11 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="eval : ${evalList}" class="clickable-row" th:onclick="|loadEvalDetail(this, ${eval.typeId}, '${eval.empNo}')|">
+                            <tr th:each="eval : ${evalList}" 
+                                class="clickable-row" 
+                                th:data-typeid="${eval.typeId}" 
+                                th:data-empno="${eval.empNo}" 
+                                onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalPeriod}">11.24 - 01.30</td>
                                 <td th:text="${eval.deptName}">개발팀</td>
                                 <td th:text="${eval.position}">선임</td>
@@ -129,7 +132,6 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- 하단 페이징 영역 -->
                 <div class="pagination-wrap">
                     <div class="pagination">
                         <button disabled><i class="fas fa-step-backward"></i></button>
@@ -142,7 +144,6 @@
                 </div>
             </div>
 
-            <!-- 2. 우측 패널 (상세 폼) -->
             <div class="right-panel" id="detailPanel">
                 <div class="detail-header">
                     성과/업무평가 상세 <span class="badge" id="detailStatusBadge">대기</span>
@@ -189,13 +190,10 @@
                                     <th>평가<br>점수</th>
                                 </tr>
                             </thead>
-                            <!-- 자바스크립트로 문항 동적 렌더링 -->
                             <tbody id="evalItemBody"></tbody>
                         </table>
                         
-                        <div style="text-align: right; margin-top: 15px;" id="actionButtons">
-                            <!-- JS를 통해 권한별 버튼(저장/제출) 렌더링 -->
-                        </div>
+                        <div style="text-align: right; margin-top: 15px;" id="actionButtons"></div>
                     </div>
                 </form>
             </div>
@@ -203,21 +201,20 @@
     </div>
 
     <script>
-        // 현재 로그인 사번 (Thymeleaf 연동)
         const currentUserNo = '[[${#authentication.name}]]';
 
-        function loadEvalDetail(rowElement, typeId, empNo) {
-            // 클릭된 행 색상 강조
+        function loadEvalDetail(rowElement) {
+            const typeId = rowElement.getAttribute('data-typeid');
+            const empNo = rowElement.getAttribute('data-empno');
+
             document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
             rowElement.classList.add('selected');
 
-            // DB 상세 데이터 호출
             fetch(`/evaluation/performance/detail/${typeId}/${empNo}`)
                 .then(res => res.json())
                 .then(data => {
-                    document.getElementById('detailPanel').style.display = 'flex'; // 폼 열기
+                    document.getElementById('detailPanel').style.display = 'flex'; 
                     
-                    // 기본 정보 채우기
                     document.getElementById('infoDept').innerText = data.deptName;
                     document.getElementById('infoPos').innerText = data.position;
                     document.getElementById('infoEmpNo').innerText = data.empNo;
@@ -228,7 +225,6 @@
                     document.getElementById('currentTypeId').value = data.typeId;
                     document.getElementById('currentEmpNo').value = data.empNo;
 
-                    // 권한 및 상태 체크
                     const isMyDoc = (data.empNo === currentUserNo);
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
@@ -237,9 +233,9 @@
 
                     let tbodyHtml = '';
                     data.items.forEach(item => {
-                        // 1. 본인 평가 영역 (항상 노출, 권한에 따라 Readonly 처리)
                         const selfReadonly = canEditSelf ? '' : 'readonly';
                         const selfClass = canEditSelf ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
+                        const weight = item.weight || 0;
                         
                         tbodyHtml += `
                             <tr>
@@ -247,17 +243,18 @@
                                 <td style="text-align:left; vertical-align:top; background:#fff; font-size:12px;">
                                     ${item.goalDesc}
                                 </td>
-                                <td style="background:#fff;">-</td>
+                                <td style="background:#fff;">${weight}</td>
                                 <td style="text-align:left; vertical-align:top; background:#fff; padding: 0;">
-                                    <textarea name="selfFeedback_${item.questionId}" class="${selfClass}" ${selfReadonly} placeholder="업무 수행 과정, 결과 및 잘된점/개선할 점을 입력하세요.">${item.selfFeedback || ''}</textarea>
+                                    <textarea name="selfFeedback_${item.questionId}" class="${selfClass}" ${selfReadonly} placeholder="업무 수행 과정 및 결과, 잘된 점/개선할 점을 입력하세요.">${item.selfFeedback || ''}</textarea>
                                 </td>
                                 <td style="background:#fff; vertical-align:middle;">
-                                    <input type="number" name="selfScore_${item.questionId}" value="${item.selfScore || ''}" ${selfReadonly} class="score-input ${selfReadonly ? 'readonly-bg' : ''}">
+                                    <input type="number" name="selfScore_${item.questionId}" value="${item.selfScore || ''}" ${selfReadonly} 
+                                           class="score-input ${selfReadonly ? 'readonly-bg' : ''}"
+                                           min="0" max="${weight}" oninput="validateInput(this, ${weight})">
                                 </td>
                             </tr>
                         `;
 
-                        // 2. 1차 평가(부서장) 영역 추가 (상태가 본인평가중이 아닐 때만 등장)
                         if (data.status !== '본인평가중') {
                             const firstReadonly = canEditFirst ? '' : 'readonly';
                             const firstClass = canEditFirst ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
@@ -269,17 +266,17 @@
                                         <textarea name="firstFeedback_${item.questionId}" class="${firstClass}" ${firstReadonly} placeholder="부서장 평가 의견을 입력하세요.">${item.firstFeedback || ''}</textarea>
                                     </td>
                                     <td>
-                                        <input type="number" name="firstScore_${item.questionId}" value="${item.firstScore || ''}" ${firstReadonly} class="score-input ${firstReadonly ? 'readonly-bg' : ''}">
+                                        <input type="number" name="firstScore_${item.questionId}" value="${item.firstScore || ''}" ${firstReadonly} 
+                                               class="score-input ${firstReadonly ? 'readonly-bg' : ''}"
+                                               min="0" max="${weight}" oninput="validateInput(this, ${weight})">
                                     </td>
                                 </tr>
                             `;
                         }
                     });
                     
-                    // 완성된 HTML을 테이블 몸통에 삽입
                     document.getElementById('evalItemBody').innerHTML = tbodyHtml;
 
-                    // 3. 버튼 동적 렌더링
                     let btnHtml = '';
                     if (canEditSelf) {
                         btnHtml = `<button type="button" class="btn-save" onclick="submitEval('SELF')">본인 평가 저장(제출)</button>`;
@@ -290,14 +287,34 @@
                 });
         }
 
-        // DB 저장 통신 함수
+        function validateInput(input, maxWeight) {
+            const val = parseInt(input.value);
+            if (val < 0) {
+                alert("음수는 입력할 수 없습니다.");
+                input.value = 0;
+            } else if (val > maxWeight) {
+                alert(`배점(${maxWeight})을 초과할 수 없습니다.`);
+                input.value = maxWeight;
+            }
+        }
+
         function submitEval(step) {
+            const prefix = (step === 'SELF') ? 'self' : 'first'; 
+            const scoreInputs = document.querySelectorAll(`input[name^="${prefix}Score_"]`);
+            
+            for (let input of scoreInputs) {
+                const val = parseInt(input.value);
+                const maxWeight = parseInt(input.getAttribute('max'));
+                if (val < 0 || val > maxWeight) {
+                    alert("점수 입력 값이 올바르지 않습니다. 다시 확인해주세요.");
+                    input.focus();
+                    return;
+                }
+            }
+
             if(!confirm("저장 및 제출하시겠습니까?")) return;
             
             const items = [];
-            const prefix = (step === 'SELF') ? 'self' : 'first'; // 'self' 인지 'first'인지에 따라 데이터 수집
-            const scoreInputs = document.querySelectorAll(`input[name^="${prefix}Score_"]`);
-            
             scoreInputs.forEach(input => {
                 const qId = input.name.split('_')[1];
                 const feedbackValue = document.querySelector(`textarea[name="${prefix}Feedback_${qId}"]`).value;
@@ -326,7 +343,7 @@
             .then(result => {
                 if(result === 'success') {
                     alert("성공적으로 저장되었습니다.");
-                    location.reload(); // 저장 완료 후 화면 새로고침
+                    location.reload(); 
                 } else {
                     alert("저장 실패: " + result);
                 }
@@ -336,7 +353,6 @@
         function searchEval() {
             const year = document.getElementById('searchYear').value;
             const period = document.getElementById('searchPeriod').value;
-            
             location.href = `/evaluation/performance/list?year=${year}&period=${period}`;
         }
     </script>

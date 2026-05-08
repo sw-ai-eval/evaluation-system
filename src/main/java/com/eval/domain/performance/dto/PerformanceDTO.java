@@ -25,6 +25,7 @@ public class PerformanceDTO {
         private Integer questionId;
         private String categoryName;
         private String goalDesc;
+        private Integer weight;
         
         private String selfFeedback;
         private Integer selfScore;

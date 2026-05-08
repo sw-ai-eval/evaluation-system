@@ -8,11 +8,16 @@ import java.util.List;
 @Mapper
 public interface PerformanceMapper {
     
-    // 1. 기준년도 리스트 조회 (중복 제거된 year 필드)
+    // 1. 기준년도 리스트 조회
     List<Integer> selectEvalYears();
 
-    // 2. 좌측 사원 목록 조회 (검색 조건: 년도와 기간 문자열)
-    List<PerformanceDTO.Info> selectEvalList(@Param("year") Integer year, @Param("period") String period);
+    // ====================================================================
+    // 2. 좌측 사원 목록 조회 (검색 조건: 년도, 기간 문자열 + empNo 추가)
+    // ====================================================================
+    List<PerformanceDTO.Info> selectEvalList(
+            @Param("year") Integer year, 
+            @Param("period") String period, 
+            @Param("empNo") String empNo);
     
     // 3. 우측 사원 상세 기본 정보 조회
     PerformanceDTO.Info selectEvalInfo(@Param("typeId") Integer typeId, @Param("empNo") String empNo);
