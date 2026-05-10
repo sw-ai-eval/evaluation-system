@@ -46,17 +46,28 @@ public class PerformanceService {
     // 4. 본인/1차 평가 저장 및 상태 변경
     @Transactional
     public void saveEvaluation(PerformanceDTO.SaveReq req) {
+        
+        // [본인 평가] 처리 흐름 (화면에서 "SELF"로 넘어옴 -> DB에는 step=0으로 반영)
         if ("SELF".equals(req.getStep())) {
+
             for (PerformanceDTO.Item item : req.getItems()) { 
                 mapper.updateSelfAnswer(req.getEmpNo(), item); 
             }
-            mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1); 
             
+            if ("Y".equals(req.getIsSubmit())) {
+                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1); 
+            }
+            
+        // [1차 평가] 처리 흐름 (화면에서 "FIRST"로 넘어옴 -> DB에는 step=1로 반영)
         } else if ("FIRST".equals(req.getStep())) {
+            
             for (PerformanceDTO.Item item : req.getItems()) { 
                 mapper.updateFirstAnswer(req.getEmpNo(), item); 
             }
-            mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
+            
+            if ("Y".equals(req.getIsSubmit())) {
+                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
+            }
         }
     }
 }

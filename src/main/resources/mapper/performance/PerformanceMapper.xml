@@ -16,7 +16,12 @@
             e.position AS position,
             e.emp_no AS empNo,
             e.name AS empName,
-            CASE WHEN tr.status = 0 THEN '본인평가중' ELSE '1차평가대기' END AS status
+            CASE 
+                WHEN tr.status = 0 THEN '본인평가중' 
+                WHEN tr.status = 1 THEN '1차평가대기' 
+                WHEN tr.status = 2 THEN '평가완료' 
+                ELSE '알수없음' 
+            END AS status
         FROM type_result_52 tr
         JOIN employee_52 e ON tr.emp_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
@@ -47,7 +52,12 @@
             e.emp_no AS empNo,
             e.name AS empName,
             fr.grade AS totalGrade,
-            CASE WHEN tr.status = 0 THEN '본인평가중' ELSE '1차평가대기' END AS status
+            CASE 
+                WHEN tr.status = 0 THEN '본인평가중' 
+                WHEN tr.status = 1 THEN '1차평가대기' 
+                WHEN tr.status = 2 THEN '평가완료' 
+                ELSE '알수없음' 
+            END AS status
         FROM type_result_52 tr
         JOIN employee_52 e ON tr.emp_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
@@ -69,15 +79,19 @@
         FROM eval_question_52 q
         LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
             AND a1.mapping_id = (
-                SELECT id FROM eval_target_mapping_52 
+                SELECT TOP 1 id FROM eval_target_mapping_52 
                 WHERE evaluatee_no = #{empNo} 
-                AND CAST(step AS VARCHAR) = 'SELF'
+                AND type_id = #{typeId} 
+                AND step = 0  
+                ORDER BY id DESC
             )
         LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
             AND a2.mapping_id = (
-                SELECT id FROM eval_target_mapping_52 
+                SELECT TOP 1 id FROM eval_target_mapping_52 
                 WHERE evaluatee_no = #{empNo} 
-                AND CAST(step AS VARCHAR) = 'FIRST'
+                AND type_id = #{typeId} 
+                AND step = 1  
+                ORDER BY id DESC
             )
         WHERE q.type_id = #{typeId}
     </select>
@@ -88,9 +102,10 @@
             score = #{item.selfScore}
         WHERE question_id = #{item.questionId}
           AND mapping_id = (
-                SELECT id FROM eval_target_mapping_52 
+                SELECT TOP 1 id FROM eval_target_mapping_52 
                 WHERE evaluatee_no = #{empNo} 
-                AND CAST(step AS VARCHAR) = 'SELF'
+                AND step = 0  
+                ORDER BY id DESC
           )
     </update>
 
@@ -100,9 +115,10 @@
             score = #{item.firstScore}
         WHERE question_id = #{item.questionId}
           AND mapping_id = (
-                SELECT id FROM eval_target_mapping_52 
+                SELECT TOP 1 id FROM eval_target_mapping_52 
                 WHERE evaluatee_no = #{empNo} 
-                AND CAST(step AS VARCHAR) = 'FIRST'
+                AND step = 1  
+                ORDER BY id DESC
           )
     </update>
 
