@@ -13,5 +13,7 @@ public class EvaluatorUpdateRequest {
     private String empNo;
     private List<String> firstEvaluators;
     private String finalEvaluator;
+    
+    private Integer typeId;
 
 }

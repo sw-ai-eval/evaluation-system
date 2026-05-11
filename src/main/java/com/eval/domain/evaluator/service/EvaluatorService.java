@@ -11,6 +11,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,8 @@ import com.eval.domain.dept.Department;
 import com.eval.domain.dept.repository.DepartmentRepository;
 import com.eval.domain.employee.Employee;
 import com.eval.domain.employee.EmployeeRepository;
+import com.eval.domain.evaluation.EvalType;
+import com.eval.domain.evaluation.repository.EvalTypeRepository;
 import com.eval.domain.evaluator.EvalTargetMapping;
 import com.eval.domain.evaluator.dto.AvailableEmployeeDto;
 import com.eval.domain.evaluator.dto.EvaluatorDetailDto;
@@ -28,6 +31,8 @@ import com.eval.domain.evaluator.dto.EvaluatorUpdateRequest;
 import com.eval.domain.evaluator.dto.EvaluatorVeiwDto;
 import com.eval.domain.evaluator.repository.EvaluatorRepository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -37,16 +42,18 @@ public class EvaluatorService {
 	 	private final EmployeeRepository employeeRepository;
 	    private final EvaluatorRepository evaluatorRepository;
 	    private final DepartmentRepository departmentRepository;
+	    private final EvalTypeRepository evalTypeRepository;
+	    
+	    @PersistenceContext
+	    private EntityManager em;
 	    
 	    // 평가자 리스트 
-	    public List<EvaluatorVeiwDto> getEvaluatorList(String deptId) {
-
-	        List<EvaluatorVeiwDto> rows = evaluatorRepository.findFlatRows(deptId);
+	    public List<EvaluatorVeiwDto> getEvaluatorList(String deptId, Integer typeId, String employeeSearch) {
+	        List<EvaluatorVeiwDto> rows = evaluatorRepository.findFlatRows(deptId, typeId, employeeSearch);
 
 	        Map<String, EvaluatorVeiwDto> map = new LinkedHashMap<>();
 
 	        for (EvaluatorVeiwDto r : rows) {
-
 	            EvaluatorVeiwDto dto = map.computeIfAbsent(r.getEmpNo(), k -> {
 	                EvaluatorVeiwDto d = new EvaluatorVeiwDto();
 	                d.setEmpNo(r.getEmpNo());
@@ -57,51 +64,42 @@ public class EvaluatorService {
 	                d.setFirstEvaluators(new ArrayList<>());
 	                return d;
 	            });
-	            
-	            if ("AUTO".equals(dto.getSystemType())|| (r.getSystemType() != null &&"MANUAL".equals(r.getSystemType()))) {
-	                    dto.setSystemType(r.getSystemType());
+
+	            if (r.getSystemType() != null) {
+	                dto.setSystemType(r.getSystemType());
 	            }
 
-	            // 1차 평가자
-	            if (r.getFirstEvaluators() != null) {
-
-	                for (EvaluatorDto eval : r.getFirstEvaluators()) {
-
-	                    boolean exists = dto.getFirstEvaluators()
-	                                        .stream()
-	                                        .anyMatch(e -> e.getEmpNo()
-	                                                        .equals(eval.getEmpNo()));
-
-	                    if (!exists) {
-	                        dto.getFirstEvaluators().add(eval);
-	                    }
+	            r.getFirstEvaluators().forEach(eval -> {
+	                if (dto.getFirstEvaluators().stream().noneMatch(e -> e.getEmpNo().equals(eval.getEmpNo()))) {
+	                    dto.getFirstEvaluators().add(eval);
 	                }
-	            }
+	            });
 
-	            // 2차 평가자
 	            if (r.getFinalEvaluatorEmpNo() != null && dto.getFinalEvaluatorEmpNo() == null) {
-
 	                dto.setFinalEvaluatorEmpNo(r.getFinalEvaluatorEmpNo());
 	                dto.setFinalEvaluatorName(r.getFinalEvaluatorName());
 	            }
 	        }
-	        for (EvaluatorVeiwDto dto : map.values()) {
 
-	            dto.setFirstEvaluatorNames(
-	                dto.getFirstEvaluators().stream()
-	                    .map(EvaluatorDto::getName)
-	                    .collect(Collectors.joining(", "))
-	            );
-	        }
+	        map.values().forEach(dto -> dto.setFirstEvaluatorNames(
+	            dto.getFirstEvaluators().stream()
+	                .map(EvaluatorDto::getName)
+	                .collect(Collectors.joining(", "))
+	        ));
+
 	        return new ArrayList<>(map.values());
 	    }
 	    
 	    
 	    // 평가자 자도 ㅇ생성
 	    @Transactional
-	    public void createEvaluatorMapping(String deptId) {
+	    public void createEvaluatorMapping(String deptId, int typeId) {
 	    	
-	    	boolean exists = evaluatorRepository.existsByDeptId(deptId);
+	    	EvalType evalType = evalTypeRepository.findById(typeId)
+	    	        .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
+	    	
+	    	boolean exists = evaluatorRepository.existsByDeptIdAndTypeId(deptId, evalType);
+	    	
 	        if (exists) {
 	            throw new IllegalStateException("이미 해당 부서의 평가 매핑이 존재합니다.");
 	        }
@@ -142,6 +140,7 @@ public class EvaluatorService {
 	                        .step(0)
 	                        .systemType("AUTO")
 	                        .deptId(deptId)
+	                        .typeId(evalType)
 	                        .build());
 	            }
 
@@ -155,6 +154,7 @@ public class EvaluatorService {
 	                        .step(1)
 	                        .systemType("AUTO")
 	                        .deptId(deptId)
+	                        .typeId(evalType)
 	                        .build());
 
 	                // 부서장 → 부서원
@@ -164,6 +164,7 @@ public class EvaluatorService {
 	                        .step(1)
 	                        .systemType("AUTO")
 	                        .deptId(deptId)
+	                        .typeId(evalType)
 	                        .build());
 	            }
 
@@ -179,6 +180,7 @@ public class EvaluatorService {
 	                        .step(2)
 	                        .systemType("AUTO")
 	                        .deptId(deptId)
+	                        .typeId(evalType)
 	                        .build());
 
 	                execIndex++;
@@ -188,22 +190,28 @@ public class EvaluatorService {
 	        evaluatorRepository.saveAll(list);
 	    }
 	    
+	    // 부서 초기화
 	    @Transactional
-	    public void resetEvaluatorMapping(String deptId) {
+	    public void resetEvaluatorMapping(String deptId, Integer typeId) {
 
-	        long deletedCount = evaluatorRepository.deleteByDeptId(deptId);
+	        try {
+	            long deletedCount = evaluatorRepository.deleteByDeptIdAndTypeId_Id(deptId, typeId);
 
-	        if (deletedCount == 0) {
-	            throw new IllegalStateException("초기화할 데이터가 없습니다.");
+	            if (deletedCount == 0) {
+	                throw new IllegalStateException("초기화할 데이터가 없습니다.");
+	            }
+
+	        } catch (DataIntegrityViolationException e) {
+	            throw new IllegalStateException("이미 일부 평가 답변(eval_answer)이 존재하여 전체 초기화할 수 없습니다. 답변 삭제 또는 개별 삭제를 먼저 수행해 주세요.");
 	        }
 	    }
 	    
 	    
-	    
-	    public EvaluatorDetailDto getDetail(String empNo) {
+	    // 세부사항 모달 
+	    public EvaluatorDetailDto getDetail(String empNo, Integer typeId) {
 
 	        List<EvalTargetMapping> list =
-	                evaluatorRepository.findByEvaluateeNo(empNo);
+	                evaluatorRepository.findByEvaluateeNoAndTypeId_Id (empNo, typeId);
 
 	        if (list.isEmpty()) {
 	            throw new IllegalArgumentException("데이터 없음");
@@ -273,25 +281,27 @@ public class EvaluatorService {
 	    
 	    
 	    
-	    
+	    // 평가자 업데이트
 	    @Transactional
-	    public void update(EvaluatorUpdateRequest request) {
+	    public void update(EvaluatorUpdateRequest request, Integer typeId) {
 	    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	        String adminNo = auth.getName();
 	        
 	        String empNo = request.getEmpNo();
 
-	        updateFirstEvaluators(request, empNo, adminNo);
-	        updateFinalEvaluator(request, empNo, adminNo);
+	        updateFirstEvaluators(request, empNo, adminNo, typeId);
+	        updateFinalEvaluator(request, empNo, adminNo, typeId);
 	        
 	        
 	    }
 	    
-	    private void updateFirstEvaluators(EvaluatorUpdateRequest request, String empNo, String adminNo) {
-	    	List<EvalTargetMapping> dbList =evaluatorRepository.findByEvaluateeNoAndStep(empNo, 1);
+	    private void updateFirstEvaluators(EvaluatorUpdateRequest request, String empNo, String adminNo, Integer typeId) {
+	    	List<EvalTargetMapping> dbList =evaluatorRepository.findByEvaluateeNoAndStepAndTypeId_Id(empNo, 1, typeId);
 	    	
 	    	Set<String> requestSet = new HashSet<>(request.getFirstEvaluators());
 	    	
+	    	EvalType type = em.getReference(EvalType.class, typeId);
+	    	type.setId(typeId);
 	    	
 	    	for (String evaluator : requestSet) {
 
@@ -307,7 +317,8 @@ public class EvaluatorService {
 	    	        newData.setDeptId(request.getDeptId());
 	    	        newData.setUpdatedBy(adminNo);
 	    	        newData.setUpdatedAt(LocalDateTime.now());
-
+	    	        newData.setTypeId(type);
+	    	        
 	    	        evaluatorRepository.save(newData);
 	    	    }
 	    	}
@@ -321,11 +332,11 @@ public class EvaluatorService {
 	    }
 	    
 	    
-	    private void updateFinalEvaluator(EvaluatorUpdateRequest request, String empNo, String adminNo) {
+	    private void updateFinalEvaluator(EvaluatorUpdateRequest request, String empNo, String adminNo, Integer typeId) {
 
 	        String newFinal = request.getFinalEvaluator();
 
-	        Optional<EvalTargetMapping> existing =evaluatorRepository.findByEvaluateeNoAndStep(empNo, 2).stream() .findFirst();
+	        Optional<EvalTargetMapping> existing =evaluatorRepository.findByEvaluateeNoAndStepAndTypeId_Id(empNo, 2, typeId).stream() .findFirst();
 
 	        // ⭐ 최종 평가자 제거
 	        if (newFinal == null || newFinal.isBlank()) {
@@ -354,6 +365,9 @@ public class EvaluatorService {
 
 	            // ⭐ 신규 생성
 	            EvalTargetMapping newEntity = new EvalTargetMapping();
+	            
+	        	EvalType type = em.getReference(EvalType.class, typeId);
+	        	type.setId(typeId);
 
 	            newEntity.setEvaluateeNo(empNo);
 	            newEntity.setEvaluatorNo(newFinal);
@@ -362,11 +376,24 @@ public class EvaluatorService {
 	            newEntity.setDeptId(request.getDeptId());
 	            newEntity.setUpdatedBy(adminNo);
 	            newEntity.setUpdatedAt(LocalDateTime.now());
-
+	            newEntity.setTypeId(type);
+	            
+	            
 	            evaluatorRepository.save(newEntity);
 	        }
 	    }
 	    
+	    // 피평가자 대상 제외
+	    @Transactional
+	    public void delete(String deptId, String empNo, Integer typeId) {
+
+	        try {
+	            evaluatorRepository.deleteByDeptIdAndEvaluateeNoAndTypeId_Id(deptId, empNo, typeId);
+
+	        } catch (DataIntegrityViolationException e) {
+	            throw new IllegalStateException("평가 답변(eval_answer)이 존재하여 삭제할 수 없습니다.");
+	        }
+	    }
 	    
 	    
 }

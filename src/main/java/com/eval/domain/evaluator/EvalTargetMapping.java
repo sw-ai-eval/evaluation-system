@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+
+import com.eval.domain.evaluation.EvalType;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -31,4 +34,8 @@ public class EvalTargetMapping {
     private LocalDateTime updatedAt;
     
     private String deptId;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "eval_type_id")
+    private EvalType typeId;
 }

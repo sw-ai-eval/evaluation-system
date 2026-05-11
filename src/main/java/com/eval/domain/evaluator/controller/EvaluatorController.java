@@ -4,6 +4,8 @@ import com.eval.domain.dept.Department;
 import com.eval.domain.dept.service.DepartmentService;
 import com.eval.domain.employee.Employee;
 import com.eval.domain.employee.service.EmployeeService;
+import com.eval.domain.evaluation.EvalType;
+import com.eval.domain.evaluation.service.EvaluationService;
 import com.eval.domain.evaluator.dto.EvaluatorDetailDto;
 import com.eval.domain.evaluator.dto.EvaluatorUpdateRequest;
 import com.eval.domain.evaluator.dto.EvaluatorVeiwDto;
@@ -22,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -31,20 +35,27 @@ public class EvaluatorController {
     private final DepartmentService departmentService;
     private final EvaluatorService evaluatorService;
     private final EmployeeService employeeService;
+    private final EvaluationService evaluationService;
 
     @GetMapping("/evaluator")
     public String evaluators(Model model,
                              @RequestParam(required = false) String deptId,
+                             @RequestParam(required = false) Integer typeId,
+                             @RequestParam(required = false) String employeeSearch, 
                              @ModelAttribute("errorMessage") String errorMessage) {
 
         List<Department> deptList = departmentService.findDepartmentUse();
         List<Employee> executiveList = employeeService.findExecutive();
 
         if (deptId != null && !deptId.isBlank()) {
-            model.addAttribute("evalList", evaluatorService.getEvaluatorList(deptId));
+            model.addAttribute("evalList", evaluatorService.getEvaluatorList(deptId, typeId, employeeSearch));
         } else {
             model.addAttribute("evalList", List.of());
         }
+        
+        List<EvalType> evalTypeList = evaluationService.findAll();
+
+        model.addAttribute("evalTypeList", evalTypeList);
         
         model.addAttribute("deptList", deptList);
         model.addAttribute("selectedDept", deptId);
@@ -57,49 +68,68 @@ public class EvaluatorController {
     }
 
     @PostMapping("/evaluator/create")
-    public String createEvaluator(@RequestParam String deptId,
+    public String createEvaluator(@RequestParam String deptId, @RequestParam Integer typeId,
                                   RedirectAttributes rttr) {
 
         try {
-            evaluatorService.createEvaluatorMapping(deptId);
+            evaluatorService.createEvaluatorMapping(deptId, typeId);
         } catch (Exception e) {   
             rttr.addFlashAttribute("errorMessage", e.getMessage());
         }
 
-        return "redirect:/evaluator?deptId=" + deptId;
+        return "redirect:/evaluator?deptId=" + deptId + "&typeId=" + typeId;
     }
     
     @PostMapping("/evaluator/reset")
-    public String resetEvaluator(@RequestParam String deptId,  RedirectAttributes rttr) {
+    public String resetEvaluator(@RequestParam String deptId,  @RequestParam Integer typeId, RedirectAttributes rttr) {
 
         try {
-        	evaluatorService.resetEvaluatorMapping(deptId);
+        	evaluatorService.resetEvaluatorMapping(deptId, typeId);
         } catch (Exception e) {   
             rttr.addFlashAttribute("errorMessage", e.getMessage());
         }
-    	return "redirect:/evaluator?deptId=" + deptId;
+        return "redirect:/evaluator?deptId=" + deptId;
     }
     
     @GetMapping("/evaluator/detail/{empNo}")
     @ResponseBody
-    public EvaluatorDetailDto detail(@PathVariable String empNo) {
-        return evaluatorService.getDetail(empNo);
+    public EvaluatorDetailDto detail(
+            @PathVariable String empNo,
+            @RequestParam Integer typeId) {
+
+        return evaluatorService.getDetail(empNo, typeId);
     }
     
     @PostMapping("/evaluator/update")
-    public String updateEvaluator(@ModelAttribute EvaluatorUpdateRequest request) {
+    public String updateEvaluator(@ModelAttribute EvaluatorUpdateRequest request, @RequestParam Integer typeId) {
 
-        evaluatorService.update(request);
+        evaluatorService.update(request, typeId);
 
-        return "redirect:/evaluator?deptId=" + request.getDeptId();
+        return "redirect:/evaluator?deptId=" +
+        request.getDeptId() +
+        "&typeId=" +
+        request.getTypeId();
     }
     
-	/*
-	 * @GetMapping("/evaluator/search") public String
-	 * searchEvaluatee(@RequestParam(required = false) String empNo) {
-	 * 
-	 * 
-	 * return "redirect:/evaluator?empNo=" + empNo; }
-	 */
+    @PostMapping("/evaluator/delete")
+    @ResponseBody
+    public Map<String, Object> deleteEvaluator(
+            @RequestParam String deptId,
+            @RequestParam String evaluateeNo,
+            @RequestParam Integer typeId) {
+
+        Map<String, Object> result = new HashMap<>();
+
+        try {
+            evaluatorService.delete(deptId, evaluateeNo, typeId);
+            result.put("success", true);
+
+        } catch (Exception e) {
+            result.put("success", false);
+            result.put("message", e.getMessage());
+        }
+
+        return result;
+    }
 
 }

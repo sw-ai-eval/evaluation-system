@@ -14,9 +14,11 @@ import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.evaluation.DeptEvalGrade;
 import com.eval.domain.evaluation.DeptEvalWeight;
 import com.eval.domain.evaluation.EvalItemTarget;
+import com.eval.domain.evaluation.EvalType;
 import com.eval.domain.evaluation.repository.DeptEvalGradeRepository;
 import com.eval.domain.evaluation.repository.DeptEvalWeightRepository;
 import com.eval.domain.evaluation.repository.EvalItemTargetRepository;
+import com.eval.domain.evaluation.repository.EvalTypeRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +32,7 @@ public class EvaluationService {
     private final DepartmentRepository departmentRepository;
     private final EvalItemTargetRepository targetRepository;
     private final EmployeeRepository employeeRepository; // 🌟 추가됨
+    private final EvalTypeRepository evalTypeRepository; // 김규리가 추가함 
 
     // --- [가중치 영역] ---
 
@@ -162,5 +165,10 @@ public class EvaluationService {
 
             return map;
         }).collect(Collectors.toList());
+    }
+    
+    // 김규리가 추가함
+    public List<EvalType> findAll() {
+        return evalTypeRepository.findAll();
     }
 }

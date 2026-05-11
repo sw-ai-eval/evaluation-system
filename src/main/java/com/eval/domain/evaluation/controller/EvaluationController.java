@@ -165,7 +165,9 @@ public class EvaluationController {
                 existing.setUpdatedBy("ADMIN");
                 existing.setUpdatedAt(LocalDateTime.now());
                 evalTypeRepository.save(existing);
+                
             } else {
+            	
                 evalType.setCreatedBy("ADMIN");
                 evalType.setCreatedAt(LocalDateTime.now());
                 evalTypeRepository.save(evalType);
