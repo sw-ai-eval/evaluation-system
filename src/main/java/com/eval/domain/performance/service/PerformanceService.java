@@ -54,7 +54,7 @@ public class PerformanceService {
                 mapper.updateSelfAnswer(req.getEmpNo(), item); 
             }
             
-            if ("Y".equals(req.getIsSubmit())) {
+            if ("Y".equals(req.getSubCheck())) {
                 mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1); 
             }
             
@@ -65,8 +65,8 @@ public class PerformanceService {
                 mapper.updateFirstAnswer(req.getEmpNo(), item); 
             }
             
-            if ("Y".equals(req.getIsSubmit())) {
-                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
+            if ("Y".equals(req.getSubCheck())) {
+            	mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
             }
         }
     }

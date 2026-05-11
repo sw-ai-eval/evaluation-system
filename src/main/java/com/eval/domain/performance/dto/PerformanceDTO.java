@@ -37,7 +37,7 @@ public class PerformanceDTO {
     @Data
     public static class SaveReq {
         private String step;
-        private String isSubmit;
+        private String subCheck;
         private Integer typeId;
         private String empNo;
         private List<Item> items;
