@@ -17,35 +17,60 @@
             <div class="filter-box">
 			
 			   <form id="deptForm" method="get" action="/evaluator">
-				    
-				    <div class="filter-row between">
-				        <div class="left-group">
-				            <label>부서 선택:</label>
-				
-				            <select name="deptId">
-				                <option th:each="dept : ${deptList}"
-				                        th:value="${dept.id}"
-				                        th:text="${dept.name}"
-				                        th:selected="${dept.id == selectedDept}">
-				                </option>
-				            </select>
-				
-				            <button type="button" class="btn-secondary"
-				                    onclick="submitDeptForm('/evaluator')">
-				                조회
-				            </button>
-				
-				            <button type="button" class="btn-primary"
-				                    onclick="submitDeptForm('/evaluator/create')">
-				                자동 생성
-				            </button>
-				        </div>
-				    </div>
-				
-				</form>
+
+			    <div class="filter-row left-group">
+			        <label>부서 선택:</label>
+			
+			        <select name="deptId">
+			            <option th:each="dept : ${deptList}"
+			                    th:value="${dept.id}"
+			                    th:text="${dept.name}"
+			                    th:selected="${dept.id == selectedDept}">
+			            </option>
+			        </select>
+			
+			        <select name="typeId">
+			            <option th:each="type : ${evalTypeList}"
+			                    th:value="${type.id}"
+			                    th:selected="${type.id == selectedTypeId}"
+			                    th:text="${type.name + ' (' +
+			                              #temporals.format(type.startDate, 'yyyy-MM-dd') +
+			                              ' ~ ' +
+			                              #temporals.format(type.endDate, 'yyyy-MM-dd') + ')'}">
+			            </option>
+			        </select>
+			
+			        <button type="button"
+			                class="btn-secondary"
+			                onclick="submitDeptForm('/evaluator')">
+			            조회
+			        </button>
+			
+			        <button type="button"
+			                class="btn-primary"
+			                onclick="submitDeptForm('/evaluator/create')">
+			            자동 생성
+			        </button>
+			    </div>
+			
+			    <div class="filter-row search-row">
+			        <div class="search-box">
+					    <label>사원 검색:</label>
+					    <input type="text" name="employeeSearch" placeholder="이름 / 사원번호 입력"  th:value="${employeeSearch}">
+					</div>
+			
+			        <button type="button"
+			                class="btn-danger"
+			                onclick="submitResetForm()">
+			            평가자 일괄 초기화
+			        </button>
+			    </div>
+			
+			</form>
 			    
 			    <form id="createForm" method="post" action="/evaluator/create">
 			        <input type="hidden" name="deptId" id="createDeptId">
+			        <input type="hidden" id="createTypeId" name="typeId">
 			    </form>
 			    
 	    		<div th:if="${errorMessage != null and errorMessage != ''}" class="alert-box">
@@ -54,27 +79,9 @@
 							
 			</div>
 
-            <!-- 👇 사원 검색 + 리스트 영역 (분리된 카드) -->
-            <div class="employee-section">
-			
-			    <div class="search-row between">
-			
-			        <div class="search-box">
-			            <label>사원 검색:</label>
-			            <input type="text" placeholder="이름 / 사원번호 입력">
-			            <button class="btn-secondary">조회</button>
-			        </div>
-			
-			        <button type="button" class="btn-danger"
-					        onclick="submitResetForm()">
-					    평가자 초기화
-					</button>
-			        
-			    </div>
-			
-			</div>
 			<form id="resetForm" method="post" action="/evaluator/reset" >
 			    <input type="hidden" name="deptId" id="resetDeptId">
+    			<input type="hidden" name="typeId" id="resetTypeId">
 			</form>
 
             <!-- 평가자 테이블 0차 평가는 본인 -->
@@ -200,6 +207,7 @@
 						    </div>
 						</div>
 						</div>
+						<input type="hidden" name="typeId" id="modalTypeId">
 <!-- 		                <div class="field checkbox">
 		                    <label>
 		                        <input type="checkbox" name="excluded">
@@ -209,7 +217,11 @@
 		            </div>
 					
 					<div style="display: flex; justify-content: space-between; align-items: center;">
-					    <button type="button" class="btn-danger" onclick="delate(empNo)">삭제</button>
+					    <button type="button"
+						        class="btn-danger"
+						        onclick="deleteTarget()">
+						    평가자 대상 삭제
+						</button>
 					
 					    <div class="button-area">
 					        <button type="submit" class="btn-primary">저장</button>
@@ -218,7 +230,9 @@
 					</div>
 		
 		        </form>
+
 		    </div>
+
 		</div>
     </div>
 </div>

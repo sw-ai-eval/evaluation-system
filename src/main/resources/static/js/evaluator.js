@@ -2,18 +2,27 @@ function submitDeptForm(url) {
 
     const deptId = document.querySelector("select[name='deptId']").value;
 
+    const typeId = document.querySelector("select[name='typeId']").value;
+
+
     if (url === '/evaluator/create') {
-        // 👉 POST form 사용
         document.getElementById("createDeptId").value = deptId;
+
+        document.getElementById("createTypeId").value = typeId;
+
         document.getElementById("createForm").submit();
 
     } else {
-        // 👉 GET form 사용
+
         document.getElementById("deptForm").submit();
     }
 }
 function submitResetForm() {
     const deptId = document.querySelector('select[name="deptId"]').value;
+	const typeId = document.querySelector("select[name='typeId']").value;
+	
+	
+	document.getElementById("resetTypeId").value = typeId;
 
     document.getElementById("resetDeptId").value = deptId;
     document.getElementById("resetForm").submit();
@@ -38,14 +47,15 @@ function openEditModal(empNo) {
     const empNameEl = document.getElementById('empName');
     const positionEl = document.getElementById('position');
 	const finalEl = document.getElementById('finalEvaluatorSelect');
-	
+	const typeId = document.querySelector("select[name='typeId']").value;
 
     if (!finalEl) {
         console.error("모달 DOM 문제");
         return;
     }
+	
 
-    fetch('/evaluator/detail/' + empNo)
+    fetch(`/evaluator/detail/${empNo}?typeId=${typeId}`)
         .then(res => res.json())
 		.then(data => {
 
@@ -54,6 +64,7 @@ function openEditModal(empNo) {
 		    empNoEl.value = data.empNo ?? '';
 		    empNameEl.value = data.empName ?? '';
 		    positionEl.value = data.position ?? '';
+			document.getElementById("modalTypeId").value = document.querySelector("select[name='typeId']").value;
 
 		    // ⭐ 1. 먼저 상태 세팅
 		    allEmployees = data.availableEmployees ?? [];
@@ -167,4 +178,33 @@ function renderAvailableEmployees() {
 	       option.textContent = emp.name;
 	       select.appendChild(option);
 	   });
+}
+
+
+function deleteTarget() {
+
+    const empNo = document.getElementById("empNo").value;
+    const deptId = document.getElementById("deptId").value;
+
+    // 현재 선택된 typeId 가져오기
+    const typeId =
+        document.querySelector("select[name='typeId']").value;
+
+    if (!confirm("정말 삭제하시겠습니까?")) {
+        return;
+    }
+
+    fetch(`/evaluator/delete?deptId=${deptId}&typeId=${typeId}&evaluateeNo=${empNo}`, {
+        method: "POST"
+    })
+	.then(res => res.json())
+	.then(data => {
+
+	    if (!data.success) {
+	        alert(data.message);
+	        return;
+	    }
+
+	    location.href = `/evaluator?deptId=${deptId}&typeId=${typeId}`;
+	});
 }
