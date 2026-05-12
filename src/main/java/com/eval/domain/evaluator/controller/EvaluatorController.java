@@ -56,6 +56,7 @@ public class EvaluatorController {
         List<EvalType> evalTypeList = evaluationService.findAll();
 
         model.addAttribute("evalTypeList", evalTypeList);
+        model.addAttribute("selectedTypeId", typeId);
         
         model.addAttribute("deptList", deptList);
         model.addAttribute("selectedDept", deptId);
@@ -88,7 +89,7 @@ public class EvaluatorController {
         } catch (Exception e) {   
             rttr.addFlashAttribute("errorMessage", e.getMessage());
         }
-        return "redirect:/evaluator?deptId=" + deptId;
+        return "redirect:/evaluator?deptId=" + deptId + "&typeId=" + typeId;
     }
     
     @GetMapping("/evaluator/detail/{empNo}")
