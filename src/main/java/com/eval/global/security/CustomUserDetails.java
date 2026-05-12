@@ -3,29 +3,35 @@ package com.eval.global.security;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.eval.domain.employee.dto.EmpManageDTO;
+import com.eval.domain.employee.dto.EmployeeDTO;
 
 public class CustomUserDetails implements UserDetails {
 
     private String empNo;
     private String password;
     private String role;
-    private String position; // 부서장/부서원 구분용
+    private String position; // DTO에는 없어도 OK
     private boolean disabled;
 
-    public CustomUserDetails(EmpManageDTO employee) {
+    public CustomUserDetails(EmployeeDTO employee) {
         this.empNo = employee.getEmpNo();
         this.password = employee.getPassword();
         this.role = employee.getRole();
-        this.position = employee.getPosition(); // 여기서 position 세팅
+
+        // EmployeeDTO에 position이 없으므로, 조건에 따라 기본값 설정
+        // 예: empNo가 특정 범위면 부서장, 아니면 부서원 등
+        this.position = employee.getPosition(); 
+        // 필요하면 DB나 서비스에서 따로 가져와 덮어쓸 수도 있음
+
         this.disabled = "퇴사".equals(employee.getStatus());
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(() -> role);
+        return List.of(new SimpleGrantedAuthority("ROLE_" + role));
     }
 
     @Override
@@ -39,35 +45,17 @@ public class CustomUserDetails implements UserDetails {
     }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return !disabled;
-    }
+    public boolean isEnabled() { return !disabled; }
 
-    // 추가 getter
-    public String getRole() {
-        return role;
-    }
+    public String getRole() { return role; }
+    public String getPosition() { return position; }
 
-    public String getPosition() {
-        return position;
-    }
-
-    // helper 메서드 (부서장/부서원 구분용)
-    public boolean isDeptHead() {
-        return "부서장".equalsIgnoreCase(position);
-    }
-
-    public boolean isStaff() {
-        return "부서원".equalsIgnoreCase(position);
-    }
+    public boolean isDeptHead() { return "부서장".equalsIgnoreCase(position); }
+    public boolean isStaff() { return "부서원".equalsIgnoreCase(position); }
 }

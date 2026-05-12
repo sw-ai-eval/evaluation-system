@@ -10,6 +10,7 @@
             status,             
             LTRIM(RTRIM(password)) AS password,
             role,
+            position,
             locked,
             login_fail_count AS failCount 
         FROM dbo.employee_52

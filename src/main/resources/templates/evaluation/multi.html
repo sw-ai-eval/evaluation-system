@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>성과/업무평가 및 조회</title>
+    <title>다면평가 및 조회</title>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" th:href="@{/css/sidebar.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -76,7 +76,7 @@
             </i>
         </h2>
         
-        <div class="search-area">
+        <!-- <div class="search-area">
             <div class="search-item">
                 <span>기준년도</span>
                 <select id="searchYear">
@@ -96,7 +96,7 @@
                 </select>
             </div>
             <button class="btn-search" onclick="searchEval()">조회</button>
-        </div>
+        </div> -->
 
         <div class="split-container">
             <!-- 좌측 목록 패널 -->
@@ -109,9 +109,10 @@
                     <table>
                         <thead>
                             <tr>
+                            	<th>부서명</th>
+                            	<th>평가자</th>
                                 <th>평가수행기간</th>
-                                <th>부서명</th>
-                                <th>직위</th>
+                                <th>대상직위</th>
                                 <th>대상사번</th>
                                 <th>대상자명</th>
                                 <th>상태</th>
@@ -121,15 +122,15 @@
                             <tr th:each="eval : ${evalList}" 
                                 class="clickable-row" 
                                 th:data-typeid="${eval.typeId}" 
-                                th:data-empno="${eval.empNo}" 
-                                th:data-role="${eval.role}" 
+                                th:data-empno="${eval.evaluateeNo}" 
                                 onclick="loadEvalDetail(this)">
-                                <td th:text="${eval.evalPeriod}">11.24 - 01.30</td>
-                                <td th:text="${eval.deptName}">개발팀</td>
-                                <td th:text="${eval.position}">선임</td>
-                                <td th:text="${eval.empNo}">1001</td>
-                                <td th:text="${eval.empName}">홍길동</td>
-                                <td><span class="badge" th:text="${eval.status}">본인평가중</span></td>
+                                <td th:text="${eval.deptName}"></td>
+                                <td th:text="${eval.evaluatorName}"></td>
+                                <td th:text="${eval.evalPeriod}"></td>
+                                <td th:text="${eval.position}"></td>
+                                <td th:text="${eval.evaluateeNo}"></td>
+                                <td th:text="${eval.evaluateeName}"></td>
+                                <td><span class="badge" th:text="${eval.statusName}">본인평가중</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -149,7 +150,7 @@
             <!-- 우측 상세 패널 -->
             <div class="right-panel" id="detailPanel">
                 <div class="detail-header">
-                    성과/업무평가 상세 <span class="badge" id="detailStatusBadge">대기</span>
+                    다면평가 상세 <span class="badge" id="detailStatusBadge">대기</span>
                 </div>
                 
                 <div class="info-section">
@@ -174,8 +175,8 @@
                     </div>
                 </div>
 
-                <!-- 본인점수 vs 전체 평균 차트 -->
-                <div class="sub-title">본인 점수 vs 전체 평균</div>
+                본인점수 vs 전체 평균 차트
+                <div class="sub-title">평가 대상자 점수 vs 전체 평균</div>
                 <canvas id="scoreChart" style="height:150px; margin-bottom: 15px;"></canvas>
 
                 <form id="evalForm">
@@ -203,87 +204,96 @@
                         <div style="text-align: right; margin-top: 15px;" id="actionButtons"></div>
                     </div>
                 </form>
-            </div>
+            </div> 
         </div>
     </div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script type="text/javascript">
+const currentUserNo = '[[${#authentication.name}]]';
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+function loadEvalDetail(rowElement) {
+    const typeId = rowElement.getAttribute('data-typeid');
+    const empNo = rowElement.getAttribute('data-empno');
+    const role = rowElement.getAttribute('data-role');
 
-    <script>
-    const currentUserNo = '[[${#authentication.name}]]';
+    document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
+    rowElement.classList.add('selected');
 
-    function loadEvalDetail(rowElement) {
-        const typeId = rowElement.getAttribute('data-typeid');
-        const empNo = rowElement.getAttribute('data-empno');
-        const role = rowElement.getAttribute('data-role'); // DEPT_HEAD, STAFF, EXEC
+    fetch(`/evaluation/multi/detail/${typeId}/${empNo}`)
+        .then(res => res.json())
+        .then(data => {
 
-        document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
-        rowElement.classList.add('selected');
+            document.getElementById('detailPanel').style.display = 'flex';
 
-        fetch(`/evaluation/performance/detail/${typeId}/${empNo}`)
-            .then(res => res.json())
-            .then(data => {
-                document.getElementById('detailPanel').style.display = 'flex';
-                
-                document.getElementById('infoDept').innerText = data.deptName;
-                document.getElementById('infoPos').innerText = data.position;
-                document.getElementById('infoEmpNo').innerText = data.empNo;
-                document.getElementById('infoName').innerText = data.empName;
-                document.getElementById('infoGrade').innerText = data.totalGrade || '-';
-                document.getElementById('detailStatusBadge').innerText = data.status;
+            // ✅ DTO 기준으로 수정
+            document.getElementById('infoDept').innerText = data.deptName;
+            document.getElementById('infoPos').innerText = data.position;
 
-                document.getElementById('currentTypeId').value = data.typeId;
-                document.getElementById('currentEmpNo').value = data.empNo;
+            // empNo / name 구분 중요
+            document.getElementById('infoEmpNo').innerText = data.evaluateeNo;
+            document.getElementById('infoName').innerText = data.evaluateeName;
 
-                const isDeptHead = role === 'DEPT_HEAD';
-                const isStaff = role === 'STAFF';
+            document.getElementById('infoGrade').innerText = data.totalGrade || '-';
 
-                // 차트 렌더링
-                const ctx = document.getElementById('scoreChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: data.items.map(i => i.categoryName),
-                        datasets: [
-                            { label: '본인 점수', data: data.items.map(i => i.selfScore || 0), backgroundColor: '#0d6efd' },
-                            { label: '전체 평균', data: data.items.map(i => i.avgScore || 0), backgroundColor: '#6c757d' }
-                        ]
-                    },
-                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
-                });
+            // statusName으로 변경
+            document.getElementById('detailStatusBadge').innerText = data.statusName;
 
-                // 평가 항목 렌더링
-                let tbodyHtml = '';
-                if (data.items && data.items.length > 0) {
-                    data.items.forEach(item => {
-                        const readonlyClass = isDeptHead ? 'readonly-bg' : '';
-                        const scoreReadonly = isDeptHead ? 'readonly' : '';
-                        tbodyHtml += `
-                            <tr>
-                                <td>${item.categoryName}</td>
-                                <td>${item.title}</td>
-                                <td>${item.weight}</td>
-                                <td>${item.feedback || ''}</td>
-                                <td><input type="number" class="${readonlyClass}" value="${item.selfScore || ''}" ${scoreReadonly}></td>
-                            </tr>
-                        `;
-                    });
-                }
-                document.getElementById('evalItemBody').innerHTML = tbodyHtml;
+            document.getElementById('currentTypeId').value = data.typeId;
+            document.getElementById('currentEmpNo').value = data.evaluateeNo;
 
-                // 버튼 권한 제어
-                const btnDiv = document.getElementById('actionButtons');
-                btnDiv.innerHTML = '';
-                if (isStaff && data.status === '본인평가중') {
-                    btnDiv.innerHTML = '<button type="button" class="btn-save" onclick="saveEval()">임시 저장</button> <button type="button" class="btn-submit" onclick="submitEval()">제출</button>';
+            const isDeptHead = role === 'DEPT_HEAD';
+            const isStaff = role === 'STAFF';
+
+            // 차트
+            const ctx = document.getElementById('scoreChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.items.map(i => i.categoryName),
+                    datasets: [
+                        { label: '본인 점수', data: data.items.map(i => i.selfScore || 0), backgroundColor: '#0d6efd' },
+                        { label: '전체 평균', data: data.items.map(i => i.avgScore || 0), backgroundColor: '#6c757d' }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true } }
                 }
             });
-    }
 
-    function saveEval() { alert('임시 저장 완료'); }
-    function submitEval() { alert('제출 완료'); }
-    function searchEval() { alert('검색 기능 호출'); }
-    </script>
+            // 평가 항목
+            let tbodyHtml = '';
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    const readonlyClass = isDeptHead ? 'readonly-bg' : '';
+                    const scoreReadonly = isDeptHead ? 'readonly' : '';
+
+                    tbodyHtml += `
+                        <tr>
+                            <td>${item.categoryName}</td>
+                            <td>${item.goalDesc}</td>
+                            <td>${item.weight}</td>
+                            <td>${item.selfFeedback || ''}</td>
+                            <td>
+                                <input type="number"
+                                    class="${readonlyClass}"
+                                    value="${item.selfScore || ''}"
+                                    ${scoreReadonly}>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            document.getElementById('evalItemBody').innerHTML = tbodyHtml;
+        });
+}
+
+function saveEval() { alert('임시 저장 완료'); }
+function submitEval() { alert('제출 완료'); }
+function searchEval() { alert('검색 기능 호출'); }
+
+</script>
 </body>
 </html>
