@@ -10,23 +10,27 @@
 
     <select id="selectEvalList" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
         SELECT 
-            tr.type_id AS typeId,
-            et.name AS evalPeriod,
+            m.eval_type_id AS typeId,
+            /* '성과평가' 명칭 대신 날짜 기간(2026-05-01 ~ 2026-05-31) 출력 */
+            FORMAT(et.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(et.end_date, 'yyyy-MM-dd') AS evalPeriod,
             d.name AS deptName,
             e.position AS position,
             e.emp_no AS empNo,
             e.name AS empName,
             CASE 
-                WHEN tr.status = 0 THEN '본인평가중' 
-                WHEN tr.status = 1 THEN '1차평가대기' 
-                WHEN tr.status = 2 THEN '평가완료' 
+                WHEN m.status = 0 THEN '본인평가중' 
+                WHEN m.status = 1 THEN '1차평가대기' 
+                WHEN m.status = 2 THEN '평가완료' 
                 ELSE '알수없음' 
             END AS status
-        FROM type_result_52 tr
-        JOIN employee_52 e ON tr.emp_no = e.emp_no
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
-        JOIN eval_type_52 et ON tr.type_id = et.id
-        WHERE 1=1
+        JOIN eval_type_52 et ON m.eval_type_id = et.id
+        WHERE m.eval_type_id = 2             /* 성과평가 고정 */
+          AND m.step = 0                    /* 리스트 중복 방지 (한 명당 1줄) */
+          /* 🌟 원본 로직: 본인 사번이거나, 내가 해당 부서의 팀장일 때만 노출 */
+          AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
         <if test="year != null">
             AND et.year = #{year}
         </if>
@@ -40,12 +44,12 @@
                 </when>
             </choose>
         </if>
-        AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
+        ORDER BY (CASE WHEN e.emp_no = #{empNo} THEN 0 ELSE 1 END), e.emp_no ASC
     </select>
 
     <select id="selectEvalInfo" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
-        SELECT 
-            tr.type_id AS typeId,
+        SELECT TOP 1
+            m.eval_type_id AS typeId,
             d.name AS deptName,
             d.leader_emp_no AS leaderEmpNo,
             e.position AS position,
@@ -53,17 +57,19 @@
             e.name AS empName,
             fr.grade AS totalGrade,
             CASE 
-                WHEN tr.status = 0 THEN '본인평가중' 
-                WHEN tr.status = 1 THEN '1차평가대기' 
-                WHEN tr.status = 2 THEN '평가완료' 
+                WHEN m.status = 0 THEN '본인평가중' 
+                WHEN m.status = 1 THEN '1차평가대기' 
+                WHEN m.status = 2 THEN '평가완료' 
                 ELSE '알수없음' 
             END AS status
-        FROM type_result_52 tr
-        JOIN employee_52 e ON tr.emp_no = e.emp_no
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no 
-            AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = #{typeId})
-        WHERE tr.type_id = #{typeId} AND tr.emp_no = #{empNo}
+            AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = m.eval_type_id)
+        WHERE m.eval_type_id = #{typeId} 
+          AND m.evaluatee_no = #{empNo}
+          AND m.step = 0  /* 🌟 한 사람당 한 줄만 가져오도록 고정 */
     </select>
 
     <select id="selectEvalItems" resultType="com.eval.domain.performance.dto.PerformanceDTO$Item">
@@ -80,17 +86,13 @@
         LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
             AND a1.mapping_id = (
                 SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} 
-                AND type_id = #{typeId} 
-                AND step = 0  
+                WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0  
                 ORDER BY id DESC
             )
         LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
             AND a2.mapping_id = (
                 SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} 
-                AND type_id = #{typeId} 
-                AND step = 1  
+                WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1  
                 ORDER BY id DESC
             )
         WHERE q.type_id = #{typeId}
@@ -103,9 +105,7 @@
         WHERE question_id = #{item.questionId}
           AND mapping_id = (
                 SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} 
-                AND step = 0  
-                ORDER BY id DESC
+                WHERE evaluatee_no = #{empNo} AND step = 0 ORDER BY id DESC
           )
     </update>
 
@@ -116,17 +116,15 @@
         WHERE question_id = #{item.questionId}
           AND mapping_id = (
                 SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} 
-                AND step = 1  
-                ORDER BY id DESC
+                WHERE evaluatee_no = #{empNo} AND step = 1 ORDER BY id DESC
           )
     </update>
 
     <update id="updateEvalStatus">
-        UPDATE type_result_52
+        UPDATE eval_target_mapping_52
         SET status = #{status},
             updated_at = GETDATE()
-        WHERE type_id = #{typeId} AND emp_no = #{empNo}
+        WHERE eval_type_id = #{typeId} AND evaluatee_no = #{empNo}
     </update>
 
 </mapper>

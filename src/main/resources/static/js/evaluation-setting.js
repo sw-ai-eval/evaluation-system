@@ -95,6 +95,9 @@ window.calculateTotal = function() {
 
 // [가중치] 서버로 가중치 데이터 전송
 function saveWeightsToServer() {
+    const btn = document.getElementById('btnSaveWeight');
+    if (btn.disabled) return;
+
     const deptId = document.getElementById('deptSelect').value;
     if (!deptId) {
         alert("대상 부서를 먼저 선택해주세요.");
@@ -114,6 +117,8 @@ function saveWeightsToServer() {
 
     const applyToChildren = document.getElementById('applyToChildren').checked;
 
+    btn.disabled = true;
+
     fetch(`/evaluation/save-weights?applyToChildren=${applyToChildren}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,18 +128,24 @@ function saveWeightsToServer() {
     .then(data => {
         if (data === "success") {
             alert("✅ 가중치 설정이 성공적으로 저장되었습니다.");
+            location.reload();
         } else {
             alert("❌ 저장 실패: " + data);
+            btn.disabled = false; // 실패 시 다시 누를 수 있게 복구
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert("서버 통신 중 오류가 발생했습니다.");
+        btn.disabled = false; // 에러 시 복구
     });
 }
 
 // [등급] 조직별 등급 기준 DB 저장
 function saveGradesToServer() {
+    const btn = document.getElementById('btnSaveGrade');
+    if (btn.disabled) return;
+
     const deptId = document.getElementById('deptSelect').value;
     
     if (!deptId) {
@@ -152,6 +163,8 @@ function saveGradesToServer() {
     };
 
     const applyToChildren = document.getElementById('applyGradeToChildren').checked;
+    
+    btn.disabled = true;
 
     fetch(`/evaluation/save-grades?applyToChildren=${applyToChildren}`, {
         method: 'POST',
@@ -162,13 +175,16 @@ function saveGradesToServer() {
     .then(data => {
         if (data === "success") {
             alert("✅ 등급 기준 설정이 성공적으로 저장되었습니다.");
+            location.reload(); // 🌟 새로고침 추가
         } else {
             alert("❌ 저장 실패: " + data);
+            btn.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
         alert("서버 통신 중 오류가 발생했습니다.");
+        btn.disabled = false;
     });
 }
 
@@ -183,23 +199,49 @@ function loadDeptSettings(deptId) {
         return;
     }
     
+    // 로딩 중임을 알리기 위해 입력창 잠시 비활성화
+    weightInputs.forEach(input => input.value = '');
+
+    // 1. 가중치 데이터 로드
     fetch('/evaluation/weights/' + deptId)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) throw new Error('데이터를 불러올 수 없습니다.');
+            return response.json();
+        })
         .then(savedWeights => {
+            console.log("🔥 서버에서 받은 가중치 데이터:", savedWeights); // F12 콘솔에서 데이터 확인용
+
+            // 데이터가 없으면 전부 0으로 초기화
+            if (!savedWeights || savedWeights.length === 0) {
+                weightInputs.forEach(input => input.value = 0);
+                if(typeof window.calculateTotal === 'function') window.calculateTotal();
+                return;
+            }
+
             weightInputs.forEach(input => {
-                const typeId = parseInt(input.getAttribute('data-typeid'));
-                const matched = savedWeights.find(w => w.typeId === typeId);
-                input.value = matched ? matched.weight : 0;
+                // 화면의 data-typeid 값
+                const targetTypeId = input.getAttribute('data-typeid');
+                
+                // 🌟 핵심: 서버 데이터의 이름표가 typeId 이든 type_id 이든 둘 다 찾아냄!
+                const matched = savedWeights.find(w => 
+                    String(w.typeId) === String(targetTypeId) || 
+                    String(w.type_id) === String(targetTypeId)
+                );
+                
+                input.value = matched ? matched.weight : 0; // 찾으면 그 값, 못 찾으면 0
             });
+
+            // 불러온 후 합계 다시 계산
             if(typeof window.calculateTotal === 'function') window.calculateTotal();
         })
-        .catch(error => console.error('가중치 로드 에러:', error));
+        .catch(error => {
+            console.error('가중치 로드 에러:', error);
+            weightInputs.forEach(input => input.value = 0);
+        });
 
+    // 2. [등급 기준 로드 부분은 기존과 동일]
     fetch('/evaluation/grades/' + deptId)
-        .then(response => {
-            if (response.ok) return response.json();
-            return null;
-        })
+        .then(response => response.ok ? response.json() : null)
         .then(gradeData => {
             if (gradeData && Object.keys(gradeData).length > 0) {
                 document.getElementById('gradeS').value = gradeData.gradeS;

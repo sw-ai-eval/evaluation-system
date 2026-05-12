@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eval.domain.competency.mapper.CompetencyMapper">
+
+    <select id="selectEvalYears" resultType="int">
+        SELECT DISTINCT t.year
+        FROM eval_type_52 t
+        INNER JOIN eval_target_mapping_52 m ON t.id = m.eval_type_id
+        WHERE t.id = 3
+        ORDER BY t.year DESC
+    </select>
+
+    <select id="selectEvalList" resultType="com.eval.domain.competency.dto.CompetencyDTO$Info">
+        SELECT 
+            m.eval_type_id AS typeId,
+            FORMAT(t.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(t.end_date, 'yyyy-MM-dd') AS evalPeriod,
+            m.evaluatee_no AS empNo,
+            e.name AS empName,
+            d.name AS deptName,
+            e.position AS position,
+            CASE 
+                WHEN m.status = 0 THEN '본인평가중'
+                WHEN m.status = 1 THEN '1차평가대기'
+                WHEN m.status = 2 THEN '평가완료'
+                ELSE '대기'
+            END AS status
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
+        JOIN department_52 d ON e.dept_id = d.id
+        JOIN eval_type_52 t ON m.eval_type_id = t.id
+        WHERE m.eval_type_id = 3
+          AND m.step = 0
+          AND e.status = 'ACTIVE' /* 퇴사/휴직자 제외 */
+          AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        <if test="year != null">
+            AND t.year = #{year}
+        </if>
+        <if test="period != null and period != ''">
+            <choose>
+                <when test="period == '상반기'">
+                    AND MONTH(t.start_date) BETWEEN 1 AND 6
+                </when>
+                <when test="period == '하반기'">
+                    AND MONTH(t.start_date) BETWEEN 7 AND 12
+                </when>
+            </choose>
+        </if>
+        ORDER BY (CASE WHEN e.emp_no = #{currentEmpNo} THEN 0 ELSE 1 END), e.emp_no ASC
+    </select>
+
+    <select id="selectCompetencyInfo" resultType="com.eval.domain.competency.dto.CompetencyDTO$Info">
+        SELECT TOP 1
+            m.eval_type_id AS typeId,
+            m.evaluatee_no AS empNo,
+            e.name AS empName,
+            d.name AS deptName,
+            e.position AS position,
+            d.leader_emp_no AS leaderEmpNo,
+            CASE 
+                WHEN m.status = 0 THEN '본인평가중'
+                WHEN m.status = 1 THEN '1차평가대기'
+                WHEN m.status = 2 THEN '평가완료'
+                ELSE '대기'
+            END AS status
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
+        JOIN department_52 d ON e.dept_id = d.id
+        WHERE m.eval_type_id = #{typeId} AND m.evaluatee_no = #{empNo} AND m.step = 0
+    </select>
+
+    <select id="selectCompetencyItems" resultType="com.eval.domain.competency.dto.CompetencyDTO$Item">
+        SELECT 
+            q.id AS questionId, q.category AS categoryName, q.question AS itemName,
+            q.goal_desc AS goalDesc, q.weight AS weight,
+            CASE 
+                WHEN CAST(a1.score AS VARCHAR) LIKE '1%' THEN 'S'
+                WHEN CAST(a1.score AS VARCHAR) LIKE '0.9%' THEN 'A'
+                WHEN CAST(a1.score AS VARCHAR) LIKE '0.8%' THEN 'B'
+                WHEN CAST(a1.score AS VARCHAR) LIKE '0.7%' THEN 'C'
+                WHEN CAST(a1.score AS VARCHAR) LIKE '0.6%' THEN 'D'
+                ELSE '' 
+            END AS selfGrade, 
+            a1.content AS selfFeedback,
+            CASE 
+                WHEN CAST(a2.score AS VARCHAR) LIKE '1%' THEN 'S'
+                WHEN CAST(a2.score AS VARCHAR) LIKE '0.9%' THEN 'A'
+                WHEN CAST(a2.score AS VARCHAR) LIKE '0.8%' THEN 'B'
+                WHEN CAST(a2.score AS VARCHAR) LIKE '0.7%' THEN 'C'
+                WHEN CAST(a2.score AS VARCHAR) LIKE '0.6%' THEN 'D'
+                ELSE '' 
+            END AS firstGrade, 
+            a2.content AS firstFeedback
+        FROM eval_question_52 q
+        LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
+            AND a1.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0 ORDER BY id DESC)
+        LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
+            AND a2.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1 ORDER BY id DESC)
+        WHERE q.type_id = #{typeId}
+        ORDER BY q.id ASC
+    </select>
+
+    <update id="updateSelfAnswer">
+        UPDATE eval_answer_52 
+        SET score = CASE #{item.selfGrade} 
+                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
+                    END,
+            content = #{item.selfFeedback}
+        WHERE question_id = #{item.questionId}
+          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 0 ORDER BY id DESC)
+    </update>
+
+    <update id="updateFirstAnswer">
+        UPDATE eval_answer_52 
+        SET score = CASE #{item.firstGrade} 
+                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
+                    END,
+            content = #{item.firstFeedback}
+        WHERE question_id = #{item.questionId}
+          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 1 ORDER BY id DESC)
+    </update>
+
+    <update id="updateEvalStatus">
+        UPDATE eval_target_mapping_52 
+        SET status = #{status}, updated_at = GETDATE()
+        WHERE eval_type_id = #{typeId} AND evaluatee_no = #{empNo}
+    </update>
+
+</mapper>

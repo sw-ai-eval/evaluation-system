@@ -204,4 +204,10 @@ public class EvaluationController {
         evaluationService.saveDeptGrades(grade, applyToChildren);
         return "success";
     }
+    
+    @GetMapping("/weights/{deptId}")
+    @ResponseBody
+    public List<DeptEvalWeight> getDeptWeights(@PathVariable("deptId") String deptId) {
+        return evaluationService.getDeptWeights(deptId); 
+    }
 }
