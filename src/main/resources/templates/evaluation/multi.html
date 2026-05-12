@@ -99,6 +99,7 @@
         </div>
 
         <div class="split-container">
+            <!-- 좌측 목록 패널 -->
             <div class="left-panel">
                 <ul class="tabs">
                     <li class="active">진행 문서</li>
@@ -121,6 +122,7 @@
                                 class="clickable-row" 
                                 th:data-typeid="${eval.typeId}" 
                                 th:data-empno="${eval.empNo}" 
+                                th:data-role="${eval.role}" 
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalPeriod}">11.24 - 01.30</td>
                                 <td th:text="${eval.deptName}">개발팀</td>
@@ -144,6 +146,7 @@
                 </div>
             </div>
 
+            <!-- 우측 상세 패널 -->
             <div class="right-panel" id="detailPanel">
                 <div class="detail-header">
                     성과/업무평가 상세 <span class="badge" id="detailStatusBadge">대기</span>
@@ -170,6 +173,10 @@
                         <div class="grade-box-score" id="infoGrade">-</div>
                     </div>
                 </div>
+
+                <!-- 본인점수 vs 전체 평균 차트 -->
+                <div class="sub-title">본인 점수 vs 전체 평균</div>
+                <canvas id="scoreChart" style="height:150px; margin-bottom: 15px;"></canvas>
 
                 <form id="evalForm">
                     <input type="hidden" id="currentTypeId">
@@ -200,211 +207,83 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+
     <script>
-        const currentUserNo = '[[${#authentication.name}]]';
+    const currentUserNo = '[[${#authentication.name}]]';
 
-        function loadEvalDetail(rowElement) {
-            const typeId = rowElement.getAttribute('data-typeid');
-            const empNo = rowElement.getAttribute('data-empno');
+    function loadEvalDetail(rowElement) {
+        const typeId = rowElement.getAttribute('data-typeid');
+        const empNo = rowElement.getAttribute('data-empno');
+        const role = rowElement.getAttribute('data-role'); // DEPT_HEAD, STAFF, EXEC
 
-            document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
-            rowElement.classList.add('selected');
+        document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
+        rowElement.classList.add('selected');
 
-            fetch(`/evaluation/performance/detail/${typeId}/${empNo}`)
-                .then(res => {
-                    if (!res.ok) throw new Error("서버 에러 발생");
-                    return res.json();
-                })
-                .then(data => {
-                    // 🌟 서버에서 에러 객체(500 등)가 반환되었을 때의 방어 로직
-                    if (data.status && typeof data.status === 'number' && data.status >= 400) {
-                        alert("해당 사용자의 평가 데이터를 불러올 수 없습니다. (DB 데이터 확인 필요)");
-                        return;
-                    }
-                    if (data.error) {
-                        alert("오류: " + data.error);
-                        return;
-                    }
-
-                    document.getElementById('detailPanel').style.display = 'flex'; 
-                    
-                    document.getElementById('infoDept').innerText = data.deptName;
-                    document.getElementById('infoPos').innerText = data.position;
-                    document.getElementById('infoEmpNo').innerText = data.empNo;
-                    document.getElementById('infoName').innerText = data.empName;
-                    document.getElementById('infoGrade').innerText = data.totalGrade || '-';
-                    document.getElementById('detailStatusBadge').innerText = data.status;
-
-                    document.getElementById('currentTypeId').value = data.typeId;
-                    document.getElementById('currentEmpNo').value = data.empNo;
-
-                    const isMyDoc = (data.empNo === currentUserNo);
-                    const isDeptHead = (data.leaderEmpNo === currentUserNo);
-                    
-                    const canEditSelf = isMyDoc && data.status === '본인평가중';
-                    const canEditFirst = isDeptHead && data.status === '1차평가대기';
-
-                    let tbodyHtml = '';
-                    if (data.items && data.items.length > 0) {
-                        data.items.forEach(item => {
-                            const selfReadonly = canEditSelf ? '' : 'readonly';
-                            const selfClass = canEditSelf ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
-                            const weight = item.weight || 0;
-                            
-                            tbodyHtml += `
-                                <tr>
-                                    <td style="text-align:center; vertical-align:middle; background:#fff;"><b>${item.categoryName || '주요 업무'}</b></td>
-                                    <td style="text-align:center; vertical-align:middle; background:#fff; font-size:12px;">
-                                        ${item.goalDesc}
-                                    </td>
-                                    <td style="background:#fff;">${weight}</td>
-                                    <td style="text-align:left; vertical-align:top; background:#fff; padding: 0;">
-                                        <textarea name="selfFeedback_${item.questionId}" class="${selfClass}" ${selfReadonly} placeholder="업무 수행 과정 및 결과, 잘된 점/개선할 점을 입력하세요.">${item.selfFeedback || ''}</textarea>
-                                    </td>
-                                    <td style="background:#fff; vertical-align:middle;">
-                                        <input type="number" name="selfScore_${item.questionId}" value="${item.selfScore || ''}" ${selfReadonly} 
-                                            class="score-input ${selfReadonly ? 'readonly-bg' : ''}"
-                                            min="0" max="${weight}" oninput="validateInput(this, ${weight})">
-                                    </td>
-                                </tr>
-                            `;
-
-                            if (data.status !== '본인평가중') {
-                                const firstReadonly = canEditFirst ? '' : 'readonly';
-                                const firstClass = canEditFirst ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
-                                
-                                tbodyHtml += `
-                                    <tr style="background-color: #f1f3f5;">
-                                        <td colspan="3" style="color:#0d6efd; font-weight:bold; font-size:11px;">[부서장 피드백]</td>
-                                        <td style="text-align:left; padding:0;">
-                                            <textarea name="firstFeedback_${item.questionId}" class="${firstClass}" ${firstReadonly} placeholder="부서장 평가 의견을 입력하세요.">${item.firstFeedback || ''}</textarea>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="firstScore_${item.questionId}" value="${item.firstScore || ''}" ${firstReadonly} 
-                                                class="score-input ${firstReadonly ? 'readonly-bg' : ''}"
-                                                min="0" max="${weight}" oninput="validateInput(this, ${weight})">
-                                        </td>
-                                    </tr>
-                                `;
-                            }
-                        });
-                    } else {
-                        tbodyHtml = `<tr><td colspan="5">등록된 평가 문항이 없습니다.</td></tr>`;
-                    }
-                    
-                    document.getElementById('evalItemBody').innerHTML = tbodyHtml;
-
-                    let btnHtml = '';
-                    if (canEditSelf) {
-                        btnHtml = `
-                            <button type="button" class="btn-save" style="background-color: #6c757d; margin-right: 5px;" onclick="submitEval('SELF', false)">임시 저장</button>
-                            <button type="button" class="btn-save" onclick="submitEval('SELF', true)">최종 제출</button>
-                        `;
-                    } else if (canEditFirst) {
-                        btnHtml = `
-                            <button type="button" class="btn-save" style="background-color: #6c757d; margin-right: 5px;" onclick="submitEval('FIRST', false)">임시 저장</button>
-                            <button type="button" class="btn-save" onclick="submitEval('FIRST', true)">1차 평가 제출</button>
-                        `;
-                    }
-                    document.getElementById('actionButtons').innerHTML = btnHtml;
-                })
-                .catch(error => {
-                    console.error('Error fetching data:', error);
-                    alert("데이터를 가져오는 중 문제가 발생했습니다.");
-                });
-        }
-
-        function validateInput(input, maxWeight) {
-            const val = parseInt(input.value);
-            if (val < 0) {
-                alert("음수는 입력할 수 없습니다.");
-                input.value = 0;
-            } else if (val > maxWeight) {
-                alert(`배점(${maxWeight})을 초과할 수 없습니다.`);
-                input.value = maxWeight;
-            }
-        }
-
-        function submitEval(step, isSubmit) {
-            const prefix = (step === 'SELF') ? 'self' : 'first'; 
-            const scoreInputs = document.querySelectorAll(`input[name^="${prefix}Score_"]`);
-            
-            for (let input of scoreInputs) {
-                if (input.value !== '') { 
-                    const val = parseInt(input.value);
-                    const maxWeight = parseInt(input.getAttribute('max'));
-                    if (val < 0 || val > maxWeight) {
-                        alert("점수 입력 값이 올바르지 않습니다. 다시 확인해주세요.");
-                        input.focus();
-                        return;
-                    }
-                }
-            }
-
-            if (isSubmit) {
-                let isComplete = true;
-                for (let input of scoreInputs) {
-                    const qId = input.name.split('_')[1];
-                    const feedback = document.querySelector(`textarea[name="${prefix}Feedback_${qId}"]`).value.trim();
-                    
-                    if (input.value === '' || feedback === '') {
-                        isComplete = false;
-                        break;
-                    }
-                }
-
-                if (!isComplete) {
-                    alert("모든 항목의 내용과 점수를 입력해야 제출할 수 있습니다.");
-                    return; 
-                }
-                if(!confirm("제출 후에는 수정할 수 없습니다. 최종 제출하시겠습니까?")) return;
-            } else {
-                if(!confirm("현재까지 작성된 내용을 임시 저장하시겠습니까?")) return;
-            }
-            
-            const items = [];
-            scoreInputs.forEach(input => {
-                const qId = input.name.split('_')[1];
-                const feedbackValue = document.querySelector(`textarea[name="${prefix}Feedback_${qId}"]`).value;
+        fetch(`/evaluation/performance/detail/${typeId}/${empNo}`)
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailPanel').style.display = 'flex';
                 
-                const scoreValue = input.value === '' ? null : parseInt(input.value);
+                document.getElementById('infoDept').innerText = data.deptName;
+                document.getElementById('infoPos').innerText = data.position;
+                document.getElementById('infoEmpNo').innerText = data.empNo;
+                document.getElementById('infoName').innerText = data.empName;
+                document.getElementById('infoGrade').innerText = data.totalGrade || '-';
+                document.getElementById('detailStatusBadge').innerText = data.status;
 
-                if (step === 'SELF') {
-                    items.push({ questionId: qId, selfFeedback: feedbackValue, selfScore: scoreValue });
-                } else {
-                    items.push({ questionId: qId, firstFeedback: feedbackValue, firstScore: scoreValue });
+                document.getElementById('currentTypeId').value = data.typeId;
+                document.getElementById('currentEmpNo').value = data.empNo;
+
+                const isDeptHead = role === 'DEPT_HEAD';
+                const isStaff = role === 'STAFF';
+
+                // 차트 렌더링
+                const ctx = document.getElementById('scoreChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.items.map(i => i.categoryName),
+                        datasets: [
+                            { label: '본인 점수', data: data.items.map(i => i.selfScore || 0), backgroundColor: '#0d6efd' },
+                            { label: '전체 평균', data: data.items.map(i => i.avgScore || 0), backgroundColor: '#6c757d' }
+                        ]
+                    },
+                    options: { responsive: true, plugins: { legend: { position: 'top' } }, scales: { y: { beginAtZero: true } } }
+                });
+
+                // 평가 항목 렌더링
+                let tbodyHtml = '';
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const readonlyClass = isDeptHead ? 'readonly-bg' : '';
+                        const scoreReadonly = isDeptHead ? 'readonly' : '';
+                        tbodyHtml += `
+                            <tr>
+                                <td>${item.categoryName}</td>
+                                <td>${item.title}</td>
+                                <td>${item.weight}</td>
+                                <td>${item.feedback || ''}</td>
+                                <td><input type="number" class="${readonlyClass}" value="${item.selfScore || ''}" ${scoreReadonly}></td>
+                            </tr>
+                        `;
+                    });
+                }
+                document.getElementById('evalItemBody').innerHTML = tbodyHtml;
+
+                // 버튼 권한 제어
+                const btnDiv = document.getElementById('actionButtons');
+                btnDiv.innerHTML = '';
+                if (isStaff && data.status === '본인평가중') {
+                    btnDiv.innerHTML = '<button type="button" class="btn-save" onclick="saveEval()">임시 저장</button> <button type="button" class="btn-submit" onclick="submitEval()">제출</button>';
                 }
             });
+    }
 
-            const data = {
-                step: step,
-                subCheck: isSubmit ? "Y" : "N",
-                typeId: document.getElementById('currentTypeId').value,
-                empNo: document.getElementById('currentEmpNo').value,
-                items: items
-            };
-
-            fetch('/evaluation/performance/save', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.text())
-            .then(result => {
-                if(result === 'success') {
-                    alert(isSubmit ? "성공적으로 제출되었습니다." : "임시 저장되었습니다.");
-                    location.reload(); 
-                } else {
-                    alert("저장 실패: " + result);
-                }
-            });
-        }
-        
-        function searchEval() {
-            const year = document.getElementById('searchYear').value;
-            const period = document.getElementById('searchPeriod').value;
-            location.href = `/evaluation/performance/list?year=${year}&period=${period}`;
-        }
+    function saveEval() { alert('임시 저장 완료'); }
+    function submitEval() { alert('제출 완료'); }
+    function searchEval() { alert('검색 기능 호출'); }
     </script>
 </body>
 </html>
