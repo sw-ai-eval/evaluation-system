@@ -131,8 +131,8 @@ public class EvaluatorService {
 	            boolean isLeader = e.getEmpNo().equals(leader);
 	            boolean isExecutive = executives.stream().anyMatch(ex -> ex.getEmpNo().equals(e.getEmpNo()));
 
-	            if (!isExecutive) {
-
+	            if (!isExecutive && !evalType.getName().contains("다면평가")) {
+	            	
 	                // 0차 자기평가 (부서장, 부서원)
 	                list.add(EvalTargetMapping.builder()
 	                        .evaluatorNo(e.getEmpNo())
@@ -144,33 +144,34 @@ public class EvaluatorService {
 	                        .build());
 	            }
 
-	            // 1차 평가
+	         // 1차 평가
 	            if (!isExecutive && !isLeader) {
 
-	                // 부서원 → 부서장
-	                list.add(EvalTargetMapping.builder()
-	                        .evaluatorNo(e.getEmpNo())
-	                        .evaluateeNo(leader)
-	                        .step(1)
-	                        .systemType("AUTO")
-	                        .deptId(deptId)
-	                        .typeId(evalType)
-	                        .build());
-
-	                // 부서장 → 부서원
-	                list.add(EvalTargetMapping.builder()
-	                        .evaluatorNo(leader)
-	                        .evaluateeNo(e.getEmpNo())
-	                        .step(1)
-	                        .systemType("AUTO")
-	                        .deptId(deptId)
-	                        .typeId(evalType)
-	                        .build());
+	                if (evalType.getName().contains("다면평가")) {
+	                    // 다면평가일 때: 부서원 → 부서장
+	                    list.add(EvalTargetMapping.builder()
+	                            .evaluatorNo(e.getEmpNo())
+	                            .evaluateeNo(leader)
+	                            .step(1)
+	                            .systemType("AUTO")
+	                            .deptId(deptId)
+	                            .typeId(evalType)
+	                            .build());
+	                } else {
+	                    // 다면평가가 아닐 때: 부서장 → 부서원
+	                    list.add(EvalTargetMapping.builder()
+	                            .evaluatorNo(leader)
+	                            .evaluateeNo(e.getEmpNo())
+	                            .step(1)
+	                            .systemType("AUTO")
+	                            .deptId(deptId)
+	                            .typeId(evalType)
+	                            .build());
+	                }
 	            }
-
 	          
 	            // 2차 평가 임원 -> 사원
-	            if (!isExecutive) {
+	            if (!isExecutive && !evalType.getName().contains("다면평가")) {
 
 	                Employee exec = executives.get(execIndex % execSize);
 
@@ -196,6 +197,7 @@ public class EvaluatorService {
 
 	        try {
 	            long deletedCount = evaluatorRepository.deleteByDeptIdAndTypeId_Id(deptId, typeId);
+	            evaluatorRepository.flush(); // 여기가 핵심! 즉시 DB 반영
 
 	            if (deletedCount == 0) {
 	                throw new IllegalStateException("초기화할 데이터가 없습니다.");

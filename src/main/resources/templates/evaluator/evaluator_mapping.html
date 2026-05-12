@@ -103,8 +103,8 @@
 			        <td th:text="${eval.deptName}"></td>
 			        <td th:text="${eval.empName}"></td>
 			        <td th:text="${eval.position}"></td>
-			        <td th:text="${eval.firstEvaluatorNames}"></td>
-			        <td th:text="${eval.finalEvaluatorName}"></td>
+			        <td th:text="${#strings.isEmpty(eval.firstEvaluatorNames) ? '-' : eval.firstEvaluatorNames}"></td>
+			        <td th:text="${#strings.isEmpty(eval.finalEvaluatorName) ? '-' : eval.finalEvaluatorName}"></td>
 			        <td>
 			            <span th:class="${eval.systemType == 'MANUAL'} ? 'tag tag-warning' : 'tag tag-success'"
 			                  th:text="${eval.systemType == 'MANUAL'} ? '수정' : '자동'">
