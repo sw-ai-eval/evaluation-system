@@ -175,9 +175,11 @@
                     </div>
                 </div>
 
+<!--
                 본인점수 vs 전체 평균 차트
                 <div class="sub-title">평가 대상자 점수 vs 전체 평균</div>
                 <canvas id="scoreChart" style="height:150px; margin-bottom: 15px;"></canvas>
+-->
 
                 <form id="evalForm">
                     <input type="hidden" id="currentTypeId">
@@ -192,16 +194,18 @@
                             <thead>
                                 <tr>
                                     <th>구분</th>
-                                    <th>항목<br>(업무 목표)</th>
+                                    <th>가이드라인<br>(업무 목표)</th>
                                     <th>배점</th>
-                                    <th>업무 수행 과정 및 결과 / 잘된 점 - 개선할 점</th>
-                                    <th>평가<br>점수</th>
+                                    <!--<th>업무 수행 과정 및 결과 / 잘된 점 - 개선할 점</th>
+                                    <th>평가<br>점수</th>-->
                                 </tr>
                             </thead>
                             <tbody id="evalItemBody"></tbody>
                         </table>
-                        
-                        <div style="text-align: right; margin-top: 15px;" id="actionButtons"></div>
+
+                        <div style="text-align: right; margin-top: 15px;" id="actionButtons">
+                            <button type="button" onclick="startEvaluation()">평가 시작</button>
+                        </div>
                     </div>
                 </form>
             </div> 
@@ -274,13 +278,6 @@ function loadEvalDetail(rowElement) {
                             <td>${item.categoryName}</td>
                             <td>${item.goalDesc}</td>
                             <td>${item.weight}</td>
-                            <td>${item.selfFeedback || ''}</td>
-                            <td>
-                                <input type="number"
-                                    class="${readonlyClass}"
-                                    value="${item.selfScore || ''}"
-                                    ${scoreReadonly}>
-                            </td>
                         </tr>
                     `;
                 });
@@ -288,6 +285,18 @@ function loadEvalDetail(rowElement) {
 
             document.getElementById('evalItemBody').innerHTML = tbodyHtml;
         });
+}
+
+function startEvaluation() {
+    const typeId = document.getElementById('currentTypeId').value;
+    const empNo = document.getElementById('currentEmpNo').value;
+
+    if (!typeId || !empNo) {
+        alert('평가 대상을 먼저 선택하세요.');
+        return;
+    }
+
+    location.href = `/evaluation/multi/${typeId}/${empNo}/sheet`;
 }
 
 function saveEval() { alert('임시 저장 완료'); }

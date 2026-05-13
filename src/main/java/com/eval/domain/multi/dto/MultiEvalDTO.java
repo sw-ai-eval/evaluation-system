@@ -55,4 +55,12 @@ public class MultiEvalDTO {
         private Integer firstScore;
         private String firstFeedback;
     }
+
+    @Getter
+    @Setter
+    public static class MultiItem {
+        private String categoryName;
+        private String guide;
+        private int weight;
+    }
 }

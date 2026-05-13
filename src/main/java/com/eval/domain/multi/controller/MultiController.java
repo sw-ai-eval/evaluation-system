@@ -9,7 +9,6 @@ import java.util.List;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -51,7 +50,7 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	      model.addAttribute("userPosition", position); // UI에서 필요하면
 	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + evalList.size());
 	      
-	      return "evaluation/multi";
+	      return "evaluation/multi/multi";
 	  }
 	  
 	  @GetMapping("/evaluation/multi/detail/{typeId}/{empNo}")
@@ -66,5 +65,19 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 
 	      return multiService.getMultiDetail(typeId, empNo, loginEmpNo, position);
 	  }
+
+	  @GetMapping("/evaluation/multi/{typeId}/{empNo}/sheet")
+	  public String multiSheet(@PathVariable Long typeId, @PathVariable String empNo, Model model) {
+
+		  System.out.println("typeId = " + typeId);
+		  System.out.println("empNo = " + empNo);
+
+		  model.addAttribute("typeId", typeId);
+		  model.addAttribute("empNo", empNo);
+
+		  return "evaluation/multi/sheet";
+	  }
+
+
 
   }

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>다면평가지</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f5f6fa;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: rgb(31, 41, 55);
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            border-left: 4px solid rgb(107, 114, 128);
+            padding-left: 10px;
+            color: rgb(55, 65, 81);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid rgb(229, 231, 235);
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: rgb(248, 250, 252);
+            color: rgb(100, 116, 139);
+        }
+
+        td {
+            color: rgb(55, 65, 81);
+        }
+
+        .question {
+            text-align: left;
+        }
+
+        .radio-group input {
+            transform: scale(1.2);
+            accent-color: rgb(107, 114, 128);
+        }
+
+        .comment-box {
+            width: 100%;
+            height: 80px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid rgb(209, 213, 219);
+            padding: 10px;
+            resize: none;
+            background: rgb(249, 250, 251);
+            color: rgb(55, 65, 81);
+        }
+
+        .submit-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: rgb(75, 85, 99);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .temporary-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: rgb(156, 163, 175);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .submit-btn:hover {
+            background-color: rgb(55, 65, 81);
+        }
+
+        .temporary-btn:hover {
+            background-color: rgb(107, 114, 128);
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>부서장 다면 평가서</h1>
+
+    <div class="section">
+        <div class="section-title">기본 정보</div>
+        <table>
+            <tr>
+                <th>부서장 이름</th>
+                <td><input type="text" /></td>
+                <th>부서명</th>
+                <td><input type="text" /></td>
+            </tr>
+            <tr>
+                <th>직급</th>
+                <td><input type="text" /></td>
+                <th>평가자</th>
+                <td><input type="text" /></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">업무 수행 능력</div>
+        <table>
+            <tr>
+                <th>평가 항목</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <td class="question">업무 이해도</td>
+                <td><input type="radio" name="q1"></td>
+                <td><input type="radio" name="q1"></td>
+                <td><input type="radio" name="q1"></td>
+                <td><input type="radio" name="q1"></td>
+                <td><input type="radio" name="q1"></td>
+            </tr>
+            <tr>
+                <td class="question">업무 정확성</td>
+                <td><input type="radio" name="q2"></td>
+                <td><input type="radio" name="q2"></td>
+                <td><input type="radio" name="q2"></td>
+                <td><input type="radio" name="q2"></td>
+                <td><input type="radio" name="q2"></td>
+            </tr>
+            <tr>
+                <td class="question">문제 해결 능력</td>
+                <td><input type="radio" name="q3"></td>
+                <td><input type="radio" name="q3"></td>
+                <td><input type="radio" name="q3"></td>
+                <td><input type="radio" name="q3"></td>
+                <td><input type="radio" name="q3"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">협업 및 태도</div>
+        <table>
+            <tr>
+                <th>평가 항목</th>
+                <th>1</th>
+                <th>2</th>
+                <th>3</th>
+                <th>4</th>
+                <th>5</th>
+            </tr>
+            <tr>
+                <td class="question">팀워크</td>
+                <td><input type="radio" name="q4"></td>
+                <td><input type="radio" name="q4"></td>
+                <td><input type="radio" name="q4"></td>
+                <td><input type="radio" name="q4"></td>
+                <td><input type="radio" name="q4"></td>
+            </tr>
+            <tr>
+                <td class="question">책임감</td>
+                <td><input type="radio" name="q5"></td>
+                <td><input type="radio" name="q5"></td>
+                <td><input type="radio" name="q5"></td>
+                <td><input type="radio" name="q5"></td>
+                <td><input type="radio" name="q5"></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="section">
+        <div class="section-title">종합 의견</div>
+        <textarea class="comment-box" placeholder="자유롭게 의견을 작성하세요"></textarea>
+    </div>
+    <div>
+        <button class="temporary-btn">임시저장</button>
+        <button class="submit-btn">제출</button>
+    </div>
+
+</div>
+</body>
+</html>
