@@ -38,4 +38,7 @@ public class EvalTargetMapping {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "eval_type_id")
     private EvalType typeId;
+    
+    @Column(name = "status", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private int status;
 }

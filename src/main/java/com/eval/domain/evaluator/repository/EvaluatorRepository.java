@@ -70,5 +70,8 @@ public interface EvaluatorRepository extends JpaRepository<EvalTargetMapping, Lo
     );
     
     void deleteByDeptIdAndEvaluateeNoAndTypeId_Id(String deptId,String evaluateeNo,Integer typeId );
+    
+    EvalTargetMapping findByEvaluatorNoAndEvaluateeNoAndTypeId(String evaluatorNo, String evaluateeNo, EvalType typeId);
+    
 
 }

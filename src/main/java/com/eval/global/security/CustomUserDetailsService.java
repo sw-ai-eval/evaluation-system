@@ -31,12 +31,14 @@ public class CustomUserDetailsService implements UserDetailsService {
         boolean isResigned = employee.getStatus() != null && "퇴사".equals(employee.getStatus().trim());
         boolean isAccountLocked = employee.getFailCount() >= 5 || employee.getLocked() == 1;
 
-        return User.builder()
-                .username(employee.getEmpNo())
-                .password(employee.getPassword())
-                .roles(employee.getRole()) 
-                .disabled(isResigned)           // true면 시큐리티가 스스로 DisabledException을 발생시킴
-                .accountLocked(isAccountLocked) // true면 시큐리티가 스스로 LockedException을 발생시킴
-                .build();
+//        return User.builder()
+//                .username(employee.getEmpNo())
+//                .password(employee.getPassword())
+//                .roles(employee.getRole()) 
+//                .disabled(isResigned)           // true면 시큐리티가 스스로 DisabledException을 발생시킴
+//                .accountLocked(isAccountLocked) // true면 시큐리티가 스스로 LockedException을 발생시킴
+//                .build();
+        
+        return new CustomUserDetails(employee);
     }
 }

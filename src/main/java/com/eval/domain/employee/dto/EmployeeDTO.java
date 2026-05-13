@@ -14,4 +14,6 @@ public class EmployeeDTO {
     private int failCount;      // 비밀번호 실패 횟수
     private int locked;     	// 계정 잠금 여부
     private String role;        // 권한 (USER, LEADER, ADMIN)
-}
+    
+    private String position;
+} 

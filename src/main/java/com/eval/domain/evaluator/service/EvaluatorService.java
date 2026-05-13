@@ -398,4 +398,27 @@ public class EvaluatorService {
 	    }
 	    
 	    
+
+	    @Transactional
+	    public void updateStatusToTwo(String evaluatorNo, String evaluateeNo, Integer typeIdInt) {
+	        // Integer로 받은 evalTypeId를 EvalType 객체로 조회
+	        EvalType evalType = evalTypeRepository.findById(typeIdInt)
+	                .orElseThrow(() -> new RuntimeException("EvalType not found for id=" + typeIdInt));
+
+	        // 매핑 조회
+	        EvalTargetMapping mapping = evaluatorRepository.findByEvaluatorNoAndEvaluateeNoAndTypeId(
+	                evaluatorNo, evaluateeNo, evalType
+	        );
+
+	        if (mapping != null) {
+	            mapping.setStatus(2);
+	            mapping.setUpdatedAt(LocalDateTime.now());
+	            mapping.setUpdatedBy(evaluatorNo); // 필요 시 평가자
+	            evaluatorRepository.save(mapping);
+	            System.out.println("✅ Status updated for mappingId=" + mapping.getId());
+	        } else {
+	            System.out.println("⚠️ Mapping not found for evaluator=" + evaluatorNo 
+	                               + ", evaluatee=" + evaluateeNo + ", evalType=" + typeIdInt);
+	        }
+	    }
 }
