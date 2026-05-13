@@ -30,7 +30,7 @@
         JOIN eval_type_52 t ON m.eval_type_id = t.id
         WHERE m.eval_type_id = 3
           AND m.step = 0
-          AND e.status = 'ACTIVE' /* 퇴사/휴직자 제외 */
+          AND e.status = 'ACTIVE'
           AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
         <if test="year != null">
             AND t.year = #{year}
@@ -65,13 +65,18 @@
         FROM eval_target_mapping_52 m
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
-        WHERE m.eval_type_id = #{typeId} AND m.evaluatee_no = #{empNo} AND m.step = 0
+        WHERE m.eval_type_id = #{typeId} 
+          AND m.evaluatee_no = #{empNo} 
+          AND m.step = 0
     </select>
 
     <select id="selectCompetencyItems" resultType="com.eval.domain.competency.dto.CompetencyDTO$Item">
         SELECT 
-            q.id AS questionId, q.category AS categoryName, q.question AS itemName,
-            q.goal_desc AS goalDesc, q.weight AS weight,
+            q.id AS questionId,
+            q.category AS categoryName,
+            q.question AS itemName,
+            q.goal_desc AS goalDesc,
+            q.weight AS weight,
             CASE 
                 WHEN CAST(a1.score AS VARCHAR) LIKE '1%' THEN 'S'
                 WHEN CAST(a1.score AS VARCHAR) LIKE '0.9%' THEN 'A'
@@ -91,38 +96,105 @@
             END AS firstGrade, 
             a2.content AS firstFeedback
         FROM eval_question_52 q
-        LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
-            AND a1.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0 ORDER BY id DESC)
-        LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
-            AND a2.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1 ORDER BY id DESC)
+        LEFT JOIN eval_answer_52 a1 
+            ON q.id = a1.question_id 
+            AND a1.mapping_id = (
+                SELECT TOP 1 id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                  AND eval_type_id = #{typeId} 
+                  AND step = 0 
+                ORDER BY id DESC
+            )
+        LEFT JOIN eval_answer_52 a2 
+            ON q.id = a2.question_id 
+            AND a2.mapping_id = (
+                SELECT TOP 1 id FROM eval_target_mapping_52 
+                WHERE evaluatee_no = #{empNo} 
+                  AND eval_type_id = #{typeId} 
+                  AND step = 1 
+                ORDER BY id DESC
+            )
         WHERE q.type_id = #{typeId}
         ORDER BY q.id ASC
     </select>
 
+    <!-- step=1 매핑 존재 여부 확인 -->
+    <select id="existsFirstMapping" resultType="int">
+        SELECT COUNT(1)
+        FROM eval_target_mapping_52
+        WHERE evaluatee_no = #{empNo}
+          AND eval_type_id = #{typeId}
+          AND step = 1
+    </select>
+
+    <!-- step=1 매핑 레코드 생성 (system_type 포함) -->
+    <insert id="insertFirstMapping">
+        INSERT INTO eval_target_mapping_52 
+            (eval_type_id, evaluatee_no, evaluator_no, step, status, system_type)
+        SELECT TOP 1
+            eval_type_id,
+            evaluatee_no,
+            (SELECT leader_emp_no FROM department_52 d 
+             JOIN employee_52 e ON d.id = e.dept_id 
+             WHERE e.emp_no = #{empNo}),
+            1,
+            1,
+            system_type
+        FROM eval_target_mapping_52
+        WHERE evaluatee_no = #{empNo}
+          AND eval_type_id = #{typeId}
+          AND step = 0
+    </insert>
+
     <update id="updateSelfAnswer">
         UPDATE eval_answer_52 
         SET score = CASE #{item.selfGrade} 
-                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
+                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 
+                        WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
                     END,
             content = #{item.selfFeedback}
         WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 0 ORDER BY id DESC)
+          AND mapping_id = (
+              SELECT TOP 1 id FROM eval_target_mapping_52 
+              WHERE evaluatee_no = #{empNo} 
+                AND eval_type_id = #{typeId} 
+                AND step = 0 
+              ORDER BY id DESC
+          )
     </update>
 
     <update id="updateFirstAnswer">
-        UPDATE eval_answer_52 
-        SET score = CASE #{item.firstGrade} 
-                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
-                    END,
-            content = #{item.firstFeedback}
-        WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 1 ORDER BY id DESC)
+        MERGE INTO eval_answer_52 AS target
+        USING (
+            SELECT 
+                #{item.questionId} AS q_id,
+                (SELECT TOP 1 id FROM eval_target_mapping_52 
+                 WHERE evaluatee_no = #{empNo} 
+                   AND eval_type_id = #{typeId}
+                   AND step = 1 
+                 ORDER BY id DESC) AS m_id
+        ) AS source
+        ON (target.question_id = source.q_id AND target.mapping_id = source.m_id)
+        WHEN MATCHED THEN
+            UPDATE SET score = CASE #{item.firstGrade}
+                WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 
+                WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 END
+        WHEN NOT MATCHED AND source.m_id IS NOT NULL THEN
+            INSERT (mapping_id, question_id, score)
+            VALUES (
+                source.m_id, 
+                source.q_id,
+                CASE #{item.firstGrade}
+                    WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 
+                    WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 END
+            );
     </update>
 
     <update id="updateEvalStatus">
         UPDATE eval_target_mapping_52 
         SET status = #{status}, updated_at = GETDATE()
-        WHERE eval_type_id = #{typeId} AND evaluatee_no = #{empNo}
+        WHERE eval_type_id = #{typeId} 
+          AND evaluatee_no = #{empNo}
     </update>
 
 </mapper>
