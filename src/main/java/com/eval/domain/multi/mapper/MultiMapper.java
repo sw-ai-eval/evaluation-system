@@ -16,4 +16,5 @@ public interface MultiMapper{
 	MultiEvalDTO findMultiEvalDetail(Map<String, Object> params);
 
 	List<EvalItem> findEvalItems(Map<String, Object> params);
+	
 }

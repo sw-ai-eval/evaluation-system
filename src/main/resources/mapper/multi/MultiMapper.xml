@@ -5,15 +5,15 @@
 
      <select id="findMultiEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
 	    SELECT 
-	        et.id AS typeId,
+	        et.id AS evalTypeId,
 	        etm.evaluator_no AS evaluatorNo,
-	        eval_emp.name AS evaluatorName,     <!-- evaluator 이름 -->
+	        eval_emp.name AS evaluatorName,
 	        etm.evaluatee_no AS evaluateeNo,
 	        e.name AS evaluateeName,
 	        et.name AS evalName,
 	        etm.step,
 	        e.dept_id AS deptId,
-	        d.name AS deptName,                 <!-- 부서 이름 -->
+	        d.name AS deptName,            
 	        e.position AS position,
 	        e.emp_no AS empNo,
 	        et.start_date AS startDate, 
@@ -41,7 +41,7 @@
 	
 	<select id="findMultiEvalDetail" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
 		SELECT TOP 1
-		    etm.id AS typeId,
+		    et.id AS evalTypeId,
 		    etm.evaluator_no AS evaluatorNo,
 		    eval_emp.name AS evaluatorName,
 		    etm.evaluatee_no AS evaluateeNo,
@@ -58,18 +58,22 @@
 		LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
 		LEFT JOIN department_52 d ON d.id = e.dept_id
 		LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS VARCHAR)
-		WHERE etm.eval_type_id = #{typeId}
+		WHERE etm.eval_type_id = #{evalTypeId}
 		  AND etm.evaluatee_no = #{empNo}
 	</select>
 	
-	<select id="findEvalItems" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO$EvalItem">
+<!-- 	<select id="findEvalItems" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO$EvalItem">
 	
 	    SELECT 
 	        q.id AS questionId,
 	        q.category AS categoryName,
-	        q.explanation AS goalDesc,
+	        q.explanation AS explanation,
+	        q.question AS question,
+	        q.question_type AS questionType,
+	        q.weight AS weight,
 	        ea.score AS selfScore,
-	        ea.content AS selfFeedback
+	        ea.content AS selfFeedback,
+	        etm.id AS mappingId  
 	    FROM eval_question_52 q
 	
 	    LEFT JOIN eval_answer_52 ea 
@@ -79,8 +83,34 @@
 	        ON etm.id = ea.mapping_id
 	        AND etm.evaluatee_no = #{empNo}
 	
-	    WHERE q.type_id = #{typeId}
+	    WHERE q.type_id = #{evalTypeId}
 	
+	</select> -->
+	<select id="findEvalItems" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO$EvalItem">
+	    SELECT 
+	        q.id AS questionId,
+	        q.category AS categoryName,
+	        q.explanation AS explanation,
+	        q.question AS question,
+	        q.question_type AS questionType,
+	        q.weight AS weight,
+	        ea.score AS selfScore,
+	        ea.content AS selfFeedback,
+	        etm.id AS mappingId  
+	    FROM eval_question_52 q
+	
+	    -- 1. 평가자 + 피평가자 기준 매핑
+	    LEFT JOIN eval_target_mapping_52 etm
+	        ON etm.eval_type_id = q.type_id
+	       AND etm.evaluator_no = #{loginEmpNo}  
+	       AND etm.evaluatee_no = #{empNo}       
+	
+	    -- 2. 매핑에 해당하는 답변
+	    LEFT JOIN eval_answer_52 ea
+	        ON ea.question_id = q.id
+	       AND ea.mapping_id = etm.id
+	
+	    WHERE q.type_id = #{evalTypeId}
 	</select>
 
 </mapper>

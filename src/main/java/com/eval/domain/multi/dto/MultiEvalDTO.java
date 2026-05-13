@@ -1,6 +1,7 @@
 package com.eval.domain.multi.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -10,14 +11,14 @@ import lombok.Setter;
 @Getter
 @Setter
 public class MultiEvalDTO {
-	private Long id;
+	private int evalTypeId;
+	
+	
     private String evaluatorNo;
     private String evaluateeNo;
     private String evalName;
     private int step;
     private String statusName;
-
-    private Long typeId;
     
     // 평가 대상자 표시용
     private String evaluatorName;
@@ -30,6 +31,8 @@ public class MultiEvalDTO {
     private LocalDate endDate;
 
     private List<EvalItem> items;
+    
+    private List<CategorySummary> categorySummaries;
     
     public String getEvalPeriod() {
         if (startDate == null && endDate == null) {
@@ -48,19 +51,25 @@ public class MultiEvalDTO {
     public static class EvalItem {
         private Long questionId;
         private String categoryName;
-        private String goalDesc;
-        private int weight;
+        private String explanation;
+        private String question;
+        private String questionType;
+        private Integer weight;
         private Integer selfScore;
         private String selfFeedback;
         private Integer firstScore;
         private String firstFeedback;
+        private Long mappingId;
+        
     }
-
+    
     @Getter
     @Setter
-    public static class MultiItem {
+    public static class CategorySummary {
         private String categoryName;
-        private String guide;
-        private int weight;
+        private int totalWeight;
+        private String combinedGuide;
+        private List<EvalItem> items;
     }
+    
 }

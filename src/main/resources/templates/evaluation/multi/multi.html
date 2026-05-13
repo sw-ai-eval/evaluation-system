@@ -37,7 +37,9 @@
         .left-panel .clickable-row:hover { background-color: #f8f9fa; }
         
         .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-        
+
+		.success{ padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; background: #28a745;; color: #fff; border: 1px solid rgb(0, 128, 0); }
+
         .pagination-wrap { padding: 10px; border-top: 1px solid #dee2e6; display: flex; justify-content: space-between; align-items: center; background: #fff; font-size: 12px; color: #6c757d; }
         .pagination { display: flex; gap: 5px; }
         .pagination button { background: #fff; border: 1px solid #dee2e6; padding: 3px 8px; cursor: pointer; color: #0d6efd; border-radius: 3px; }
@@ -63,6 +65,34 @@
         
         .btn-save { background-color: #0d6efd; color: white; border: none; padding: 8px 20px; border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500; }
         .btn-save:hover { background-color: #0b5ed7; }
+        
+		        /* 기업 평가 시스템 스타일 버튼 */
+		.btn-eval-start {
+		    background: linear-gradient(90deg, #0d6efd, #0b5ed7);
+		    color: #fff;
+		    border: none;
+		    padding: 10px 25px;
+		    font-size: 14px;
+		    font-weight: 600;
+		    border-radius: 6px;
+		    cursor: pointer;
+		    display: inline-flex;
+		    align-items: center;
+		    gap: 8px;
+		    transition: all 0.2s ease-in-out;
+		    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+		}
+		
+		.btn-eval-start:hover {
+		    background: linear-gradient(90deg, #0b5ed7, #084298);
+		    transform: translateY(-2px);
+		    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+		}
+		
+		.btn-eval-start:active {
+		    transform: translateY(0);
+		    box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+		}
     </style>
 </head>
 <body>
@@ -121,7 +151,7 @@
                         <tbody>
                             <tr th:each="eval : ${evalList}" 
                                 class="clickable-row" 
-                                th:data-typeid="${eval.typeId}" 
+                                th:data-evalTypeId="${eval.evalTypeId}" 
                                 th:data-empno="${eval.evaluateeNo}" 
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.deptName}"></td>
@@ -130,7 +160,12 @@
                                 <td th:text="${eval.position}"></td>
                                 <td th:text="${eval.evaluateeNo}"></td>
                                 <td th:text="${eval.evaluateeName}"></td>
-                                <td><span class="badge" th:text="${eval.statusName}">본인평가중</span></td>
+                                <td>
+								    <span 
+								        th:text="${eval.statusName}" 
+								        th:class="${eval.statusName == '평가 완료'} ? 'success' : 'badge'">
+								    </span>
+								</td>
                             </tr>
                         </tbody>
                     </table>
@@ -189,23 +224,23 @@
                         <div class="sub-title">주요 수행업무 평가</div>
                         <table class="detail-table" style="width: 100%; border-collapse: collapse; text-align: center; border: 1px solid #dee2e6;">
                             <colgroup>
-                                <col width="10%"><col width="25%"><col width="8%"><col width="50%"><col width="7%">
+                                <col width="10%"><col width="25%"><col width="8%">
                             </colgroup>
                             <thead>
                                 <tr>
                                     <th>구분</th>
                                     <th>가이드라인<br>(업무 목표)</th>
                                     <th>배점</th>
-                                    <!--<th>업무 수행 과정 및 결과 / 잘된 점 - 개선할 점</th>
-                                    <th>평가<br>점수</th>-->
                                 </tr>
                             </thead>
                             <tbody id="evalItemBody"></tbody>
                         </table>
 
                         <div style="text-align: right; margin-top: 15px;" id="actionButtons">
-                            <button type="button" onclick="startEvaluation()">평가 시작</button>
-                        </div>
+						    <button type="button" class="btn-eval-start" onclick="startEvaluation()">
+						        <i class="fas fa-play"></i> 평가 시작
+						    </button>
+						</div>
                     </div>
                 </form>
             </div> 
@@ -216,14 +251,14 @@
 const currentUserNo = '[[${#authentication.name}]]';
 
 function loadEvalDetail(rowElement) {
-    const typeId = rowElement.getAttribute('data-typeid');
+    const evalTypeId = rowElement.getAttribute('data-evalTypeId');
     const empNo = rowElement.getAttribute('data-empno');
     const role = rowElement.getAttribute('data-role');
 
     document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
     rowElement.classList.add('selected');
 
-    fetch(`/evaluation/multi/detail/${typeId}/${empNo}`)
+    fetch(`/evaluation/multi/detail/${evalTypeId}/${empNo}`)
         .then(res => res.json())
         .then(data => {
 
@@ -242,14 +277,21 @@ function loadEvalDetail(rowElement) {
             // statusName으로 변경
             document.getElementById('detailStatusBadge').innerText = data.statusName;
 
-            document.getElementById('currentTypeId').value = data.typeId;
+            document.getElementById('currentTypeId').value = data.evalTypeId;
             document.getElementById('currentEmpNo').value = data.evaluateeNo;
+            
+            const actionButtons = document.getElementById('actionButtons');
+            if (currentUserNo === data.evaluateeNo) {
+                actionButtons.style.display = 'none'; // 피평가자면 버튼 숨김
+            } else {
+                actionButtons.style.display = 'block';
+            }
 
             const isDeptHead = role === 'DEPT_HEAD';
             const isStaff = role === 'STAFF';
 
-            // 차트
-            const ctx = document.getElementById('scoreChart').getContext('2d');
+            ///////////////////////////////////////////////////////////////////////////////////////// 차트
+            /* const ctx = document.getElementById('scoreChart').getContext('2d');
             new Chart(ctx, {
                 type: 'bar',
                 data: {
@@ -264,45 +306,46 @@ function loadEvalDetail(rowElement) {
                     plugins: { legend: { position: 'top' } },
                     scales: { y: { beginAtZero: true } }
                 }
-            });
-
+            }); */
+			/////////////////////////////////////////////////////////////////////////////////////////////
             // 평가 항목
             let tbodyHtml = '';
-            if (data.items && data.items.length > 0) {
-                data.items.forEach(item => {
-                    const readonlyClass = isDeptHead ? 'readonly-bg' : '';
-                    const scoreReadonly = isDeptHead ? 'readonly' : '';
+			if (data.categorySummaries && data.categorySummaries.length > 0) {
+			    data.categorySummaries.forEach(category => {
+			        // Dept Head 여부에 따라 readonly 처리 가능
+			        const readonlyClass = isDeptHead ? 'readonly-bg' : '';
+			        const scoreReadonly = isDeptHead ? 'readonly' : '';
+			
+			        tbodyHtml += `
+			            <tr class="${readonlyClass}">
+			                <td>${category.categoryName}</td>
+			                <td>${category.combinedGuide.replace(/\n/g, '<br>')}</td>
+			                <td>${category.totalWeight}</td>
+			            </tr>
+			        `;
+			    });
+			}
+			
+			document.getElementById('evalItemBody').innerHTML = tbodyHtml;
 
-                    tbodyHtml += `
-                        <tr>
-                            <td>${item.categoryName}</td>
-                            <td>${item.goalDesc}</td>
-                            <td>${item.weight}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            document.getElementById('evalItemBody').innerHTML = tbodyHtml;
         });
 }
 
 function startEvaluation() {
-    const typeId = document.getElementById('currentTypeId').value;
+    const evalTypeId = document.getElementById('currentTypeId').value;
     const empNo = document.getElementById('currentEmpNo').value;
 
-    if (!typeId || !empNo) {
+    if (!evalTypeId || !empNo) {
         alert('평가 대상을 먼저 선택하세요.');
         return;
     }
+    
+    console.log('evalTypeId=', document.getElementById('currentTypeId').value);
+    console.log('empNo=', document.getElementById('currentEmpNo').value);
 
-    location.href = `/evaluation/multi/${typeId}/${empNo}/sheet`;
+    location.href = `/evaluation/multi/${evalTypeId}/${empNo}/sheet`;
 }
-
-function saveEval() { alert('임시 저장 완료'); }
-function submitEval() { alert('제출 완료'); }
 function searchEval() { alert('검색 기능 호출'); }
-
 </script>
 </body>
 </html>
