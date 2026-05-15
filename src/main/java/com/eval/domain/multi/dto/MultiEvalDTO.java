@@ -1,5 +1,6 @@
 package com.eval.domain.multi.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -12,7 +13,9 @@ import lombok.Setter;
 @Setter
 public class MultiEvalDTO {
 	private int evalTypeId;
+	private String evalTypeName;
 	
+	private Integer totalScore;
 	
     private String evaluatorNo;
     private String evaluateeNo;
@@ -33,6 +36,8 @@ public class MultiEvalDTO {
     private List<EvalItem> items;
     
     private List<CategorySummary> categorySummaries;
+    
+    private MultiChartDto chart;
     
     public String getEvalPeriod() {
         if (startDate == null && endDate == null) {
@@ -55,10 +60,8 @@ public class MultiEvalDTO {
         private String question;
         private String questionType;
         private Integer weight;
-        private Integer selfScore;
-        private String selfFeedback;
-        private Integer firstScore;
-        private String firstFeedback;
+        private Integer score;
+        private String content;
         private Long mappingId;
         
     }
@@ -71,5 +74,20 @@ public class MultiEvalDTO {
         private String combinedGuide;
         private List<EvalItem> items;
     }
+    
+    @Getter
+    @Setter
+    public static class MultiChartDto {
+        private String evaluateeNo;
+        // 내 총점
+        private BigDecimal myTotalScore;
+
+        // 전체 부서장 평균 점수
+        private BigDecimal allLeaderAvgScore;
+
+        // 내 평균 점수
+        private BigDecimal myAvgScore;
+    }
+
     
 }

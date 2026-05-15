@@ -43,7 +43,7 @@ public class Employee {
     @Column(name = "level_id", nullable = false, length = 50)
     private Long levelId;
 
-    @Column(name = "position", length = 50)
+    @Column(name = "position", length = 50) // 부서장, 부서원
     private String position;
 
     @Column(name = "role", nullable = false, length = 20)

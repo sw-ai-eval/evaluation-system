@@ -37,7 +37,8 @@ public interface EvaluatorRepository extends JpaRepository<EvalTargetMapping, Lo
     	        m.step,
     	        e1.empNo,
     	        e1.name,
-    	        m.systemType
+    	        m.systemType,
+    	        m.status
     	    )
     	    FROM EvalTargetMapping m
     	    JOIN Employee e1 ON m.evaluatorNo = e1.empNo
@@ -72,6 +73,10 @@ public interface EvaluatorRepository extends JpaRepository<EvalTargetMapping, Lo
     void deleteByDeptIdAndEvaluateeNoAndTypeId_Id(String deptId,String evaluateeNo,Integer typeId );
     
     EvalTargetMapping findByEvaluatorNoAndEvaluateeNoAndTypeId(String evaluatorNo, String evaluateeNo, EvalType typeId);
+
+	boolean existsByEvaluateeNoAndTypeId_IdAndStatusGreaterThan(String empNo, Integer typeId, int i);
+
+	List<Long> findMappingIdsByEvaluateeNoAndTypeId(String evaluateeNo, EvalType typeId);
     
 
 }

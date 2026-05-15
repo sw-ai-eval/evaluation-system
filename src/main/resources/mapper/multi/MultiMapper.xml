@@ -3,9 +3,10 @@
 
 <mapper namespace="com.eval.domain.multi.mapper.MultiMapper">
 
-     <select id="findMultiEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
+     <select id="findMultiProgressEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
 	    SELECT 
 	        et.id AS evalTypeId,
+	        et.name AS evalTypeName,
 	        etm.evaluator_no AS evaluatorNo,
 	        eval_emp.name AS evaluatorName,
 	        etm.evaluatee_no AS evaluateeNo,
@@ -30,6 +31,45 @@
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
 	        et.name LIKE '%다면평가%'
+	        AND etm.status != 2
+	        <if test="position == '부서원'">
+	            AND etm.evaluator_no = #{userNo}
+	        </if>
+	        <if test="position == '부서장'">
+	            AND etm.evaluatee_no = #{userNo}
+	        </if>
+	    </where>
+	</select>
+	
+	<select id="findMultiCompletedEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
+	    SELECT 
+	        et.id AS evalTypeId,
+	        et.name AS evalTypeName,
+	        etm.evaluator_no AS evaluatorNo,
+	        eval_emp.name AS evaluatorName,
+	        etm.evaluatee_no AS evaluateeNo,
+	        e.name AS evaluateeName,
+	        et.name AS evalName,
+	        etm.step,
+	        e.dept_id AS deptId,
+	        d.name AS deptName,            
+	        e.position AS position,
+	        e.emp_no AS empNo,
+	        et.start_date AS startDate, 
+	        et.end_date AS endDate,
+	        cc.name AS statusName
+	    FROM eval_target_mapping_52 etm
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN department_52 d ON d.id = e.dept_id 
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   <!-- evaluator join -->
+	    LEFT JOIN code_common_52 cc 
+	        ON cc.code = CAST(etm.status AS VARCHAR)
+	    LEFT JOIN code_group_52 cg
+	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND etm.status = 2
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
@@ -40,26 +80,29 @@
 	</select>
 	
 	<select id="findMultiEvalDetail" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
-		SELECT TOP 1
-		    et.id AS evalTypeId,
-		    etm.evaluator_no AS evaluatorNo,
-		    eval_emp.name AS evaluatorName,
-		    etm.evaluatee_no AS evaluateeNo,
-		    e.name AS evaluateeName,
-		    e.position AS position,
-		    e.dept_id AS deptId,
-		    d.name AS deptName,
-		    et.start_date AS startDate,
-		    et.end_date AS endDate,
-		    cc.name AS statusName
-		FROM eval_target_mapping_52 etm
-		JOIN eval_type_52 et ON et.id = etm.eval_type_id
-		JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
-		LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
-		LEFT JOIN department_52 d ON d.id = e.dept_id
-		LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS VARCHAR)
-		WHERE etm.eval_type_id = #{evalTypeId}
-		  AND etm.evaluatee_no = #{empNo}
+	    SELECT TOP 1
+	        et.id AS evalTypeId,
+	        et.name AS evalTypeName,
+	        etm.evaluator_no AS evaluatorNo,
+	        eval_emp.name AS evaluatorName,
+	        etm.evaluatee_no AS evaluateeNo,
+	        e.name AS evaluateeName,
+	        e.position AS position,
+	        e.dept_id AS deptId,
+	        d.name AS deptName,
+	        et.start_date AS startDate,
+	        et.end_date AS endDate,
+	        cc.name AS statusName
+	    FROM eval_target_mapping_52 etm
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
+	    LEFT JOIN department_52 d ON d.id = e.dept_id
+	    LEFT JOIN code_common_52 cc 
+	        ON cc.group_id = 3 AND cc.code = CAST(etm.status AS VARCHAR)
+	    WHERE etm.eval_type_id = #{evalTypeId}
+	      AND etm.evaluatee_no = #{evaluateeNo} 
+	      AND etm.evaluator_no = #{evaluatorNo}
 	</select>
 	
 <!-- 	<select id="findEvalItems" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO$EvalItem">
@@ -94,8 +137,8 @@
 	        q.question AS question,
 	        q.question_type AS questionType,
 	        q.weight AS weight,
-	        ea.score AS selfScore,
-	        ea.content AS selfFeedback,
+	        ea.score AS score,
+	        ea.content AS content,
 	        etm.id AS mappingId  
 	    FROM eval_question_52 q
 	
@@ -112,5 +155,18 @@
 	
 	    WHERE q.type_id = #{evalTypeId}
 	</select>
+	
+	<select id="findTargetMapping" parameterType="map" resultType="com.eval.domain.evaluator.EvalTargetMapping">
+	    SELECT TOP 1
+	        id,
+	        evaluator_no AS evaluatorNo,
+	        evaluatee_no AS evaluateeNo,
+	        status
+	    FROM eval_target_mapping_52
+	    WHERE eval_type_id = #{evalTypeId}
+	      AND evaluatee_no = #{evaluateeNo}
+	      AND evaluator_no = #{evaluatorNo}
+	</select>
+	
 
 </mapper>
