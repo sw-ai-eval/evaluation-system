@@ -29,6 +29,8 @@ public class EvaluatorVeiwDto {
 
     private String systemType;
     private String firstEvaluatorNames;
+    
+    private int status;
 
 
     // ✅ 생성자 반드시 클래스 내부
@@ -41,7 +43,8 @@ public class EvaluatorVeiwDto {
             int step,
             String evaluatorEmpNo,
             String evaluatorName,
-            String systemType
+            String systemType,
+            int status
     ) {
         
         this.deptId = deptId;
@@ -50,7 +53,7 @@ public class EvaluatorVeiwDto {
         this.empName = empName;
         this.position = position;
         this.systemType=systemType;
-
+        this.status=status;
         this.firstEvaluators = new ArrayList<>();
         
         if (step == 1) {

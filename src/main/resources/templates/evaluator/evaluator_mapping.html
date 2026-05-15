@@ -103,19 +103,23 @@
 			        <td th:text="${eval.deptName}"></td>
 			        <td th:text="${eval.empName}"></td>
 			        <td th:text="${eval.position}"></td>
-			        <td th:text="${#strings.isEmpty(eval.firstEvaluatorNames) ? '-' : eval.firstEvaluatorNames}"></td>
+			        <td th:text="${#strings.isEmpty(eval.firstEvaluatorNames) ? '다면평가' : eval.firstEvaluatorNames}"></td>
 			        <td th:text="${#strings.isEmpty(eval.finalEvaluatorName) ? '-' : eval.finalEvaluatorName}"></td>
 			        <td>
 			            <span th:class="${eval.systemType == 'MANUAL'} ? 'tag tag-warning' : 'tag tag-success'"
 			                  th:text="${eval.systemType == 'MANUAL'} ? '수정' : '자동'">
 			            </span>
 			        </td>
-			        <td>
-			            <button class="edit-btn"
-						        th:data-emp-no="${eval.empNo}">
-						    수정
-						</button>
-			        </td>
+
+		            <td>
+					    <button class="edit-btn"
+					            th:data-emp-no="${eval.empNo}"
+					            th:if="${eval.status == 0}">
+					        수정
+					    </button>
+					    <span th:if="${eval.status > 0}" class="text-muted">평가 진행 중</span>
+					</td>
+
 			    </tr>
 			    </tbody>
 			</table>
@@ -208,6 +212,7 @@
 						</div>
 						</div>
 						<input type="hidden" name="typeId" id="modalTypeId">
+						<input type="hidden" name="evalTypeName" id="evalTypeName" data-eval-type-name="">
 <!-- 		                <div class="field checkbox">
 		                    <label>
 		                        <input type="checkbox" name="excluded">

@@ -7,6 +7,8 @@ import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+import com.eval.domain.evaluator.EvalTargetMapping;
+
 @Getter
 @Setter
 @Entity
@@ -19,9 +21,18 @@ public class MultiEvalAnswer {
 
     @Column(name = "question_id", nullable = false)
     private Long questionId;
-    
+
     @Column(name = "mapping_id", nullable = false)
     private Long mappingId;
+
+    // 🔥 추가 (핵심)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "mapping_id",
+        insertable = false,
+        updatable = false
+    )
+    private EvalTargetMapping mapping;
 
     @Column(name = "score")
     private BigDecimal score;
@@ -31,5 +42,4 @@ public class MultiEvalAnswer {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
 }

@@ -190,6 +190,7 @@
 		            <th>질문</th>
 		            <th>최대 점수</th>
 		            <th>답변</th>
+		            <th>피드백</th>
 		        </tr>
 		
 		        <tr th:each="item : ${category.items}">
@@ -203,20 +204,26 @@
 				    <td class="answer" th:if="${item.questionType == 'SCORE'}">
 					    <input type="number" 
 					           th:name="${'q' + item.questionId}" 
+					           th:value="${item.score}"
 					           min="1" 
 					           placeholder="입력"
 					           th:attr="max=${item.weight}" 
-					           class="number-input"/>
+					           class="number-input"
+					           required />
 					     <input type="hidden" th:name="${'mapping' + item.questionId}" th:value="${item.mappingId}" />
 					</td>
-				
-				    <!-- 서술형 의견 입력 -->
-				    <td  class="answer"  th:if="${item.questionType == 'TEXT'}">
-				        <textarea th:name="${'comment' + item.questionId}" class="comment-box"
-				                  th:text="${item.selfFeedback != null ? item.selfFeedback : ''}"
-				                  placeholder="의견을 작성하세요"></textarea>
+					<!-- 서술형 문항은 점수 input 없음 -->
+				    <td th:if="${item.questionType == 'TEXT'}">
 				        <input type="hidden" th:name="${'mapping' + item.questionId}" th:value="${item.mappingId}" />
 				    </td>
+				
+				    <!-- content 입력 (점수형 피드백 또는 서술형 의견) -->
+				    <td>
+				        <textarea th:name="${'comment' + item.questionId}" class="comment-box"
+				                  th:text="${item.content != null ? item.content : ''}"
+				                  placeholder="의견/피드백 작성" ></textarea>
+				    </td>
+				    
 				</tr>
 		    </table>
 		</div>

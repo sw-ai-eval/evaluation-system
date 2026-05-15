@@ -48,6 +48,9 @@ function openEditModal(empNo) {
     const positionEl = document.getElementById('position');
 	const finalEl = document.getElementById('finalEvaluatorSelect');
 	const typeId = document.querySelector("select[name='typeId']").value;
+	const evalTypeInput = document.getElementById("evalTypeName");
+	const typeIdInput = document.getElementById("modalTypeId");
+	
 
     if (!finalEl) {
         console.error("모달 DOM 문제");
@@ -64,21 +67,22 @@ function openEditModal(empNo) {
 		    empNoEl.value = data.empNo ?? '';
 		    empNameEl.value = data.empName ?? '';
 		    positionEl.value = data.position ?? '';
-			document.getElementById("modalTypeId").value = document.querySelector("select[name='typeId']").value;
-
+			
+			typeIdInput.value = typeId;
+			typeIdInput.dataset.typeId = typeId; // dataset으로 JS 접근용
+			evalTypeInput.value = data.evalTypeName ?? '';
+			evalTypeInput.dataset.evalTypeName = data.evalTypeName ?? '';
+			
 		    // ⭐ 1. 먼저 상태 세팅
 		    allEmployees = data.availableEmployees ?? [];
 		    firstEvaluators = data.firstEvaluators ?? [];
 
 		    // ⭐ 2. 그 다음 렌더
-		    renderFirstEvaluators(firstEvaluators);
-		    renderAvailableEmployees();
+			renderFirstEvaluators(firstEvaluators, data.evalTypeName);
+			renderAvailableEmployees(data.evalTypeName);
 
 		    // final evaluator
-		    setTimeout(() => {
-		        finalEl.value = data.finalEvaluator ?? '';
-		    }, 0);
-
+		    document.getElementById('finalEvaluatorSelect').value = data.finalEvaluator ?? '';
 		    document.getElementById('editModal').style.display = 'block';
 		});
 }
@@ -87,38 +91,46 @@ function closeModal() {
     document.getElementById('editModal').style.display = 'none';
 }
 
-function renderFirstEvaluators(list) {
-
+function renderFirstEvaluators(list, evalTypeName) {
     const box = document.getElementById("firstEvaluatorsBox");
     const input = document.getElementById("firstEvaluatorsInput");
+    const addBtn = document.querySelector(".add-evaluator-btn");
+    const select = document.getElementById("availableEvaluatorSelect");
 
     box.innerHTML = "";
 
-    list.forEach((emp, index) => {
-
+    list.forEach(emp => {
         const tag = document.createElement("span");
         tag.className = "tag-eval";
         tag.innerHTML = `
             ${emp.name}
-            <button type="button" class="tag-eval-button" onclick="removeFirstEvaluator(${emp.empNo})">X</button>
+            <button type="button" class="tag-eval-button" onclick="removeFirstEvaluator('${emp.empNo}', '${evalTypeName}')">X</button>
         `;
-
         box.appendChild(tag);
     });
+
+    // 숨기기/비활성화 처리
+    if (!evalTypeName.includes('다면') && list.length >= 1) {
+        select.disabled = true;
+        addBtn.disabled = true;
+    } else {
+        select.disabled = false;
+        addBtn.disabled = false;
+    }
 
     input.value = list.map(e => e.empNo).join(",");
 }
 
 
 
-function removeFirstEvaluator(empNo) {
-	firstEvaluators = firstEvaluators.filter(
-	        e => e.empNo != empNo
-	    );
+function removeFirstEvaluator(empNo, evalTypeName) {
+    firstEvaluators = firstEvaluators.filter(
+        e => e.empNo != empNo
+    );
 
-    renderFirstEvaluators(firstEvaluators);
+    renderFirstEvaluators(firstEvaluators, evalTypeName);
 
-    renderAvailableEmployees();
+    renderAvailableEmployees(evalTypeName);
 }
 
 function addEvaluator() {
@@ -133,6 +145,15 @@ function addEvaluator() {
     const employee = allEmployees.find(
         emp => emp.empNo == selectedEmpNo
     );
+	
+	const evalTypeInput = document.getElementById('evalTypeName');
+    const evalTypeName = evalTypeInput.dataset.evalTypeName ?? '';
+
+    // 다면 평가 아닌 경우 1명만 가능
+    if (!evalTypeName.includes('다면') && firstEvaluators.length >= 1) {
+        alert("이 평가는 1차 평가자가 1명만 가능합니다.");
+        return;
+    }
 
     // 중복 방지
     if (firstEvaluators.some(e => e.empNo == selectedEmpNo)) {
@@ -144,11 +165,11 @@ function addEvaluator() {
         name: employee.name
     });
 
-    renderFirstEvaluators(firstEvaluators);
-    renderAvailableEmployees();
+	renderFirstEvaluators(firstEvaluators, evalTypeName);
+	renderAvailableEmployees(evalTypeName);
 }
 
-function renderAvailableEmployees() {
+function renderAvailableEmployees(evalTypeName) {
 
     const select = document.getElementById('availableEvaluatorSelect');
 
@@ -159,7 +180,7 @@ function renderAvailableEmployees() {
 	    );
 		
 		
-	// ⭐ 데이터 없을 때
+	// 다면
     if (!available || available.length === 0) {
 
         const option = document.createElement('option');
@@ -178,6 +199,18 @@ function renderAvailableEmployees() {
 	       option.textContent = emp.name;
 	       select.appendChild(option);
 	   });
+	   
+	   // 1명만 가능이면 select 비활성화 처리
+	   const addBtn = document.querySelector('.add-evaluator-btn');
+
+	   // 🔹 다면 평가면 항상 활성, 1명만 가능한 평가는 1명 이상이면 비활성
+	   if (!evalTypeName.includes('다면') && firstEvaluators.length >= 1) {
+	       select.disabled = true;
+	       addBtn.disabled = true;
+	   } else {
+	       select.disabled = false;
+	       addBtn.disabled = false;
+	   }
 }
 
 
