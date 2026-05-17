@@ -242,7 +242,7 @@
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
                     const canEditSelf = isMyDoc && data.status === '본인평가중';
-                    const canEditFirst = isDeptHead && data.status === '1차평가대기';
+                    const canEditFirst = isDeptHead && !isMyDoc && data.status === '1차평가대기';
 
                     let tbodyHtml = '';
                     if (data.items && data.items.length > 0) {
@@ -269,7 +269,7 @@
                                 </tr>
                             `;
 
-                            if (data.status !== '본인평가중') {
+                            if (data.status !== '본인평가중' && !isMyDoc) {
                                 const firstReadonly = canEditFirst ? '' : 'readonly';
                                 const firstClass = canEditFirst ? 'feedback-textarea' : 'feedback-textarea readonly-bg';
                                 

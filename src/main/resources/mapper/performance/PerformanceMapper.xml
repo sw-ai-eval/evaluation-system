@@ -11,7 +11,6 @@
     <select id="selectEvalList" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
         SELECT 
             m.eval_type_id AS typeId,
-            /* '성과평가' 명칭 대신 날짜 기간(2026-05-01 ~ 2026-05-31) 출력 */
             FORMAT(et.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(et.end_date, 'yyyy-MM-dd') AS evalPeriod,
             d.name AS deptName,
             e.position AS position,
@@ -27,9 +26,9 @@
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 et ON m.eval_type_id = et.id
-        WHERE m.eval_type_id = 2             /* 성과평가 고정 */
-          AND m.step = 0                    /* 리스트 중복 방지 (한 명당 1줄) */
-          /* 🌟 원본 로직: 본인 사번이거나, 내가 해당 부서의 팀장일 때만 노출 */
+        WHERE m.eval_type_id = 2
+          AND m.step = 0
+          AND e.status = 'ACTIVE'
           AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
         <if test="year != null">
             AND et.year = #{year}
@@ -69,7 +68,7 @@
             AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = m.eval_type_id)
         WHERE m.eval_type_id = #{typeId} 
           AND m.evaluatee_no = #{empNo}
-          AND m.step = 0  /* 🌟 한 사람당 한 줄만 가져오도록 고정 */
+          AND m.step = 0
     </select>
 
     <select id="selectEvalItems" resultType="com.eval.domain.performance.dto.PerformanceDTO$Item">
@@ -97,34 +96,88 @@
             )
         WHERE q.type_id = #{typeId}
     </select>
-    
+
+    <!-- 본인 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
     <update id="updateSelfAnswer">
-        UPDATE eval_answer_52
-        SET content = #{item.selfFeedback}, 
-            score = #{item.selfScore}
-        WHERE question_id = #{item.questionId}
-          AND mapping_id = (
-                SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} AND step = 0 ORDER BY id DESC
-          )
+        IF EXISTS (
+            SELECT 1 FROM eval_answer_52
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                    ORDER BY id DESC
+              )
+        )
+        BEGIN
+            UPDATE eval_answer_52
+            SET content = #{item.selfFeedback},
+                score = #{item.selfScore}
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                    ORDER BY id DESC
+              )
+        END
+        ELSE
+        BEGIN
+            INSERT INTO eval_answer_52 (question_id, mapping_id, score, content, created_at)
+            VALUES (
+                #{item.questionId},
+                (SELECT TOP 1 id FROM eval_target_mapping_52
+                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                 ORDER BY id DESC),
+                #{item.selfScore},
+                #{item.selfFeedback},
+                GETDATE()
+            )
+        END
     </update>
 
+    <!-- 1차 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
     <update id="updateFirstAnswer">
-        UPDATE eval_answer_52
-        SET content = #{item.firstFeedback}, 
-            score = #{item.firstScore}
-        WHERE question_id = #{item.questionId}
-          AND mapping_id = (
-                SELECT TOP 1 id FROM eval_target_mapping_52 
-                WHERE evaluatee_no = #{empNo} AND step = 1 ORDER BY id DESC
-          )
+        IF EXISTS (
+            SELECT 1 FROM eval_answer_52
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                    ORDER BY id DESC
+              )
+        )
+        BEGIN
+            UPDATE eval_answer_52
+            SET content = #{item.firstFeedback},
+                score = #{item.firstScore}
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                    ORDER BY id DESC
+              )
+        END
+        ELSE
+        BEGIN
+            INSERT INTO eval_answer_52 (question_id, mapping_id, score, content, created_at)
+            VALUES (
+                #{item.questionId},
+                (SELECT TOP 1 id FROM eval_target_mapping_52
+                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                 ORDER BY id DESC),
+                #{item.firstScore},
+                #{item.firstFeedback},
+                GETDATE()
+            )
+        END
     </update>
 
     <update id="updateEvalStatus">
         UPDATE eval_target_mapping_52
         SET status = #{status},
             updated_at = GETDATE()
-        WHERE eval_type_id = #{typeId} AND evaluatee_no = #{empNo}
+        WHERE eval_type_id = #{typeId}
+          AND evaluatee_no = #{empNo}
+          AND step = #{step}
     </update>
 
 </mapper>

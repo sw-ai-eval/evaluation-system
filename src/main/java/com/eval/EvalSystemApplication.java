@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 	    "com.eval.domain.employee.mapper",
 	    "com.eval.domain.dept.mapper",
 	    "com.eval.domain.performance.mapper",
-	    "com.eval.domain.multi.mapper"
+	    "com.eval.domain.multi.mapper",
 	    "com.eval.domain.competency.mapper"
 	})
 @SpringBootApplication

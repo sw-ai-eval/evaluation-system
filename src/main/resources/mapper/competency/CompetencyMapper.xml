@@ -30,7 +30,7 @@
         JOIN eval_type_52 t ON m.eval_type_id = t.id
         WHERE m.eval_type_id = 3
           AND m.step = 0
-          AND e.status = 'ACTIVE' /* 퇴사/휴직자 제외 */
+          AND e.status = 'ACTIVE'
           AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
         <if test="year != null">
             AND t.year = #{year}
@@ -92,37 +92,109 @@
             a2.content AS firstFeedback
         FROM eval_question_52 q
         LEFT JOIN eval_answer_52 a1 ON q.id = a1.question_id 
-            AND a1.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0 ORDER BY id DESC)
+            AND a1.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 
+                                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0 
+                                 ORDER BY id DESC)
         LEFT JOIN eval_answer_52 a2 ON q.id = a2.question_id 
-            AND a2.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1 ORDER BY id DESC)
+            AND a2.mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 
+                                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1 
+                                 ORDER BY id DESC)
         WHERE q.type_id = #{typeId}
         ORDER BY q.id ASC
     </select>
 
+    <!-- 본인 역량 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
     <update id="updateSelfAnswer">
-        UPDATE eval_answer_52 
-        SET score = CASE #{item.selfGrade} 
-                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
-                    END,
-            content = #{item.selfFeedback}
-        WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 0 ORDER BY id DESC)
+        IF EXISTS (
+            SELECT 1 FROM eval_answer_52
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                    ORDER BY id DESC
+              )
+        )
+        BEGIN
+            UPDATE eval_answer_52
+            SET score = CASE #{item.selfGrade}
+                            WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8
+                            WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE NULL
+                        END,
+                content = #{item.selfFeedback}
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                    ORDER BY id DESC
+              )
+        END
+        ELSE
+        BEGIN
+            INSERT INTO eval_answer_52 (question_id, mapping_id, score, content, created_at)
+            VALUES (
+                #{item.questionId},
+                (SELECT TOP 1 id FROM eval_target_mapping_52
+                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 0
+                 ORDER BY id DESC),
+                CASE #{item.selfGrade}
+                    WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8
+                    WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE NULL
+                END,
+                #{item.selfFeedback},
+                GETDATE()
+            )
+        END
     </update>
 
+    <!-- 1차 역량 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
     <update id="updateFirstAnswer">
-        UPDATE eval_answer_52 
-        SET score = CASE #{item.firstGrade} 
-                        WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8 WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE 0 
-                    END,
-            content = #{item.firstFeedback}
-        WHERE question_id = #{item.questionId}
-          AND mapping_id = (SELECT TOP 1 id FROM eval_target_mapping_52 WHERE evaluatee_no = #{empNo} AND eval_type_id = 3 AND step = 1 ORDER BY id DESC)
+        IF EXISTS (
+            SELECT 1 FROM eval_answer_52
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                    ORDER BY id DESC
+              )
+        )
+        BEGIN
+            UPDATE eval_answer_52
+            SET score = CASE #{item.firstGrade}
+                            WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8
+                            WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE NULL
+                        END,
+                content = #{item.firstFeedback}
+            WHERE question_id = #{item.questionId}
+              AND mapping_id = (
+                    SELECT TOP 1 id FROM eval_target_mapping_52
+                    WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                    ORDER BY id DESC
+              )
+        END
+        ELSE
+        BEGIN
+            INSERT INTO eval_answer_52 (question_id, mapping_id, score, content, created_at)
+            VALUES (
+                #{item.questionId},
+                (SELECT TOP 1 id FROM eval_target_mapping_52
+                 WHERE evaluatee_no = #{empNo} AND eval_type_id = #{typeId} AND step = 1
+                 ORDER BY id DESC),
+                CASE #{item.firstGrade}
+                    WHEN 'S' THEN 1.0 WHEN 'A' THEN 0.9 WHEN 'B' THEN 0.8
+                    WHEN 'C' THEN 0.7 WHEN 'D' THEN 0.6 ELSE NULL
+                END,
+                #{item.firstFeedback},
+                GETDATE()
+            )
+        END
     </update>
 
     <update id="updateEvalStatus">
         UPDATE eval_target_mapping_52 
         SET status = #{status}, updated_at = GETDATE()
-        WHERE eval_type_id = #{typeId} AND evaluatee_no = #{empNo}
+        WHERE eval_type_id = #{typeId}
+          AND evaluatee_no = #{empNo}
+          AND step = #{step}
     </update>
 
 </mapper>

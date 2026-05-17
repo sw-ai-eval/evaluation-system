@@ -271,7 +271,7 @@
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
                     const canEditSelf = isMyDoc && data.status === '본인평가중';
-                    const canEditFirst = isDeptHead && data.status === '1차평가대기';
+                    const canEditFirst = isDeptHead && !isMyDoc && data.status === '1차평가대기';
 
                     let tbodyHtml = '';
 
@@ -299,7 +299,7 @@
                                 </tr>
                             `;
 
-                            if (data.status !== '본인평가중') {
+                            if (data.status !== '본인평가중' && !isMyDoc) {
                                 const firstGradeSelect = createGradeSelect(`firstGrade_${item.questionId}`, item.firstGrade, weight, !canEditFirst);
                                 
                                 tbodyHtml += `

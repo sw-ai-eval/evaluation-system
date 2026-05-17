@@ -15,63 +15,63 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PerformanceService {
 
-private final PerformanceMapper mapper;
+    private final PerformanceMapper mapper;
 
-public List<Integer> getEvalYears() {
-    return mapper.selectEvalYears();
-}
+    public List<Integer> getEvalYears() {
+        return mapper.selectEvalYears();
+    }
 
-public List<PerformanceDTO.Info> getEvalList(Integer year, String period) {
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String currentEmpNo = auth.getName(); 
-    
-    return mapper.selectEvalList(year, period, currentEmpNo);
-}
+    public List<PerformanceDTO.Info> getEvalList(Integer year, String period) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmpNo = auth.getName();
+        return mapper.selectEvalList(year, period, currentEmpNo);
+    }
 
-public PerformanceDTO.Info getEvalDetail(Integer typeId, String empNo) {
-    PerformanceDTO.Info info = mapper.selectEvalInfo(typeId, empNo);
-    
-    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    String currentEmpNo = auth.getName();
+    public PerformanceDTO.Info getEvalDetail(Integer typeId, String empNo) {
+        PerformanceDTO.Info info = mapper.selectEvalInfo(typeId, empNo);
 
-    if (info != null) {
-        if (!empNo.equals(currentEmpNo) && "본인평가중".equals(info.getStatus())) {
-            info.setItems(new ArrayList<>()); 
-        } else {
-            List<PerformanceDTO.Item> items = mapper.selectEvalItems(typeId, empNo);
-            
-            if ("1차평가대기".equals(info.getStatus()) && empNo.equals(currentEmpNo)) {
-                for (PerformanceDTO.Item item : items) {
-                    item.setFirstFeedback("");
-                    item.setFirstScore(null);
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String currentEmpNo = auth.getName();
+
+        if (info != null) {
+            if (!empNo.equals(currentEmpNo) && "본인평가중".equals(info.getStatus())) {
+                info.setItems(new ArrayList<>());
+            } else {
+                List<PerformanceDTO.Item> items = mapper.selectEvalItems(typeId, empNo);
+
+                if ("1차평가대기".equals(info.getStatus()) && empNo.equals(currentEmpNo)) {
+                    for (PerformanceDTO.Item item : items) {
+                        item.setFirstFeedback("");
+                        item.setFirstScore(null);
+                    }
                 }
+                info.setItems(items);
             }
-            
-            info.setItems(items);
         }
+        return info;
     }
-    return info;
-}
 
-@Transactional
-public void saveEvaluation(PerformanceDTO.SaveReq req) {
-    if ("SELF".equals(req.getStep())) {
-        for (PerformanceDTO.Item item : req.getItems()) { 
-            mapper.updateSelfAnswer(req.getEmpNo(), item); 
-        }
-        
-        if ("Y".equals(req.getSubCheck())) {
-            mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1); 
-        }
-        
-    } else if ("FIRST".equals(req.getStep())) {
-        for (PerformanceDTO.Item item : req.getItems()) { 
-            mapper.updateFirstAnswer(req.getEmpNo(), item); 
-        }
-        
-        if ("Y".equals(req.getSubCheck())) {
-            mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2); 
+    @Transactional
+    public void saveEvaluation(PerformanceDTO.SaveReq req) {
+        if ("SELF".equals(req.getStep())) {
+            for (PerformanceDTO.Item item : req.getItems()) {
+                // typeId 추가 전달
+                mapper.updateSelfAnswer(req.getEmpNo(), req.getTypeId(), item);
+            }
+            if ("Y".equals(req.getSubCheck())) {
+                // status=1(1차평가대기)로 바꾸는 건 step=0 행
+                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 1, 0);
+            }
+
+        } else if ("FIRST".equals(req.getStep())) {
+            for (PerformanceDTO.Item item : req.getItems()) {
+                // typeId 추가 전달
+                mapper.updateFirstAnswer(req.getEmpNo(), req.getTypeId(), item);
+            }
+            if ("Y".equals(req.getSubCheck())) {
+                // status=2(평가완료)로 바꾸는 건 step=0 행 (목록 조회가 step=0 기준이므로)
+                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2, 0);
+            }
         }
     }
-}
 }
