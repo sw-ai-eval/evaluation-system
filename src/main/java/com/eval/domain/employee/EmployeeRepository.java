@@ -32,6 +32,7 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     void updatePosition(@Param("empNo") String empNo,
                         @Param("position") String position);
     
+    // 해당 부서의 부서장 찾기
     @Query("SELECT d.leaderEmpNo FROM Department d WHERE d.id = :deptId")
     String findDeptLeader(@Param("deptId") String deptId);
     
@@ -44,5 +45,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     
     // 사원 1명 조회
     Employee findByEmpNo(String empNo);
+    
+    // 모든 부서장 찾기
+    @Query("""
+    SELECT e.empNo
+    FROM Employee e
+    WHERE e.position = '부서장'
+    """)
+    List<String> findLeaderEmpNos();
 
 }

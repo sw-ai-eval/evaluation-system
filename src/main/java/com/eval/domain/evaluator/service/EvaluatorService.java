@@ -2,6 +2,7 @@ package com.eval.domain.evaluator.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -68,6 +69,8 @@ public class EvaluatorService {
 	            if (r.getSystemType() != null) {
 	                dto.setSystemType(r.getSystemType());
 	            }
+	            
+	            dto.setStatus(r.getStatus());
 
 	            r.getFirstEvaluators().forEach(eval -> {
 	                if (dto.getFirstEvaluators().stream().noneMatch(e -> e.getEmpNo().equals(eval.getEmpNo()))) {
@@ -233,6 +236,9 @@ public class EvaluatorService {
 	        dto.setEmpNo(empNo);
 	        dto.setEmpName(evaluatee != null ? evaluatee.getName() : null);
 	        dto.setPosition(evaluatee != null ? evaluatee.getPosition() : null);
+	        
+	        EvalType evalType = m.getTypeId();  // EvalTargetMapping에서 타입 가져오기
+	        dto.setEvalTypeName(evalType != null ? evalType.getName() : null);  // DTO에 세팅
 
 	        // 평가자
 	        Set<String> empNos = list.stream().map(EvalTargetMapping::getEvaluatorNo).collect(Collectors.toSet());
@@ -286,6 +292,8 @@ public class EvaluatorService {
 	    // 평가자 업데이트
 	    @Transactional
 	    public void update(EvaluatorUpdateRequest request, Integer typeId) {
+	    	checkEvaluationStarted(request.getEmpNo(), typeId);
+	    	
 	    	Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	        String adminNo = auth.getName();
 	        
@@ -300,10 +308,15 @@ public class EvaluatorService {
 	    private void updateFirstEvaluators(EvaluatorUpdateRequest request, String empNo, String adminNo, Integer typeId) {
 	    	List<EvalTargetMapping> dbList =evaluatorRepository.findByEvaluateeNoAndStepAndTypeId_Id(empNo, 1, typeId);
 	    	
-	    	Set<String> requestSet = new HashSet<>(request.getFirstEvaluators());
-	    	
 	    	EvalType type = em.getReference(EvalType.class, typeId);
 	    	type.setId(typeId);
+	    	
+	    	Set<String> requestSet;
+	        if (type.getName().contains("다면")) {
+	            requestSet = new HashSet<>(request.getFirstEvaluators());
+	        } else {
+	            requestSet = request.getFirstEvaluators().isEmpty() ? Collections.emptySet() : Collections.singleton(request.getFirstEvaluators().get(0));
+	        }
 	    	
 	    	for (String evaluator : requestSet) {
 
@@ -388,6 +401,7 @@ public class EvaluatorService {
 	    // 피평가자 대상 제외
 	    @Transactional
 	    public void delete(String deptId, String empNo, Integer typeId) {
+	    	checkEvaluationStarted(empNo, typeId);
 
 	        try {
 	            evaluatorRepository.deleteByDeptIdAndEvaluateeNoAndTypeId_Id(deptId, empNo, typeId);
@@ -421,4 +435,34 @@ public class EvaluatorService {
 	                               + ", evaluatee=" + evaluateeNo + ", evalType=" + typeIdInt);
 	        }
 	    }
+	    
+	    private void checkEvaluationStarted(String empNo, Integer typeId) {
+	        boolean anyStarted = evaluatorRepository.existsByEvaluateeNoAndTypeId_IdAndStatusGreaterThan(empNo, typeId, 0);
+	        if (anyStarted) {
+	            throw new IllegalStateException("이미 평가가 진행된 항목이 있어 수정할 수 없습니다.");
+	        }
+	    }
+
+
+		public void updateStatusToOne(String evaluatorNo, String evaluateeNo, Integer typeIdInt) {
+			// TODO Auto-generated method stub
+	        EvalType evalType = evalTypeRepository.findById(typeIdInt)
+	                .orElseThrow(() -> new RuntimeException("EvalType not found for id=" + typeIdInt));
+
+	        // 매핑 조회
+	        EvalTargetMapping mapping = evaluatorRepository.findByEvaluatorNoAndEvaluateeNoAndTypeId(
+	                evaluatorNo, evaluateeNo, evalType
+	        );
+
+	        if (mapping != null) {
+	            mapping.setStatus(1);
+	            mapping.setUpdatedAt(LocalDateTime.now());
+	            mapping.setUpdatedBy(evaluatorNo); // 필요 시 평가자
+	            evaluatorRepository.save(mapping);
+	            System.out.println("✅ Status updated for mappingId=" + mapping.getId());
+	        } else {
+	            System.out.println("⚠️ Mapping not found for evaluator=" + evaluatorNo 
+	                               + ", evaluatee=" + evaluateeNo + ", evalType=" + typeIdInt);
+	        }
+		}
 }

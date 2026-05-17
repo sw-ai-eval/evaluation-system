@@ -17,6 +17,8 @@ public class EvaluatorDetailDto {
     private String empNo;
     private String empName;
     private String position;
+    
+    private String evalTypeName;
 
     private List<EvaluatorDto> firstEvaluators;
     private String finalEvaluator;

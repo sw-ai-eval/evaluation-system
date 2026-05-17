@@ -94,11 +94,9 @@ public class EvaluatorController {
     
     @GetMapping("/evaluator/detail/{empNo}")
     @ResponseBody
-    public EvaluatorDetailDto detail(
-            @PathVariable String empNo,
-            @RequestParam Integer typeId) {
+    public EvaluatorDetailDto detail(@PathVariable String empNo, @RequestParam Integer typeId) {
 
-        return evaluatorService.getDetail(empNo, typeId);
+    	return evaluatorService.getDetail(empNo, typeId);
     }
     
     @PostMapping("/evaluator/update")

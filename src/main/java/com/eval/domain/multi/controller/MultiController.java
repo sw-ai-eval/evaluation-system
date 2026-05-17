@@ -4,6 +4,7 @@ package com.eval.domain.multi.controller;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -52,10 +53,24 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	          return "redirect:/login";
 	      }
 
-	      List<MultiEvalDTO> evalList = multiService.getMultiList(empNo, position);
-	      model.addAttribute("evalList", evalList);
+	      List<MultiEvalDTO> inProgressList = multiService.getMultiProgressList(empNo, position);
+	      List<MultiEvalDTO> completedList = multiService.getMultiCompletedList(empNo, position);
+	      model.addAttribute("inProgressList", inProgressList);
+	      model.addAttribute("completedList", completedList);
+	      
 	      System.out.println("===== evalList 내용 =====");
-	      for (MultiEvalDTO eval : evalList) {
+	      for (MultiEvalDTO eval : inProgressList) {
+	          System.out.println("evalTypeId=" + eval.getEvalTypeId() +
+	                             ", evaluatorNo=" + eval.getEvaluatorNo() +
+	                             ", evaluateeNo=" + eval.getEvaluateeNo() +
+	                             ", evaluatorName=" + eval.getEvaluatorName() +
+	                             ", evaluateeName=" + eval.getEvaluateeName() +
+	                             ", position=" + eval.getPosition() +
+	                             ", deptName=" + eval.getDeptName() +
+	                             ", statusName=" + eval.getStatusName());
+	      }
+	      
+	      for (MultiEvalDTO eval : completedList) {
 	          System.out.println("evalTypeId=" + eval.getEvalTypeId() +
 	                             ", evaluatorNo=" + eval.getEvaluatorNo() +
 	                             ", evaluateeNo=" + eval.getEvaluateeNo() +
@@ -67,20 +82,21 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	      }
 
 	      model.addAttribute("userPosition", position); // UI에서 필요하면
-	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + evalList.size());
+	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + inProgressList.size());
+	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + completedList.size());
 	      
 	      return "evaluation/multi/multi";
 	  }
 	  
-	  @GetMapping("/evaluation/multi/detail/{evalTypeId}/{empNo}")
+	  @GetMapping("/evaluation/multi/detail/{evalTypeId}/{evaluatorNo}/{empNo}")
 	  @ResponseBody
-	  public MultiEvalDTO getMultiEvalDetail(@PathVariable Long evalTypeId,@PathVariable String empNo,Authentication authentication) {
+	  public MultiEvalDTO getMultiEvalDetail(@PathVariable Long evalTypeId,@PathVariable String evaluatorNo,@PathVariable String empNo, Authentication authentication) {
 	      CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
 
 	      String loginEmpNo = user.getUsername();
 	      String position = user.getPosition();
 
-	      return multiService.getMultiDetail(evalTypeId, empNo, loginEmpNo, position);
+	      return multiService.getMultiDetail(evalTypeId, empNo, evaluatorNo, position);
 	  }
 
 	  @GetMapping("/evaluation/multi/{evalTypeId}/{empNo}/sheet")
@@ -104,79 +120,90 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	  }
 	  
 	  @PostMapping("/evaluation/multi/submit")
-	  public String submitMulti(@RequestParam Map<String, String> formData,  Authentication auth) {
-		  
-		  // 로그인 정보에서 평가자 empNo 가져오기
-		    CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
-		    String evaluatorNo = user.getUsername();
+	  public String submitMulti(@RequestParam Map<String, String> formData, Authentication auth) {
 
-		    // evaluateeNo와 evalTypeId는 formData나 hidden input에서 가져와야 함
-		    String evaluateeNo = formData.get("evaluateeNo");
-		    Integer evalTypeId = Integer.parseInt(formData.get("evalTypeId"));
+	      CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
 
-		  
-	      List<MultiEvalAnswer> answers = new ArrayList<>();
-	      
-	      System.out.println("폼 데이터: " + formData);
-	      
-	      formData.forEach((key, value) -> {
-	          try {
-	              MultiEvalAnswer ans = null;
-	              Long questionId = null;
+	      String evaluatorNo = user.getUsername();
 
-	              if (key.startsWith("q")) { // 점수
-	                  questionId = Long.parseLong(key.substring(1));
-	                  BigDecimal score = new BigDecimal(value);
+	      String evaluateeNo = formData.get("evaluateeNo");
 
-	                  ans = new MultiEvalAnswer();
-	                  ans.setQuestionId(questionId);
-	                  ans.setScore(score);
+	      Integer evalTypeId = Integer.parseInt(formData.get("evalTypeId"));
 
-	              } else if (key.startsWith("comment")) { // 의견
-	                  questionId = Long.parseLong(key.substring(7));
+	      List<MultiEvalAnswer> answers = parseAnswers(formData);
 
-	                  ans = new MultiEvalAnswer();
-	                  ans.setQuestionId(questionId);
-	                  ans.setContent(value);
-	              }
+	      multiService.saveAnswers( answers, evaluatorNo, evaluateeNo, evalTypeId);
+	      multiService.saveSummary(evaluateeNo, evalTypeId);
 
-	              if (ans != null) {
-	                  // 공통 필드 설정
-	                  ans.setCreatedAt(LocalDateTime.now());
-
-	                  // mappingId 가져오기 (없으면 null 체크)
-	                  String mappingKey = "mapping" + questionId;
-	                  if (formData.containsKey(mappingKey) && !formData.get(mappingKey).isBlank()) {
-	                      ans.setMappingId(Long.parseLong(formData.get(mappingKey)));
-	                  } else {
-	                      // nullable=false라면 기본값 설정 필요
-	                      System.out.println("⚠️ mappingId 없음 for questionId=" + questionId);
-	                      ans.setMappingId(0L); // 예: 기본값 0
-	                  }
-
-	                  System.out.println("➡ 답변 생성: " + ans);
-	                  answers.add(ans);
-	              }
-
-	          } catch (NumberFormatException e) {
-	              System.out.println("❌ NumberFormatException for key=" + key + ", value=" + value);
-	              e.printStackTrace();
-	          }
-	      });
-
-	      System.out.println("총 저장될 답변 수: " + answers.size());
-	      System.out.println("evalTypeId: " + evalTypeId);
-	      try {
-	    	  multiService.saveAnswers(answers, evaluatorNo, evaluateeNo, evalTypeId);
-	          System.out.println("✅ 답변 저장 완료");
-	      } catch (Exception e) {
-	          System.out.println("❌ 답변 저장 실패: " + e.getMessage());
-	          e.printStackTrace();
-	      }
-
-	      return "redirect:/evaluation/multi"; // 필요에 따라 리다이렉트 URL 변경
+	      return "redirect:/evaluation/multi";
 	  }
 
+	  @PostMapping("/evaluation/multi/temporary")
+	  public String temporaryMulti(@RequestParam Map<String, String> formData,Authentication auth) {
 
+	      CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
 
+	      String evaluatorNo = user.getUsername();
+
+	      String evaluateeNo = formData.get("evaluateeNo");
+
+	      Integer evalTypeId =Integer.parseInt(formData.get("evalTypeId"));
+
+	      List<MultiEvalAnswer> answers = parseAnswers(formData);
+
+	      multiService.temporarySaveAnswers(answers, evaluatorNo,evaluateeNo, evalTypeId);
+
+	      return "redirect:/evaluation/multi";
+	  }
+	  
+	  private List<MultiEvalAnswer> parseAnswers(Map<String, String> formData) {
+
+		    Map<Long, MultiEvalAnswer> answerMap = new HashMap<>();
+
+		    formData.forEach((key, value) -> {
+
+		        try {
+
+		            Long questionId = null;
+
+		            if (key.startsWith("q")) {
+		                questionId = Long.parseLong(key.substring(1));
+
+		            } else if (key.startsWith("comment")) {
+		                questionId = Long.parseLong(key.substring(7));
+
+		            } else if (key.startsWith("mapping")) {
+		                questionId = Long.parseLong(key.substring(7));
+		            }
+
+		            if (questionId == null) return;
+
+		            MultiEvalAnswer ans =
+		                    answerMap.getOrDefault(questionId, new MultiEvalAnswer());
+
+		            ans.setQuestionId(questionId);
+
+		            if (key.startsWith("q")) {
+		                ans.setScore(new BigDecimal(value));
+		            }
+
+		            if (key.startsWith("comment")) {
+		                ans.setContent(value);
+		            }
+
+		            if (key.startsWith("mapping")) {
+		                ans.setMappingId(Long.parseLong(value));
+		            }
+
+		            ans.setCreatedAt(LocalDateTime.now());
+
+		            answerMap.put(questionId, ans);
+
+		        } catch (Exception e) {
+		            e.printStackTrace();
+		        }
+		    });
+
+		    return new ArrayList<>(answerMap.values());
+		}
   }
