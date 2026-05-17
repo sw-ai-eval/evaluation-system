@@ -101,12 +101,6 @@ public class EvaluatorService {
 	    	EvalType evalType = evalTypeRepository.findById(typeId)
 	    	        .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
 	    	
-	    	boolean exists = evaluatorRepository.existsByDeptIdAndTypeId(deptId, evalType);
-	    	
-	        if (exists) {
-	            throw new IllegalStateException("이미 해당 부서의 평가 매핑이 존재합니다.");
-	        }
-	    	
 	        List<Employee> employees = employeeRepository.findByDeptId(deptId);
 	        
 	        if (employees == null || employees.isEmpty()) {
@@ -131,6 +125,12 @@ public class EvaluatorService {
 
 	        for (Employee e : employees) {
 
+				boolean alreadyExists = evaluatorRepository.existsByEvaluateeNoAndDeptIdAndTypeId(e.getEmpNo(), deptId, evalType);
+
+				if (alreadyExists) {
+					continue;
+				}
+
 	            boolean isLeader = e.getEmpNo().equals(leader);
 	            boolean isExecutive = executives.stream().anyMatch(ex -> ex.getEmpNo().equals(e.getEmpNo()));
 
@@ -147,7 +147,7 @@ public class EvaluatorService {
 	                        .build());
 	            }
 
-	         // 1차 평가
+	        	 // 1차 평가
 	            if (!isExecutive && !isLeader) {
 
 	                if (evalType.getName().contains("다면평가")) {
