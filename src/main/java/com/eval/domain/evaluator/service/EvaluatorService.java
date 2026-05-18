@@ -62,33 +62,61 @@ public class EvaluatorService {
 	                d.setPosition(r.getPosition());
 	                d.setDeptId(r.getDeptId());
 	                d.setDeptName(r.getDeptName());
+	                d.setStatus(0); // 초기값 0
 	                d.setFirstEvaluators(new ArrayList<>());
+	                d.setFirstEvaluatorsStatus(new ArrayList<>());
 	                return d;
 	            });
 
+	            // 시스템 타입 세팅
 	            if (r.getSystemType() != null) {
 	                dto.setSystemType(r.getSystemType());
 	            }
-	            
-	            dto.setStatus(r.getStatus());
 
+	            // 1차 평가자 합치기
 	            r.getFirstEvaluators().forEach(eval -> {
 	                if (dto.getFirstEvaluators().stream().noneMatch(e -> e.getEmpNo().equals(eval.getEmpNo()))) {
 	                    dto.getFirstEvaluators().add(eval);
 	                }
 	            });
 
+	            // 최종 평가자 세팅
 	            if (r.getFinalEvaluatorEmpNo() != null && dto.getFinalEvaluatorEmpNo() == null) {
 	                dto.setFinalEvaluatorEmpNo(r.getFinalEvaluatorEmpNo());
 	                dto.setFinalEvaluatorName(r.getFinalEvaluatorName());
 	            }
+
+	            // status 리스트에 추가
+	            dto.getFirstEvaluatorsStatus().add(r.getStatus());
 	        }
 
-	        map.values().forEach(dto -> dto.setFirstEvaluatorNames(
-	            dto.getFirstEvaluators().stream()
-	                .map(EvaluatorDto::getName)
-	                .collect(Collectors.joining(", "))
-	        ));
+	        // DTO별로 최종 status 계산
+	     // DTO별로 최종 status 계산
+	        map.values().forEach(dto -> {
+	            List<Integer> statuses = dto.getFirstEvaluatorsStatus();
+
+	            System.out.println("=== empNo: " + dto.getEmpNo() + " ===");
+	            System.out.println("First Evaluators Status List: " + statuses);
+
+	            int finalStatus;
+	            if (statuses.isEmpty() || statuses.stream().allMatch(s -> s == 0)) {
+	                finalStatus = 0; // 모두 0 → 버튼 활성
+	            } else if (statuses.stream().allMatch(s -> s == 2)) {
+	                finalStatus = 2; // 모두 2 → 완료
+	            } else {
+	                finalStatus = 1; // 그 외 → 진행 중
+	            }
+
+	            dto.setStatus(finalStatus);
+	            System.out.println("Final DTO Status: " + dto.getStatus());
+
+	            // firstEvaluatorNames 합치기
+	            dto.setFirstEvaluatorNames(
+	                dto.getFirstEvaluators().stream()
+	                    .map(EvaluatorDto::getName)
+	                    .collect(Collectors.joining(", "))
+	            );
+	        });
 
 	        return new ArrayList<>(map.values());
 	    }

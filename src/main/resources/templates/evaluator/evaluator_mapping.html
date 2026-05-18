@@ -113,11 +113,12 @@
 
 		            <td>
 					    <button class="edit-btn"
-					            th:data-emp-no="${eval.empNo}"
-					            th:if="${eval.status == 0}">
-					        수정
-					    </button>
-					    <span th:if="${eval.status > 0}" class="text-muted">평가 진행 중</span>
+						        th:data-emp-no="${eval.empNo}"
+						        th:if="${eval.status eq 0}">
+						    수정
+						</button>
+						<span th:if="${eval.status eq 1}" class="text-muted">평가 진행 중</span>
+						<span th:if="${eval.status eq 2}" class="text-success">평가 완료</span>
 					</td>
 
 			    </tr>

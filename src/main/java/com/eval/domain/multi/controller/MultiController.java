@@ -57,33 +57,8 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	      List<MultiEvalDTO> completedList = multiService.getMultiCompletedList(empNo, position);
 	      model.addAttribute("inProgressList", inProgressList);
 	      model.addAttribute("completedList", completedList);
-	      
-	      System.out.println("===== evalList 내용 =====");
-	      for (MultiEvalDTO eval : inProgressList) {
-	          System.out.println("evalTypeId=" + eval.getEvalTypeId() +
-	                             ", evaluatorNo=" + eval.getEvaluatorNo() +
-	                             ", evaluateeNo=" + eval.getEvaluateeNo() +
-	                             ", evaluatorName=" + eval.getEvaluatorName() +
-	                             ", evaluateeName=" + eval.getEvaluateeName() +
-	                             ", position=" + eval.getPosition() +
-	                             ", deptName=" + eval.getDeptName() +
-	                             ", statusName=" + eval.getStatusName());
-	      }
-	      
-	      for (MultiEvalDTO eval : completedList) {
-	          System.out.println("evalTypeId=" + eval.getEvalTypeId() +
-	                             ", evaluatorNo=" + eval.getEvaluatorNo() +
-	                             ", evaluateeNo=" + eval.getEvaluateeNo() +
-	                             ", evaluatorName=" + eval.getEvaluatorName() +
-	                             ", evaluateeName=" + eval.getEvaluateeName() +
-	                             ", position=" + eval.getPosition() +
-	                             ", deptName=" + eval.getDeptName() +
-	                             ", statusName=" + eval.getStatusName());
-	      }
 
-	      model.addAttribute("userPosition", position); // UI에서 필요하면
-	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + inProgressList.size());
-	      System.out.println("empNo=" + empNo + ", position=" + position + ", evalList.size()=" + completedList.size());
+	      model.addAttribute("userPosition", position); 
 	      
 	      return "evaluation/multi/multi";
 	  }
