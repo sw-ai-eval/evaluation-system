@@ -76,7 +76,5 @@ public interface EvaluatorRepository extends JpaRepository<EvalTargetMapping, Lo
 
 	boolean existsByEvaluateeNoAndTypeId_IdAndStatusGreaterThan(String empNo, Integer typeId, int i);
 
-	List<Long> findMappingIdsByEvaluateeNoAndTypeId(String evaluateeNo, EvalType typeId);
-    
-
+    boolean existsByEvaluateeNoAndDeptIdAndTypeId(String empNo, String deptId, EvalType typeId);
 }

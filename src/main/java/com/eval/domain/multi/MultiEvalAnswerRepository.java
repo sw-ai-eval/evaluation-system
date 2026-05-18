@@ -46,11 +46,20 @@ public interface MultiEvalAnswerRepository extends JpaRepository<MultiEvalAnswer
 		    @Param("evalTypeId") Integer evalTypeId
 		);
 
-		@Query("""
-				SELECT AVG(a.score)
-				FROM MultiEvalAnswer a
-				WHERE a.mapping.evaluateeNo = :evaluateeNo
-				AND a.mapping.typeId = :evalTypeId
-				""")
-				BigDecimal getMyAvgScore(String evaluateeNo, Integer evalTypeId);
+	@Query(value = """
+    SELECT COALESCE(AVG(x.total_score), 0)
+    FROM (
+        SELECT SUM(a.score) AS total_score
+        FROM eval_answer_52 a
+        JOIN eval_target_mapping_52 m
+          ON a.mapping_id = m.id
+        WHERE m.evaluatee_no = :evaluateeNo
+          AND m.eval_type_id = :evalTypeId
+        GROUP BY m.id
+    ) x
+	""", nativeQuery = true)
+	BigDecimal getMyAvgScore(
+			@Param("evaluateeNo") String evaluateeNo,
+			@Param("evalTypeId") Integer evalTypeId
+	);
 }

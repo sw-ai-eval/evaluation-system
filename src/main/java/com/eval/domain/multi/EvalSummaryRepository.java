@@ -32,10 +32,10 @@ public interface EvalSummaryRepository extends JpaRepository<EvalSummaryChart, L
     		""")
     		BigDecimal findMyAvgScore(Long evalTypeId, String leaderNo);
 
-    @Query("""
-    		SELECT AVG(e.avgScore)
-    		FROM EvalSummaryChart e
-    		WHERE e.evalTypeId = :evalTypeId
-    		""")
-    		BigDecimal findAllLeaderAvgScore(Long evalTypeId);
+	@Query("""
+		SELECT AVG(e.totalScore)
+		FROM EvalSummaryChart e
+		WHERE e.evalTypeId = :evalTypeId
+	""")
+	BigDecimal findAllLeaderAvgScore(Long evalTypeId);
 }

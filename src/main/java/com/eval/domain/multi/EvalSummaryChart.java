@@ -25,13 +25,13 @@ public class EvalSummaryChart {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-    private String evaluateeNo;
+    private String evaluateeNo; //본인
 
     private Integer evalTypeId;
 
-    private BigDecimal totalScore;
+    private BigDecimal totalScore; // 본인 합계
 
-    private BigDecimal avgScore; // 전체 부서장들의 평균의 평균
+    private BigDecimal avgScore; // 본인의 평균
 
     private BigDecimal maxGivenScore; // 사용 안하고 있음
 

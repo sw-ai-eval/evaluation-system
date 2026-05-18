@@ -1,0 +1,279 @@
+
+.interview-container {
+    padding: 30px;
+    max-width: 1200px;
+}
+
+.page-header {
+    margin-bottom: 30px;
+}
+
+.page-header h1 {
+    font-size: 28px;
+    color: #1a202c;
+    margin-bottom: 8px;
+}
+
+.page-header p {
+    color: #718096;
+    font-size: 15px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 24px;
+    color: #2d3748;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #4a5568;
+}
+
+.form-control {
+    padding: 12px;
+    border: 1px solid #d2d6dc;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.topic-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.topic-item {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.topic-header {
+    background: #f7fafc;
+    padding: 14px 18px;
+    font-weight: 700;
+    color: #2d3748;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.topic-textarea {
+    width: 100%;
+    border: none;
+    padding: 18px;
+    resize: vertical;
+    font-size: 14px;
+    min-height: 120px;
+    outline: none;
+    box-sizing: border-box;
+}
+
+.button-area {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.save-btn {
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.save-btn:hover {
+    background: #2b6cb0;
+}
+
+/* =========================
+   면담 기록 테이블
+========================= */
+
+.interview-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.interview-table th {
+    background: #f7fafc;
+    padding: 14px;
+    text-align: left;
+    font-size: 14px;
+    color: #4a5568;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.interview-table td {
+    padding: 16px 14px;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 14px;
+    color: #2d3748;
+}
+
+.interview-table tbody tr:hover {
+    background: #f9fafb;
+}
+
+/* =========================
+   상태 뱃지
+========================= */
+
+.status {
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status.completed {
+    background: #c6f6d5;
+    color: #22543d;
+}
+
+/* =========================
+   주제 라벨
+========================= */
+
+.topic-label-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.topic-label {
+    background: #ebf8ff;
+    color: #2b6cb0;
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.topic-guide {
+    font-size: 13px;
+    color: #718096;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.open-panel-btn {
+    background: #3182ce;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.open-panel-btn:hover {
+    background: #2b6cb0;
+}
+
+/* =========================
+   오른쪽 패널
+========================= */
+
+.interview-panel {
+    position: fixed;
+    top: 0;
+    right: -650px;
+    width: 620px;
+    height: 100%;
+    background: white;
+    box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    transition: right 0.3s ease;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+}
+
+.interview-panel.open {
+    right: 0;
+}
+
+.panel-header {
+    padding: 24px;
+    border-bottom: 1px solid #e2e8f0;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.panel-header h2 {
+    margin: 0;
+    font-size: 22px;
+}
+
+.close-btn {
+    border: none;
+    background: none;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.panel-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.panel-topic-area {
+    margin-top: 30px;
+}
+
+.panel-topic-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 18px;
+}
+
+.panel-button-area {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.edit-btn {
+    border: none;
+    background: #edf2f7;
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.edit-btn:hover {
+    background: #e2e8f0;
+}

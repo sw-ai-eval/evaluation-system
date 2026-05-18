@@ -326,9 +326,9 @@
 	                    <input type="hidden" id="currentEmpNo">
 	                    
 	                    <!-- 차트 -->
-						<div style="width: 100%; height: 300px; margin-bottom: 20px;">
-						    <canvas id="avgChart"></canvas>
-						</div>
+                        <div id="chartWrap" style="display:none; width:100%; height:300px; margin-bottom:20px;">
+                            <canvas id="avgChart"></canvas>
+                        </div>
 							                    
 	                    
 	                    <div>
@@ -415,6 +415,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script type="text/javascript">
 const currentUserNo = '[[${#authentication.name}]]';
+const currentUserPosition = '[[${userPosition}]]';
 
 function loadEvalDetail(rowElement) {
     const evalTypeId = rowElement.getAttribute('data-evalTypeId');
@@ -478,7 +479,8 @@ function loadEvalDetail(rowElement) {
                 renderGuideTableSafe(data.categorySummaries);
                 tfoot.style.display = 'none';
             }
-            if (data.chart) {
+            if (data.chart && currentUserPosition?.trim() === "부서장") {
+                document.getElementById('chartWrap').style.display = 'block'; // 이거 필수
                 renderChart(data.chart);
             }
         });

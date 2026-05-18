@@ -70,6 +70,7 @@ import lombok.RequiredArgsConstructor;
     	    String statusStr = etm != null ? String.valueOf(etm.getStatus()) : "0"; // null이면 기본 '0'
     	    params.put("statusStr", statusStr);
 
+
     	    MultiEvalDTO dto = multiMapper.findMultiEvalDetail(params);
     	    
     	    System.out.println("dto = " + dto);
@@ -272,7 +273,6 @@ import lombok.RequiredArgsConstructor;
     	    // 전체 부서장 평균들의 평균
     	    BigDecimal allLeaderAvgScore = evalSummaryRepository.findAllLeaderAvgScore( evalTypeId );
 
-    	    // DTO 조립
     	    MultiEvalDTO.MultiChartDto dto =new MultiEvalDTO.MultiChartDto();
 
     	    dto.setEvaluateeNo(leaderNo);
@@ -284,6 +284,6 @@ import lombok.RequiredArgsConstructor;
     	    dto.setAllLeaderAvgScore( allLeaderAvgScore != null? allLeaderAvgScore : BigDecimal.ZERO );
 
     	    return dto;
-    	}
+	 }
      
  }
