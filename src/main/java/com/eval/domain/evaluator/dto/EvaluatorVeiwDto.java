@@ -31,6 +31,8 @@ public class EvaluatorVeiwDto {
     private String firstEvaluatorNames;
     
     private int status;
+    
+    private List<Integer> firstEvaluatorsStatus = new ArrayList<>();
 
 
     // ✅ 생성자 반드시 클래스 내부
