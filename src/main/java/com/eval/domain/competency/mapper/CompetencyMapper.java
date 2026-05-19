@@ -7,15 +7,23 @@ import java.util.List;
 
 @Mapper
 public interface CompetencyMapper {
-    
+
     List<Integer> selectEvalYears();
-    
-    List<CompetencyDTO.Info> selectEvalList(@Param("year") Integer year, 
-                                           @Param("period") String period, 
-                                           @Param("currentEmpNo") String currentEmpNo);
+
+    /** 진행 문서 목록 (empNo=null이면 전체 - ADMIN용) */
+    List<CompetencyDTO.Info> selectEvalList(
+            @Param("year") Integer year,
+            @Param("period") String period,
+            @Param("currentEmpNo") String currentEmpNo);
+
+    /** 확정 문서 목록 */
+    List<CompetencyDTO.Info> selectConfirmedList(
+            @Param("year") Integer year,
+            @Param("period") String period,
+            @Param("currentEmpNo") String currentEmpNo);
 
     CompetencyDTO.Info selectCompetencyInfo(@Param("typeId") Integer typeId, @Param("empNo") String empNo);
-    
+
     List<CompetencyDTO.Item> selectCompetencyItems(@Param("typeId") Integer typeId, @Param("empNo") String empNo);
 
     void updateSelfAnswer(@Param("empNo") String empNo, @Param("typeId") Integer typeId, @Param("item") CompetencyDTO.Item item);

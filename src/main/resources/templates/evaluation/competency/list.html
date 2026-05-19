@@ -116,8 +116,8 @@
         <div class="split-container">
             <div class="left-panel">
                 <ul class="tabs">
-                    <li class="active">진행 문서</li>
-                    <li>확정 문서</li>
+                    <li class="active" onclick="switchTab('ongoing', this)">진행 문서</li>
+                    <li onclick="switchTab('confirmed', this)">확정 문서</li>
                 </ul>
                 <div class="table-wrap">
                     <table>
@@ -143,6 +143,38 @@
                                 <td th:text="${eval.empNo}">1001</td>
                                 <td th:text="${eval.empName}">홍길동</td>
                                 <td><span class="badge" th:text="${eval.status}">본인평가중</span></td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrap" id="confirmedTableWrap" style="display:none; overflow-y:auto; flex-grow:1;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>평가수행기간</th>
+                                <th>부서명</th>
+                                <th>직위</th>
+                                <th>대상사번</th>
+                                <th>대상자명</th>
+                                <th>확정등급</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="eval : ${confirmedList}"
+                                class="clickable-row"
+                                th:data-typeid="${eval.typeId}"
+                                th:data-empno="${eval.empNo}"
+                                onclick="loadDetail(this)">
+                                <td th:text="${eval.evalPeriod}"></td>
+                                <td th:text="${eval.deptName}"></td>
+                                <td th:text="${eval.position}"></td>
+                                <td th:text="${eval.empNo}"></td>
+                                <td th:text="${eval.empName}"></td>
+                                <td><span class="badge" style="background:#d1e7dd;color:#0f5132;border:1px solid #badbcc;" th:text="${eval.totalGrade ?: '-'}"></span></td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(confirmedList)}">
+                                <td colspan="6" style="color:#aaa;padding:20px;">확정된 평가가 없습니다.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -233,7 +265,22 @@
     </div>
 
     <script>
-        const currentUserNo = '[[${#authentication.name}]]';
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.tabs li').forEach(li => li.classList.remove('active'));
+            el.classList.add('active');
+            const ongoingWrap = document.querySelector('.table-wrap');
+            const confirmedWrap = document.getElementById('confirmedTableWrap');
+            if (tab === 'ongoing') {
+                ongoingWrap.style.display = '';
+                confirmedWrap.style.display = 'none';
+            } else {
+                ongoingWrap.style.display = 'none';
+                confirmedWrap.style.display = '';
+            }
+            document.getElementById('detailPanel').style.display = 'none';
+        }
+                const currentUserNo = '[[${#authentication.name}]]';
 
         const gradeMultipliers = { 'S': 1.0, 'A': 0.9, 'B': 0.8, 'C': 0.7, 'D': 0.6, '': 0 };
 
@@ -271,7 +318,7 @@
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
                     const canEditSelf = isMyDoc && data.status === '본인평가중';
-                    const canEditFirst = isDeptHead && !isMyDoc && data.status === '1차평가대기';
+                    const canEditFirst = isDeptHead && data.status === '1차평가대기';
 
                     let tbodyHtml = '';
 
@@ -299,7 +346,7 @@
                                 </tr>
                             `;
 
-                            if (data.status !== '본인평가중' && !isMyDoc) {
+                            if (data.status !== '본인평가중' && data.position !== '부서장') {
                                 const firstGradeSelect = createGradeSelect(`firstGrade_${item.questionId}`, item.firstGrade, weight, !canEditFirst);
                                 
                                 tbodyHtml += `

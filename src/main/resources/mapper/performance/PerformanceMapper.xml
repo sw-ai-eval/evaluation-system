@@ -29,7 +29,9 @@
         WHERE m.eval_type_id = 2
           AND m.step = 0
           AND e.status = 'ACTIVE'
-          AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
+        <if test="empNo != null and empNo != ''">
+            AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
+        </if>
         <if test="year != null">
             AND et.year = #{year}
         </if>
@@ -170,6 +172,41 @@
             )
         END
     </update>
+
+    <!-- 확정 문서 목록: final_result_52.status=1 인 사원만 -->
+    <select id="selectConfirmedList" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
+        SELECT
+            m.eval_type_id AS typeId,
+            FORMAT(et.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(et.end_date, 'yyyy-MM-dd') AS evalPeriod,
+            d.name AS deptName,
+            e.position AS position,
+            e.emp_no AS empNo,
+            e.name AS empName,
+            fr.grade AS totalGrade,
+            '평가완료' AS status
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
+        JOIN department_52 d ON e.dept_id = d.id
+        JOIN eval_type_52 et ON m.eval_type_id = et.id
+        JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+        WHERE m.eval_type_id = 2
+          AND m.step = 0
+          AND e.status = 'ACTIVE'
+          AND fr.status = 1
+        <if test="empNo != null and empNo != ''">
+            AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
+        </if>
+        <if test="year != null">
+            AND et.year = #{year} AND fr.year = #{year}
+        </if>
+        <if test="period != null and period != ''">
+            <choose>
+                <when test="period == '상반기'">AND MONTH(et.start_date) BETWEEN 1 AND 6</when>
+                <when test="period == '하반기'">AND MONTH(et.start_date) BETWEEN 7 AND 12</when>
+            </choose>
+        </if>
+        ORDER BY d.name, e.emp_no ASC
+    </select>
 
     <update id="updateEvalStatus">
         UPDATE eval_target_mapping_52

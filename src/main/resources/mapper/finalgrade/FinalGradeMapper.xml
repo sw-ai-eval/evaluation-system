@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eval.domain.finalgrade.mapper.FinalGradeMapper">
+
+    <select id="selectYears" resultType="int">
+        SELECT DISTINCT year FROM eval_type_52 ORDER BY year DESC
+    </select>
+
+    <!-- =============================================
+         사원 탭: position='부서원'
+         성과 1차 = 부서장이 매긴 점수 (type_result_52.first_score, type_id=2)
+         역량 1차 = 부서장이 매긴 점수 (type_result_52.first_score, type_id=3)
+         2차 = 임원 확정 점수 (type_result_52.second_score)
+    ============================================= -->
+    <select id="selectStaffList" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$StaffInfo">
+        SELECT
+            e.emp_no        AS empNo,
+            e.name          AS empName,
+            d.name          AS deptName,
+            e.position      AS position,
+
+            pr.first_score  AS perfFirst,
+            pr.second_score AS perfSecond,
+            pr.total_score  AS perfTotal,
+            CASE pm.status
+                WHEN 0 THEN '본인평가중'
+                WHEN 1 THEN '1차평가대기'
+                WHEN 2 THEN '평가완료'
+            END             AS perfStatus,
+
+            cr.first_score  AS compFirst,
+            cr.second_score AS compSecond,
+            cr.total_score  AS compTotal,
+            CASE cm.status
+                WHEN 0 THEN '본인평가중'
+                WHEN 1 THEN '1차평가대기'
+                WHEN 2 THEN '평가완료'
+            END             AS compStatus,
+
+            fr.final_score  AS totalScore,
+            fr.grade        AS totalGrade,
+            fr.grade        AS confirmedGrade,
+            CASE fr.status WHEN 1 THEN '확정' ELSE '미확정' END AS confirmStatus,
+            fr.reason       AS reason,
+            fr.weight_ratio AS weightRatio
+
+        FROM employee_52 e
+        JOIN department_52 d ON e.dept_id = d.id
+
+        LEFT JOIN eval_target_mapping_52 pm
+            ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
+
+        LEFT JOIN type_result_52 pr
+            ON pr.emp_no = e.emp_no AND pr.type_id = 2
+            <if test="year != null">AND pr.year = #{year}</if>
+
+        LEFT JOIN eval_target_mapping_52 cm
+            ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
+
+        LEFT JOIN type_result_52 cr
+            ON cr.emp_no = e.emp_no AND cr.type_id = 3
+            <if test="year != null">AND cr.year = #{year}</if>
+
+        LEFT JOIN final_result_52 fr
+            ON fr.emp_no = e.emp_no
+            <if test="year != null">AND fr.year = #{year}</if>
+
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서원'
+          AND (pm.id IS NOT NULL OR cm.id IS NOT NULL)
+        <if test="empNo != null and empNo != ''">
+            AND e.emp_no = #{empNo}
+        </if>
+        ORDER BY d.name, e.emp_no
+    </select>
+
+    <!-- =============================================
+         부서장 탭: position='부서장'
+         성과/역량 1차 = 다면평가 avg_score (eval_summary_52)
+         성과/역량 2차 = 임원 확정 점수 (type_result_52.second_score)
+    ============================================= -->
+    <select id="selectLeaderList" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$LeaderInfo">
+        SELECT
+            e.emp_no            AS empNo,
+            e.name              AS empName,
+            d.name              AS deptName,
+            e.position          AS position,
+
+            /* 성과평가: 1차=다면avg, 2차=임원 */
+            es.avg_score        AS perfFirst,
+            pr.second_score     AS perfSecond,
+            pr.total_score      AS perfTotal,
+            CASE pm.status
+                WHEN 0 THEN '본인평가중'
+                WHEN 1 THEN '1차평가대기'
+                WHEN 2 THEN '평가완료'
+            END                 AS perfStatus,
+
+            /* 역량평가: 1차=다면avg(동일), 2차=임원 */
+            es.avg_score        AS compFirst,
+            cr.second_score     AS compSecond,
+            cr.total_score      AS compTotal,
+            CASE cm.status
+                WHEN 0 THEN '본인평가중'
+                WHEN 1 THEN '1차평가대기'
+                WHEN 2 THEN '평가완료'
+            END                 AS compStatus,
+
+            fr.final_score      AS totalScore,
+            fr.grade            AS totalGrade,
+            fr.grade            AS confirmedGrade,
+            CASE fr.status WHEN 1 THEN '확정' ELSE '미확정' END AS confirmStatus,
+            fr.reason           AS reason,
+            fr.weight_ratio     AS weightRatio
+
+        FROM employee_52 e
+        JOIN department_52 d ON e.dept_id = d.id
+
+        /* 다면평가 집계 점수 */
+        LEFT JOIN eval_summary_52 es
+            ON es.evaluatee_no = e.emp_no
+           AND es.eval_type_id IN (
+               SELECT id FROM eval_type_52 WHERE name LIKE '%다면평가%'
+               <if test="year != null">AND year = #{year}</if>
+           )
+
+        LEFT JOIN eval_target_mapping_52 pm
+            ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
+
+        LEFT JOIN type_result_52 pr
+            ON pr.emp_no = e.emp_no AND pr.type_id = 2
+            <if test="year != null">AND pr.year = #{year}</if>
+
+        LEFT JOIN eval_target_mapping_52 cm
+            ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
+
+        LEFT JOIN type_result_52 cr
+            ON cr.emp_no = e.emp_no AND cr.type_id = 3
+            <if test="year != null">AND cr.year = #{year}</if>
+
+        LEFT JOIN final_result_52 fr
+            ON fr.emp_no = e.emp_no
+            <if test="year != null">AND fr.year = #{year}</if>
+
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서장'
+        <if test="empNo != null and empNo != ''">
+            AND e.emp_no = #{empNo}
+        </if>
+        ORDER BY d.name, e.emp_no
+    </select>
+
+    <!-- 부서별 등급 통계 -->
+    <select id="selectDeptStat" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$DeptStat">
+        SELECT
+            d.name  AS deptName,
+            COUNT(*) AS total,
+            SUM(CASE WHEN fr.grade = 'S' THEN 1 ELSE 0 END) AS cntS,
+            SUM(CASE WHEN fr.grade = 'A' THEN 1 ELSE 0 END) AS cntA,
+            SUM(CASE WHEN fr.grade = 'B' THEN 1 ELSE 0 END) AS cntB,
+            SUM(CASE WHEN fr.grade = 'C' THEN 1 ELSE 0 END) AS cntC,
+            SUM(CASE WHEN fr.grade = 'D' THEN 1 ELSE 0 END) AS cntD
+        FROM final_result_52 fr
+        JOIN employee_52 e ON fr.emp_no = e.emp_no
+        JOIN department_52 d ON e.dept_id = d.id
+        WHERE fr.status = 1
+        <if test="year != null">AND fr.year = #{year}</if>
+        GROUP BY d.name
+        ORDER BY d.name
+    </select>
+
+    <!-- 단건 UPSERT -->
+    <update id="upsertFinalResult">
+        IF EXISTS (SELECT 1 FROM final_result_52 WHERE emp_no = #{empNo} AND year = #{year})
+        BEGIN
+            UPDATE final_result_52
+            SET grade        = #{grade},
+                final_score  = #{finalScore},
+                status       = #{status},
+                reason       = #{reason},
+                weight_ratio = #{weightRatio},
+                updated_at   = GETDATE(),
+                updated_by   = #{updatedBy}
+            WHERE emp_no = #{empNo} AND year = #{year}
+        END
+        ELSE
+        BEGIN
+            INSERT INTO final_result_52 (emp_no, grade, final_score, status, reason, year, weight_ratio, updated_by, created_at)
+            VALUES (#{empNo}, #{grade}, #{finalScore}, #{status}, #{reason}, #{year}, #{weightRatio}, #{updatedBy}, GETDATE())
+        END
+    </update>
+
+    <!-- 최종 확정 -->
+    <update id="confirmFinalResult">
+        UPDATE final_result_52
+        SET status     = 1,
+            updated_at = GETDATE(),
+            updated_by = #{updatedBy}
+        WHERE emp_no = #{empNo} AND year = #{year}
+    </update>
+
+    <!-- 매핑 상태 완료 처리 -->
+    <update id="updateMappingStatus">
+        UPDATE eval_target_mapping_52
+        SET status     = 2,
+            updated_at = GETDATE()
+        WHERE evaluatee_no = #{empNo}
+          AND step = 0
+          AND eval_type_id IN (SELECT id FROM eval_type_52 WHERE year = #{year})
+    </update>
+
+</mapper>
