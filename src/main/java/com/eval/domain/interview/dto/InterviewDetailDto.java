@@ -8,46 +8,43 @@ import java.time.format.DateTimeFormatter;
 
 @Getter
 @Setter
-public class InterviewListDto {
+public class InterviewDetailDto {
 	private final Long id;
     private final LocalDateTime startDateTime; // 시작 시간
     private final LocalDateTime endDateTime;
     private final String interviewType;
-
-    private final String evaluatorNo;
-    private final String evaluatorName;
 
     private final String evaluateeNo;
     private final String evaluateeName;
 
     private final String subject;
     private final String place;
+    
     private final String status;
+    private final String detail;
 
-    public InterviewListDto(
+    public InterviewDetailDto(
     		Long id,
     		LocalDateTime startDateTime,
     		LocalDateTime endDateTime,
             String interviewType,
-            String evaluatorNo,
-            String evaluatorName,
             String evaluateeNo,
             String evaluateeName,
             String subject,
             String place,
-            String status
+            String status,
+            String detail
     ) {
     	this.id=id;
         this.startDateTime = startDateTime;
         this.endDateTime = endDateTime;
         this.interviewType = interviewType;
-        this.evaluatorNo = evaluatorNo;
-        this.evaluatorName = evaluatorName;
         this.evaluateeNo = evaluateeNo;
         this.evaluateeName = evaluateeName;
         this.subject = subject;
         this.place = place;
-        this.status =status;
+        this.status = status;
+        this.detail = detail;
         
         
     }

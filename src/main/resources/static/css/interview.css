@@ -1,217 +1,128 @@
-
+/* =========================
+   전체 컨테이너
+========================= */
 .interview-container {
-    padding: 30px;
+    padding: 40px;
     max-width: 1200px;
+    font-family: 'Noto Sans KR', sans-serif;
 }
 
+/* =========================
+   헤더
+========================= */
 .page-header {
-    margin-bottom: 30px;
+    display: flex;
+    justify-content: space-between; /* 좌우 배치 */
+    align-items: center;           /* 세로 중앙 정렬 */
+    margin-bottom: 40px;
+    gap: 20px; /* h1/p와 버튼 사이 간격 */
 }
 
 .page-header h1 {
-    font-size: 28px;
+    font-size: 30px;
+    font-weight: 700;
     color: #1a202c;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 .page-header p {
-    color: #718096;
-    font-size: 15px;
+    font-size: 16px;
+    color: #4a5568;
 }
 
+.page-header div {
+    display: flex;
+    flex-direction: column;  /* h1과 p는 세로 배치 */
+}
+
+/* 테이블 헤더: 제목 왼쪽, 버튼 오른쪽 */
+.table-header {
+    display: flex;
+    justify-content: space-between; /* 좌측과 우측으로 분리 */
+    align-items: center;            /* 세로 중앙 정렬 */
+    margin-bottom: 10px;
+}
+/* =========================
+   카드
+========================= */
 .card {
-    background: white;
+    background: #ffffff;
     border-radius: 12px;
-    padding: 28px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    padding: 32px;
+    margin-bottom: 32px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
 }
 
 .card-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
-    margin-bottom: 24px;
     color: #2d3748;
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 24px;
-}
-
+/* =========================
+   폼 그룹 & 간격
+========================= */
 .form-group {
     display: flex;
     flex-direction: column;
+    margin-bottom: 18px;  /* 각 항목 위아래 여백을 넉넉하게 */
 }
 
 .form-group label {
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #4a5568;
 }
 
 .form-control {
-    padding: 12px;
+    padding: 14px 12px;
     border: 1px solid #d2d6dc;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 15px;
+    background-color: #fdfdfd;
+    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.topic-list {
+.form-control:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 5px rgba(49, 130, 206, 0.4);
+    outline: none;
+}
+/* 한 라인으로 만들기 */
+.form-group-inline {
+    display: flex;
+    gap: 16px;             /* 시작/종료 입력 사이 간격 */
+    align-items: flex-start; /* 라벨과 입력 정렬 */
+    margin-bottom: 24px;    /* form-group 간 간격 유지 */
+}
+
+.form-group-inline .inline-field {
+    flex: 1; /* 두 입력이 같은 비율로 넓이 차지 */
     display: flex;
     flex-direction: column;
-    gap: 20px;
 }
 
-.topic-item {
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    overflow: hidden;
-}
-
-.topic-header {
-    background: #f7fafc;
-    padding: 14px 18px;
-    font-weight: 700;
-    color: #2d3748;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.topic-textarea {
-    width: 100%;
-    border: none;
-    padding: 18px;
-    resize: vertical;
-    font-size: 14px;
-    min-height: 120px;
-    outline: none;
-    box-sizing: border-box;
-}
-
-.button-area {
-    display: flex;
-    justify-content: flex-end;
-}
-
-.save-btn {
-    background: #3182ce;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 14px 28px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.save-btn:hover {
-    background: #2b6cb0;
-}
-
-/* =========================
-   면담 기록 테이블
-========================= */
-
-.interview-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.interview-table th {
-    background: #f7fafc;
-    padding: 14px;
-    text-align: left;
-    font-size: 14px;
-    color: #4a5568;
-    border-bottom: 1px solid #e2e8f0;
-}
-
-.interview-table td {
-    padding: 16px 14px;
-    border-bottom: 1px solid #edf2f7;
-    font-size: 14px;
-    color: #2d3748;
-}
-
-.interview-table tbody tr:hover {
-    background: #f9fafb;
-}
-
-/* =========================
-   상태 뱃지
-========================= */
-
-.status {
-    padding: 6px 10px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-}
-
-.status.completed {
-    background: #c6f6d5;
-    color: #22543d;
-}
-
-/* =========================
-   주제 라벨
-========================= */
-
-.topic-label-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 14px;
-}
-
-.topic-label {
-    background: #ebf8ff;
-    color: #2b6cb0;
-    padding: 10px 14px;
-    border-radius: 999px;
-    font-size: 14px;
+.form-group-inline .inline-field label {
+    margin-bottom: 6px;
     font-weight: 600;
+    color: #4a5568;
 }
 
-.topic-guide {
-    font-size: 13px;
-    color: #718096;
-}
+.form-group-inline .inline-field .form-control {
 
-.table-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-.open-panel-btn {
-    background: #3182ce;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-weight: 700;
-    cursor: pointer;
-}
-
-.open-panel-btn:hover {
-    background: #2b6cb0;
 }
 
 /* =========================
-   오른쪽 패널
+   패널
 ========================= */
-
 .interview-panel {
     position: fixed;
     top: 0;
     right: -650px;
-    width: 620px;
+    width: 640px;  /* 조금 더 넉넉하게 */
     height: 100%;
-    background: white;
-    box-shadow: -4px 0 12px rgba(0,0,0,0.1);
+    background: #ffffff;
+    box-shadow: -4px 0 16px rgba(0,0,0,0.12);
     transition: right 0.3s ease;
     z-index: 999;
     display: flex;
@@ -223,57 +134,361 @@
 }
 
 .panel-header {
-    padding: 24px;
+    padding: 28px;
     border-bottom: 1px solid #e2e8f0;
-
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
 .panel-header h2 {
-    margin: 0;
-    font-size: 22px;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1a202c;
 }
 
 .close-btn {
     border: none;
     background: none;
-    font-size: 22px;
+    font-size: 24px;
     cursor: pointer;
+    color: #718096;
 }
 
 .panel-body {
-    padding: 24px;
+    padding: 28px;
     overflow-y: auto;
     flex: 1;
 }
 
+/* =========================
+   주제 영역
+========================= */
 .panel-topic-area {
-    margin-top: 30px;
 }
 
-.panel-topic-title {
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 18px;
+.topic-label-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
+.topic-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid #cbd5e0;
+    background-color: #edf2f7;
+    color: #2d3748;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.topic-label.selected {
+    background-color: #3182ce;
+    color: #ffffff;
+    border-color: #3182ce;
+}
+
+.topic-textarea {
+    min-height: 120px;
+    padding: 14px;
+    border: 1px solid #d2d6dc;
+    border-radius: 8px;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: vertical;
+    background-color: #ffffff;
+}
+
+.topic-textarea:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 5px rgba(49, 130, 206, 0.3);
+}
+
+/* =========================
+   버튼
+========================= */
 .panel-button-area {
-    margin-top: 30px;
+    margin-top: 36px;
     display: flex;
     justify-content: flex-end;
+    gap: 12px;
+}
+
+.edit-btn, .open-panel-btn {
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
 }
 
 .edit-btn {
-    border: none;
-    background: #edf2f7;
-    padding: 8px 14px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
+    background-color: #edf2f7;
+    color: #2d3748;
+    border: 1px solid #e2e8f0;
 }
 
 .edit-btn:hover {
-    background: #e2e8f0;
+    background-color: #e2e8f0;
+}
+
+.open-panel-btn {
+	margin-left: auto;
+    background-color: #3182ce;
+    color: white;
+    border: none;
+
+}
+
+.open-panel-btn:hover {
+    background-color: #2b6cb0;
+}
+
+/* =========================
+   테이블
+========================= */
+.interview-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.interview-table th {
+    background: #f7fafc;
+    padding: 16px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4a5568;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.interview-table td {
+    padding: 18px 16px;
+    font-size: 14px;
+    color: #2d3748;
+    border-bottom: 1px solid #edf2f7;
+}
+
+.interview-table tbody tr:hover {
+    background-color: #f1f5f9;
+}
+
+.status {
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.status.completed {
+    background-color: #c6f6d5;
+    color: #22543d;
+}
+
+/* =========================
+   면담 기록 없을 때
+========================= */
+.no-data-card {
+    text-align: center;
+    padding: 50px 20px;
+    background-color: #f0f4f8;
+    border: 2px dashed #cbd5e0;
+    border-radius: 8px;
+    color: #718096;
+    font-size: 16px;
+    line-height: 1.5;
+}
+.no-data-card p:first-child {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 12px;
+}
+/* =========================
+   패널 버튼 영역
+========================= */
+.panel-button-area {
+    margin-top: 36px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;  /* 버튼 간 간격 */
+}
+
+/* 저장 버튼 */
+.save-btn {
+    background-color: #3182ce;
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.save-btn:hover {
+    background-color: #2b6cb0;
+}
+
+/* 삭제 버튼 */
+.delete-btn {
+    background-color: #e53e3e; /* 빨강 계열 */
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 700;
+    border-radius: 8px;
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.delete-btn:hover {
+    background-color: #c53030; /* 진한 빨강 */
+}
+
+/* 면담 상태 선택 드롭다운 */
+#panelStatus {
+    padding: 12px;
+    border: 1px solid #d2d6dc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #2d3748;
+    background-color: #fff;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#panelStatus:focus {
+    border-color: #4A90E2;
+    box-shadow: 0 0 5px rgba(74, 144, 226, 0.5);
+    outline: none;
+}
+
+/* 선택 옵션에 따라 배경색 표시 (JS에서 선택하면 클래스 추가 가능) */
+.status-option.pending {
+    background-color: #fefcbf; /* 노란색 */
+    color: #744210;
+}
+
+.status-option.delayed {
+    background-color: #fed7d7; /* 연한 빨강 */
+    color: #742a2a;
+}
+
+.status-option.completed {
+    background-color: #c6f6d5; /* 연한 초록 */
+    color: #22543d;
+}
+
+/* topic-label-container 안에 라벨이 없을 때 보여주는 메시지 */
+.no-label-message {
+    display: flex;                  /* 아이콘 + 텍스트 가로 배치 */
+    align-items: center;             /* 수직 중앙 정렬 */
+    justify-content: center;         /* 가로 중앙 정렬 */
+    gap: 8px;                        /* 아이콘과 텍스트 사이 간격 */
+    padding: 12px;                   /* 안쪽 여백 */
+    border: 1px dashed #ccc;         /* 점선 테두리 */
+    border-radius: 6px;              /* 둥근 모서리 */
+    background-color: #f9f9f9;       /* 연한 배경색 */
+    color: #777;                     /* 텍스트 회색 */
+    font-style: italic;              /* 이탤릭체로 안내 느낌 */
+    font-size: 14px;                 /* 글자 크기 */
+    text-align: center;              /* 가운데 정렬 */
+}
+/* =========================
+   필터 컨테이너
+========================= */
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;          /* 화면이 좁으면 자동 줄바꿈 */
+    gap: 16px;
+    padding: 24px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    font-family: 'Noto Sans KR', sans-serif;
+    align-items: flex-end;    /* 필드와 버튼 아래쪽 정렬 */
+    margin-bottom: 10px;
+}
+
+/* 각 필드 */
+.filter-field {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px; /* 최소 넓이 */
+    flex: 1;          /* 남는 공간 나누기 */
+}
+
+/* 레이블 */
+.filter-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+/* 입력 및 선택박스 */
+.filter-input,
+.filter-select {
+    padding: 10px 14px;
+    border: 1px solid #d2d6dc;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #2d3748;
+    background-color: #fdfdfd;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+    border-color: #3182ce;
+    box-shadow: 0 0 5px rgba(49, 130, 206, 0.3);
+    outline: none;
+}
+
+/* 버튼 컨테이너 */
+.filter-button-container {
+    display: flex;
+    align-items: flex-end;
+    flex: 0 0 auto; /* 버튼 크기 고정 */
+}
+
+/* 버튼 스타일 */
+.filter-button {
+    padding: 12px 24px;
+    background-color: #3182ce;
+    border: none;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+}
+
+.filter-button:hover {
+    background-color: #2b6cb0;
+    transform: translateY(-1px);
+}
+
+/* 반응형: 화면 좁으면 세로 배치 */
+@media (max-width: 800px) {
+    .filter-container {
+        flex-direction: column;
+        align-items: stretch; /* 세로 배치 시 넓이 맞춤 */
+    }
+    .filter-field,
+    .filter-button-container {
+        width: 100%;
+    }
+    .filter-button-container {
+        justify-content: flex-start;
+        margin-top: 12px;
+    }
 }

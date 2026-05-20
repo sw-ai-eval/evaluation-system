@@ -3,8 +3,72 @@
 
 <mapper namespace="com.eval.domain.multi.mapper.MultiMapper">
 
+	<select id="findAllDeptMultiProgressEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
+	
+	    SELECT
+	        et.id AS evalTypeId,
+	        et.name AS evalTypeName,
+	        etm.evaluator_no AS evaluatorNo,
+	        eval_emp.name AS evaluatorName,
+	        etm.evaluatee_no AS evaluateeNo,
+	        e.name AS evaluateeName,
+	        et.name AS evalName,
+	        etm.step,
+	        e.dept_id AS deptId,
+	        d.name AS deptName,
+	        e.position AS position,
+	        e.emp_no AS empNo,
+	        et.start_date AS startDate,
+	        et.end_date AS endDate,
+	        cc.name AS statusName
+	
+	    FROM eval_target_mapping_52 etm
+	
+	    JOIN eval_type_52 et
+	        ON et.id = etm.eval_type_id
+	
+	    JOIN employee_52 e
+	        ON e.emp_no = etm.evaluatee_no
+	
+	    LEFT JOIN department_52 d
+	        ON d.id = e.dept_id
+	
+	    LEFT JOIN employee_52 eval_emp
+	        ON eval_emp.emp_no = etm.evaluator_no
+	
+	    LEFT JOIN code_common_52 cc
+	        ON cc.code = CAST(etm.status AS CHAR)
+	
+	    LEFT JOIN code_group_52 cg
+	        ON cg.id = cc.group_id
+	
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        <if test="year != null">
+		        AND et.year = #{year}
+		    </if>
+		    
+		    <if test="period != null and period != ''">
+		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        <choose>
+		            <when test="period == '연간'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+		            </when>
+		            <when test="period == '상반기'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+		            </when>
+		            <when test="period == '하반기'">
+		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+		            </when>
+		        </choose>
+		    </if>
+	    </where>
+	
+	</select>
+
      <select id="findMultiProgressEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
-	    SELECT 
+	    SELECT
 	        et.id AS evalTypeId,
 	        et.name AS evalTypeName,
 	        etm.evaluator_no AS evaluatorNo,
@@ -31,18 +95,36 @@
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
 	        et.name LIKE '%다면평가%'
-	        AND etm.status != 2
+	        AND cg.group_code = 'EVAL_STATUS'
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
 	        <if test="position == '부서장'">
 	            AND etm.evaluatee_no = #{userNo}
 	        </if>
+	        <if test="year != null">
+		        AND et.year = #{year}
+		    </if>
+		    
+		    <if test="period != null and period != ''">
+		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        <choose>
+		            <when test="period == '연간'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+		            </when>
+		            <when test="period == '상반기'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+		            </when>
+		            <when test="period == '하반기'">
+		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+		            </when>
+		        </choose>
+		    </if>
 	    </where>
 	</select>
 	
 	<select id="findMultiCompletedEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
-	    SELECT 
+	    SELECT
 	        et.id AS evalTypeId,
 	        et.name AS evalTypeName,
 	        etm.evaluator_no AS evaluatorNo,
@@ -69,6 +151,7 @@
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
 	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
 	        AND etm.status = 2
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
@@ -76,6 +159,24 @@
 	        <if test="position == '부서장'">
 	            AND etm.evaluatee_no = #{userNo}
 	        </if>
+	        <if test="year != null">
+		        AND et.year = #{year}
+		    </if>
+		    
+		    <if test="period != null and period != ''">
+		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        <choose>
+		            <when test="period == '연간'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+		            </when>
+		            <when test="period == '상반기'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+		            </when>
+		            <when test="period == '하반기'">
+		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+		            </when>
+		        </choose>
+		    </if>
 	    </where>
 	</select>
 	
@@ -145,8 +246,8 @@
 	    -- 1. 평가자 + 피평가자 기준 매핑
 	    LEFT JOIN eval_target_mapping_52 etm
 	        ON etm.eval_type_id = q.type_id
-	       AND etm.evaluator_no = #{loginEmpNo}  
-	       AND etm.evaluatee_no = #{empNo}       
+	       AND etm.evaluator_no = #{evaluatorNo}  
+	       AND etm.evaluatee_no = #{evaluateeNo}       
 	
 	    -- 2. 매핑에 해당하는 답변
 	    LEFT JOIN eval_answer_52 ea
@@ -168,5 +269,65 @@
 	      AND evaluator_no = #{evaluatorNo}
 	</select>
 	
+	<select id="findAvailableYears" resultType="int">
+	    SELECT DISTINCT year
+	    FROM eval_type_52
+	    ORDER BY year DESC
+	</select>
+	<select id="selectEvalItems" resultType="com.eval.domain.multi.dto.MultiEvalDTO$EvalItem">
+	
+	    SELECT
+	        q.id AS questionId,
+	        q.category AS categoryName,
+	        q.question AS question,
+	        q.weight AS weight,
+	        a.score AS score,
+	        a.content AS content,
+	        a.mapping_id AS mappingId
+	    FROM eval_answer_52 a
+	    JOIN eval_question_52 q
+	        ON a.question_id = q.id
+	    JOIN eval_target_mapping_52 m
+	        ON a.mapping_id = m.id
+	    WHERE m.evaluatee_no = #{evaluateeNo}
+	      AND m.eval_type_id = #{evalTypeId}
+	
+	</select>
+	
+	<select id="findCategoryScores" resultType="com.eval.domain.multi.dto.MultiEvalDTO$MyCategoryScoreDto">
+	    SELECT
+		    q.category AS categoryName,
+		    SUM(a.score) AS totalScore,
+		    COUNT(DISTINCT m.evaluator_no) AS evaluatorCount
+		FROM eval_answer_52 a
+		JOIN eval_question_52 q ON a.question_id = q.id
+		JOIN eval_target_mapping_52 m ON a.mapping_id = m.id
+		WHERE m.evaluatee_no = #{evaluateeNo}
+		  AND m.eval_type_id = #{evalTypeId}
+		GROUP BY q.category
+		ORDER BY q.category
+	</select>
+	
+	<select id="findMyAvgCategoryScores" resultType="com.eval.domain.multi.dto.MultiEvalDTO$CategoryAvgDto" parameterType="map">
+	    SELECT 
+	        category_name AS categoryName,
+	        avg_score AS avgScore
+	    FROM eval_category_summary_52
+	    WHERE evaluatee_no = #{evaluateeNo}
+	      AND eval_type_id = #{evalTypeId}
+	    ORDER BY category_name
+	</select>
+
+	
+	<select id="findAllAvgCategoryScores" resultType="com.eval.domain.multi.dto.MultiEvalDTO$CategoryAvgDto">
+	    SELECT 
+		    category_name AS categoryName,
+		    SUM(avg_score) / COUNT(*) AS avgScore
+		FROM eval_category_summary_52
+		WHERE eval_type_id = #{evalTypeId}
+		GROUP BY category_name
+	</select>
+	
+
 
 </mapper>

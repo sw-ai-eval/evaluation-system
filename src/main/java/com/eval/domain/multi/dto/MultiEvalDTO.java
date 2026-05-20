@@ -4,8 +4,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -78,16 +80,46 @@ public class MultiEvalDTO {
     @Getter
     @Setter
     public static class MultiChartDto {
-        private String evaluateeNo;
-        // 내 총점
-        private BigDecimal myTotalScore;
 
-        // 전체 부서장 평균 점수
-        private BigDecimal allLeaderAvgScore;
+        private List<String> labels = new ArrayList<>();
 
-        // 내 평균 점수
-        private BigDecimal myAvgScore;
+        private List<Double> myAvgScores = new ArrayList<>();
+        private List<Double> allAvgScores = new ArrayList<>();
+        
+        private List<Integer> maxScores = new ArrayList<>();
+
     }
+    
+    @Getter 
+    @Setter
+    public static class CategoryAvgDto {
+        private String categoryName;
+        private Double avgScore;
+    }
+    
+    @Getter 
+    @Setter
+    public static class MyCategoryScoreDto {
 
+        private String categoryName;
+        private Double totalScore;
+        private int evaluatorCount;
+ 
+    }
+    
+    // 다면 평가 결과 나온 후 화면에서 보여주는 용
+    @Getter 
+    @Setter
+    public static class resultEvalDto {
+
+        private String categoryName;
+        private Long questionId;
+        private Double score;
+        private String content;
+ 
+    }
+    
+    
+    
     
 }

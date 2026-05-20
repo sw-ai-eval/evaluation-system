@@ -14,12 +14,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "eval_target_mapping_52")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "eval_target_mapping_52")
 public class EvalTargetMapping {
 
     @Id

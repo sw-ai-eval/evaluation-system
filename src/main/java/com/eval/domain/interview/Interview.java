@@ -48,6 +48,9 @@ public class Interview {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "status", nullable = false)
+    private int status;
 
 
 }

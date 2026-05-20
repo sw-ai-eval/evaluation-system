@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface EmployeeRepository extends JpaRepository<Employee, String> {
 	
 	// 부서에 소속된 모든 사원 검색
@@ -42,8 +44,9 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     
     // 부서에 소속된 사원 이름으로 정렬
     List<Employee> findByDeptIdOrderByNameAsc(String deptId);
-    
+
     // 사원 1명 조회
+    @Query("SELECT e FROM Employee e WHERE e.empNo = :empNo")
     Employee findByEmpNo(String empNo);
     
     // 모든 부서장 찾기
@@ -53,5 +56,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     WHERE e.position = '부서장'
     """)
     List<String> findLeaderEmpNos();
+    
+    List<Employee> findByDeptIdAndStatusAndLevelIdNot(String deptId, String status, Integer levelId);
+
+	@Query("SELECT e.deptId FROM Employee e WHERE e.empNo = :empNo")
+	String findDeptIdByEmpNo(@Param("empNo") String empNo);
+	
+	// 특정 부서, 상태, 직책(position) 사원 조회
+	List<Employee> findByDeptIdAndStatusAndPosition(String deptId, String status, String position);
 
 }

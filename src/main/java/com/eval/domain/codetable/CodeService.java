@@ -19,4 +19,8 @@ public class CodeService {
 
         return commonRepo.findByGroupIdAndIsUseTrueOrderBySortOrder(group.getId());
     }
+    public List<CodeCommon> getInterviewStatusList() {
+        return commonRepo.findByGroupIdAndIsUseTrueOrderBySortOrder(4L); // 4 = INTERVIEW_STATUS
+    }
+    
 }
