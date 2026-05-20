@@ -53,7 +53,7 @@ public class EvaluatorController {
             model.addAttribute("evalList", List.of());
         }
         
-        List<EvalType> evalTypeList = evaluationService.findAll();
+        List<EvalType> evalTypeList = evaluationService.findAllExcludingInterview();
 
         model.addAttribute("evalTypeList", evalTypeList);
         model.addAttribute("selectedTypeId", typeId);

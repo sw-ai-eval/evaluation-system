@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List; import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,13 +18,17 @@ import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.evaluator.EvalTargetMapping;
 import com.eval.domain.evaluator.repository.EvaluatorRepository;
 import com.eval.domain.evaluator.service.EvaluatorService;
+import com.eval.domain.multi.EvalCategorySummary;
 import com.eval.domain.multi.EvalSummaryChart;
-import com.eval.domain.multi.EvalSummaryRepository;
 import com.eval.domain.multi.MultiEvalAnswer;
-import com.eval.domain.multi.MultiEvalAnswerRepository;
 import com.eval.domain.multi.dto.MultiEvalDTO;
+import com.eval.domain.multi.dto.MultiEvalDTO.CategoryAvgDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.MultiChartDto;
+import com.eval.domain.multi.dto.MultiEvalDTO.MyCategoryScoreDto;
 import com.eval.domain.multi.mapper.MultiMapper;
+import com.eval.domain.multi.repository.EvalCategorySummaryRepository;
+import com.eval.domain.multi.repository.EvalSummaryRepository;
+import com.eval.domain.multi.repository.MultiEvalAnswerRepository;
 import com.eval.domain.performance.dto.PerformanceDTO.EvalType;
 
 import lombok.RequiredArgsConstructor;
@@ -35,28 +40,43 @@ import lombok.RequiredArgsConstructor;
      private final MultiMapper multiMapper;
      private final MultiEvalAnswerRepository multiEvalAnswerRepository;
      private final EvaluatorService evaluatorService;
-     private final EvalSummaryRepository evalSummaryRepository;
-     private final EvaluatorRepository evaluatorRepository;
-     private final EmployeeRepository employeeRepository;
+     private final EvalCategorySummaryRepository evalCategorySummaryRepository;
      
-     //진행전, 진행중 평가 리스트
-     public List<MultiEvalDTO> getMultiProgressList(String empNo, String position) {
+     public List<Integer> getAvailableYears() {
+    	    return multiMapper.findAvailableYears();
+    }
+     
+     // 진행전, 진행중 평가 리스트
+     public List<MultiEvalDTO> getMultiProgressList(String empNo, String position, Integer year, String period) {
     	    Map<String, Object> params = new HashMap<>();
     	    params.put("userNo", empNo);
     	    params.put("position", position); // Mapper 조건용
+    	    params.put("year", year);
+    	    params.put("period", period);
     	    return multiMapper.findMultiProgressEval(params);
     	}
      
-     //완료 평가 리스트
-     public List<MultiEvalDTO> getMultiCompletedList(String empNo, String position) {
+     //관리자 진행전, 진행중 평가 리스트
+     public List<MultiEvalDTO> getAllDeptMultiProgressList(Integer year, String period) {
+    	    Map<String, Object> params = new HashMap<>();
+    	    params.put("year", year);
+    	    params.put("period", period);
+    	    return multiMapper.findAllDeptMultiProgressEval(params);
+    	}
+     
+     
+     //확정 평가 리스트
+     public List<MultiEvalDTO> getMultiCompletedList(String empNo, String position, Integer year, String period) {
  	    Map<String, Object> params = new HashMap<>();
  	    params.put("userNo", empNo);
  	    params.put("position", position); // Mapper 조건용
+ 	    params.put("year", year);
+ 	    params.put("period", period);
  	    return multiMapper.findMultiCompletedEval(params);
  	}
      
      // 세부 패널 화면
-     public MultiEvalDTO getMultiDetail(Long evalTypeId, String evaluateeNo, String evaluatorNo, String position) {
+     public MultiEvalDTO getMultiDetail(Long evalTypeId, String evaluatorNo,String evaluateeNo,  String position) {
     	    Map<String, Object> params = new HashMap<>();
     	    params.put("evalTypeId", evalTypeId);
     	    params.put("evaluateeNo", evaluateeNo);
@@ -67,98 +87,93 @@ import lombok.RequiredArgsConstructor;
 
     	    EvalTargetMapping etm = multiMapper.findTargetMapping(params);// 필요 시 별도 Mapper 호출
     	    
+    	    System.out.println("mappingId : " + etm.getId()); // 매핑 아이디 잘 나옴
+    	    
     	    String statusStr = etm != null ? String.valueOf(etm.getStatus()) : "0"; // null이면 기본 '0'
     	    params.put("statusStr", statusStr);
 
 
     	    MultiEvalDTO dto = multiMapper.findMultiEvalDetail(params);
     	    
-    	    System.out.println("dto = " + dto);
-    	    
-    	    System.out.println("===== findMultiEvalDetail 결과 =====");
-    	    System.out.println("evalTypeId: " + dto.getEvalTypeId());
-    	    System.out.println("evalTypeName: " + dto.getEvalTypeName());
-    	    System.out.println("evaluatorNo: " + dto.getEvaluatorNo());
-    	    System.out.println("evaluatorName: " + dto.getEvaluatorName());
-    	    System.out.println("evaluateeNo: " + dto.getEvaluateeNo());
-    	    System.out.println("deptId: " + dto.getDeptId());
-    	    System.out.println("deptName: " + dto.getDeptName());
-    	    System.out.println("startDate: " + dto.getStartDate());
-    	    System.out.println("endDate: " + dto.getEndDate());
-    	    System.out.println("statusName: " + dto.getStatusName());
-    	    System.out.println("totalScore: " + dto.getTotalScore());
-    	    // items는 아직 안 세팅되었으므로 null일 수 있음
-    	    System.out.println("items: " + dto.getItems());
-    	    System.out.println("===== 끝 =====");
     	    
     	    List<MultiEvalDTO.EvalItem> items = multiMapper.findEvalItems(params);
-    	    System.out.println("dto = " + dto);
     	    dto.setItems(items);
-    	    System.out.println("===== items 데이터 확인 =====");
-    	    for (MultiEvalDTO.EvalItem item : items) {
-    	        System.out.println("QuestionId: " + item.getQuestionId() +
-    	                           ", Category: " + item.getCategoryName() +
-    	                           ", Score: " + item.getScore() +
-    	                           ", Content: " + item.getContent() +
-    	                           ", Weight: " + item.getWeight() +
-    	                           ", MappingId: " + item.getMappingId() +
-    	                           ", Explanation: " + item.getExplanation());
-    	    }
-    	    System.out.println("===== items 끝 =====");
     	    
+    	    
+    	    if(!"평가 전".equals(dto.getStatusName())) {
     	    // 각 문항에 기존 답변(점수/피드백) 세팅
-    	    for (MultiEvalDTO.EvalItem item : items) {
-    	    	Long mappingId = etm != null ? etm.getId() : null;
-    	        item.setMappingId(mappingId);
-
-    	        // 기존 답변 조회
-    	        Optional<MultiEvalAnswer> answerOpt = multiEvalAnswerRepository.findByQuestionIdAndMappingId(item.getQuestionId(), mappingId);
-    	        if (answerOpt.isPresent()) {
-    	            MultiEvalAnswer answer = answerOpt.get();
-    	            if (answer.getScore() != null) {
-    	                item.setScore(answer.getScore().intValue());
-    	            }
-    	            if (answer.getContent() != null) {
-    	                item.setContent(answer.getContent()); // 점수형 피드백 또는 서술형 의견
-    	            }
-    	            System.out.println("QuestionId: " + item.getQuestionId() +
-                            ", Score: " + item.getScore() +
-                            ", Content: " + item.getContent());
-
-    	        }
+	    	    for (MultiEvalDTO.EvalItem item : items) {
+	    	    	Long mappingId = etm != null ? etm.getId() : null;
+	    	        item.setMappingId(mappingId);
+	
+	    	        // 기존 답변 조회
+	    	        Optional<MultiEvalAnswer> answerOpt = multiEvalAnswerRepository.findByQuestionIdAndMappingId(item.getQuestionId(), mappingId);
+	    	        if (answerOpt.isPresent()) {
+	    	            MultiEvalAnswer answer = answerOpt.get();
+	    	            if (answer.getScore() != null) {
+	    	                item.setScore(answer.getScore().intValue());
+	    	            }
+	    	            if (answer.getContent() != null) {
+	    	                item.setContent(answer.getContent()); // 점수형 피드백 또는 서술형 의견
+	    	            }
+	    	            System.out.println("QuestionId: " + item.getQuestionId() +
+	                            ", Score: " + item.getScore() +
+	                            ", Content: " + item.getContent());
+	
+	    	        }
+	    	    }
     	    }
 
     	    // 카테고리별 그룹화
-    	    Map<String, MultiEvalDTO.CategorySummary> categoryMap = new LinkedHashMap<>();
-    	    for (MultiEvalDTO.EvalItem item : items) {
-    	        categoryMap.compute(item.getCategoryName(), (k, summary) -> {
+    	 // statusName 확인 후 "평가 완료"이면 카테고리 그룹화 건너뜀
+    	    List<Integer> totalWeightList = new ArrayList<>();
+
+    	    if (!"평가 완료".equals(dto.getStatusName())) {
+    	        // 평가 미완료: 기존처럼 CategorySummary 생성
+    	        Map<String, MultiEvalDTO.CategorySummary> categoryMap = new LinkedHashMap<>();
+    	        for (MultiEvalDTO.EvalItem item : items) {
+    	            MultiEvalDTO.CategorySummary summary = categoryMap.get(item.getCategoryName());
     	            if (summary == null) {
     	                summary = new MultiEvalDTO.CategorySummary();
-    	                summary.setCategoryName(k);
+    	                summary.setCategoryName(item.getCategoryName());
     	                summary.setTotalWeight(item.getWeight() != null ? item.getWeight() : 0);
     	                summary.setCombinedGuide(item.getExplanation() != null ? item.getExplanation() : "");
     	                summary.setItems(new ArrayList<>());
+    	                categoryMap.put(item.getCategoryName(), summary);
     	            } else {
     	                summary.setTotalWeight(summary.getTotalWeight() + (item.getWeight() != null ? item.getWeight() : 0));
     	                summary.setCombinedGuide(summary.getCombinedGuide() + "\n" + (item.getExplanation() != null ? item.getExplanation() : ""));
     	            }
     	            summary.getItems().add(item);
-    	            return summary;
-    	        });
-    	    }
-    	    
+    	        }
+    	        dto.setCategorySummaries(new ArrayList<>(categoryMap.values()));
 
-    	    dto.setCategorySummaries(new ArrayList<>(categoryMap.values()));
-    	    System.out.println("===== categorySummaries 출력 =====");
-    	    dto.getCategorySummaries().forEach(cs -> {
-    	        System.out.println("카테고리명: " + cs.getCategoryName());
-    	        System.out.println("총 배점: " + cs.getTotalWeight());
-    	        System.out.println("가이드라인:\n" + cs.getCombinedGuide());
-    	        System.out.println("항목 수: " + (cs.getItems() != null ? cs.getItems().size() : 0));
-    	        System.out.println("-----------------------------");
-    	    });
+    	        // totalWeight 리스트 생성
+    	        for (MultiEvalDTO.CategorySummary summary : categoryMap.values()) {
+    	            totalWeightList.add(summary.getTotalWeight());
+    	        }
+    	    } else {
+    	        // 평가 완료: totalWeight만 계산
+    	        Map<String, Integer> totalWeightMap = new LinkedHashMap<>();
+    	        for (MultiEvalDTO.EvalItem item : items) {
+    	            int weight = item.getWeight() != null ? item.getWeight() : 0;
+    	            totalWeightMap.put(item.getCategoryName(), totalWeightMap.getOrDefault(item.getCategoryName(), 0) + weight);
+    	        }
+
+    	        List<MultiEvalDTO.CategorySummary> summaries = new ArrayList<>();
+    	        for (Map.Entry<String, Integer> entry : totalWeightMap.entrySet()) {
+    	            MultiEvalDTO.CategorySummary summary = new MultiEvalDTO.CategorySummary();
+    	            summary.setCategoryName(entry.getKey());
+    	            summary.setTotalWeight(entry.getValue());
+    	            summaries.add(summary);
+
+    	            // totalWeight 리스트에 추가
+    	            totalWeightList.add(entry.getValue());
+    	        }
+    	        dto.setCategorySummaries(summaries);
+    	    }
+ 
     	    
-    	    System.out.println("DTO statusName: " + dto.getStatusName());
     	    
     	    int totalScore = items.stream()
     	            .map(MultiEvalDTO.EvalItem::getScore)
@@ -168,9 +183,12 @@ import lombok.RequiredArgsConstructor;
 
     	    dto.setTotalScore(totalScore);
     	    
-    	    dto.setChart(getLeaderChart(evalTypeId, evaluateeNo));
+    	    for (Integer weight : totalWeightList) {
+    	        System.out.println(weight);
+    	    }
     	    
-    	    System.out.println("totalScore: "+totalScore);
+    	    dto.setChart(makeChart(evaluateeNo, evalTypeId, totalWeightList));
+    	    
     	    
     	    return dto;
 
@@ -178,6 +196,7 @@ import lombok.RequiredArgsConstructor;
      
      	
      // 평가 입력 내용 저장
+     @Transactional
      public void saveAnswers(List<MultiEvalAnswer> answers,String evaluatorNo,String evaluateeNo, Integer evalTypeId) {
 
 		answers.forEach(ans -> {
@@ -204,10 +223,13 @@ import lombok.RequiredArgsConstructor;
 			}
 		});
 		
+		saveChartSummary(evaluatorNo, evaluateeNo, evalTypeId);
+		
 		evaluatorService.updateStatusToTwo( evaluatorNo,evaluateeNo,evalTypeId);
 	}
      	
      //임시 저장
+     @Transactional
      public void temporarySaveAnswers(List<MultiEvalAnswer> answers,String evaluatorNo,String evaluateeNo,Integer evalTypeId) {
 		
 		answers.forEach(ans -> { 
@@ -234,56 +256,91 @@ import lombok.RequiredArgsConstructor;
 		);
 	}
      
-	 // 차트에 사용할 점수 합산, 평균   
+ 
+
      @Transactional
-     public EvalSummaryChart saveSummary(String evaluateeNo, Integer evalTypeId) {
+     public List<EvalCategorySummary> saveChartSummary(
+             String evaluatorNo,
+             String evaluateeNo,
+             Integer evalTypeId) {
 
-         // 1. 해당 부서장의 총점
-         BigDecimal myTotal =multiEvalAnswerRepository.getTotalScore( evaluateeNo,  evalTypeId);
+         Long evalTypeIdLong = evalTypeId.longValue();
 
-         // 2. 해당 부서장의 평균 점수
-         BigDecimal myAvg = multiEvalAnswerRepository.getMyAvgScore( evaluateeNo, evalTypeId );
+         // 항상 전체를 다시 계산해서 가져옴
+         List<MyCategoryScoreDto> categoryScores =
+                 multiMapper.findCategoryScores(evaluateeNo, evalTypeIdLong);
 
-         // 3. 기존 summary 조회
-         EvalSummaryChart summary =evalSummaryRepository.findByEvaluateeNoAndEvalTypeId( evaluateeNo, evalTypeId).orElseGet(EvalSummaryChart::new);
+         List<EvalCategorySummary> summaries = new ArrayList<>();
 
-         // 4. 값 세팅
-         summary.setEvaluateeNo(evaluateeNo);
-         summary.setEvalTypeId(evalTypeId);
+         for (MyCategoryScoreDto dto : categoryScores) {
 
-         summary.setTotalScore(myTotal != null ? myTotal : BigDecimal.ZERO);
+             String categoryName = dto.getCategoryName();
 
-         summary.setAvgScore(myAvg != null ? myAvg : BigDecimal.ZERO);
+             BigDecimal totalScore = BigDecimal.valueOf(dto.getTotalScore());
+             int evaluatorCount = dto.getEvaluatorCount();
 
-         summary.setMaxGivenScore(BigDecimal.ZERO);
+             // 기존 row 조회 (있으면 update, 없으면 insert)
+             EvalCategorySummary summary =
+                     evalCategorySummaryRepository
+                             .findByEvaluateeNoAndEvalTypeIdAndCategoryName(
+                                     evaluateeNo, evalTypeIdLong, categoryName)
+                             .orElse(null);
 
-         summary.setEvaluatedAt(LocalDateTime.now());
+             if (summary == null) {
+                 summary = new EvalCategorySummary();
+                 summary.setEvaluateeNo(evaluateeNo);
+                 summary.setEvalTypeId(evalTypeIdLong);
+                 summary.setCategoryName(categoryName);
+             }
 
-         // 5. 저장
-         return evalSummaryRepository.save(summary);
+             summary.setScore(totalScore);
+
+             BigDecimal avgScore = evaluatorCount == 0
+                     ? BigDecimal.ZERO
+                     : totalScore.divide(
+                         BigDecimal.valueOf(evaluatorCount),
+                         2,
+                         RoundingMode.HALF_UP
+                     );
+
+             summary.setAvgScore(avgScore);
+             summary.setEvaluatedAt(LocalDateTime.now());
+
+             evalCategorySummaryRepository.save(summary);
+             summaries.add(summary);
+         }
+
+         return summaries;
      }
      
-     public MultiChartDto getLeaderChart( Long evalTypeId, String leaderNo) {
-    	    // 내 총점
-    	    BigDecimal myTotalScore =evalSummaryRepository.findMyTotalScore( evalTypeId,leaderNo);
+     public MultiChartDto makeChart(String evaluateeNo, Long evalTypeId, List<Integer> totalWeightList) {
 
-    	    // 내 평균 점수
-    	    BigDecimal myAvgScore =evalSummaryRepository.findMyAvgScore( evalTypeId, leaderNo);
+    	    MultiChartDto chart = new MultiChartDto();
 
-    	    // 전체 부서장 평균들의 평균
-    	    BigDecimal allLeaderAvgScore = evalSummaryRepository.findAllLeaderAvgScore( evalTypeId );
+    	    List<CategoryAvgDto> myScores = multiMapper.findMyAvgCategoryScores(evaluateeNo, evalTypeId);
 
-    	    MultiEvalDTO.MultiChartDto dto =new MultiEvalDTO.MultiChartDto();
+    	    List<CategoryAvgDto> allScores = multiMapper.findAllAvgCategoryScores(evalTypeId);
 
-    	    dto.setEvaluateeNo(leaderNo);
+    	    for (CategoryAvgDto myDto : myScores) {
+    	        String category = myDto.getCategoryName();
+    	        chart.getLabels().add(category);
+    	        chart.getMyAvgScores().add(myDto.getAvgScore());
+ 
+    	        double allAvg = allScores.stream()
+    	                .filter(a -> a.getCategoryName().equals(category))
+    	                .map(CategoryAvgDto::getAvgScore)
+    	                .findFirst()
+    	                .orElse(0.0); // 없으면 0
+    	        chart.getAllAvgScores().add(allAvg);
+    	    }
+    	    if (totalWeightList != null) {
+    	        chart.getMaxScores().addAll(totalWeightList);
+    	    }
+    	    for (Integer weight : totalWeightList) {
+    	        System.out.println(weight);
+    	    }
 
-    	    dto.setMyTotalScore( myTotalScore != null ? myTotalScore : BigDecimal.ZERO);
+    	    return chart;
+    	}
 
-    	    dto.setMyAvgScore(myAvgScore != null ? myAvgScore: BigDecimal.ZERO);
-
-    	    dto.setAllLeaderAvgScore( allLeaderAvgScore != null? allLeaderAvgScore : BigDecimal.ZERO );
-
-    	    return dto;
-	 }
-     
  }

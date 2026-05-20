@@ -15,6 +15,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -34,6 +35,7 @@ public class EmployeeService {
     private final PasswordEncoder passwordEncoder;
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
+    
     public EmployeeService(EmployeeMapper employeeMapper,
             PasswordEncoder passwordEncoder,
             EmployeeRepository employeeRepository,
@@ -160,8 +162,13 @@ public class EmployeeService {
         employee.setCreatedAt(LocalDateTime.now());
         employee.setCreatedBy(adminNo); 
         employee.setResignDate(null);   // 퇴사일 제외
-	    employee.setPassword("$2a$10$kBio8K0mGAXpAAJ9o3XWNuJlDSNd7DxN4CgD.jOsLDFKyBSt9rK0u");     //  초기 비밀번호 1234
-	    employee.setPosition("부서원");
+	    employee.setPassword("$2a$10$kBio8K0mGAXpAAJ9o3XWNuJlDSNd7DxN4CgD.jOsLDFKyBSt9rK0u");     //  초기 비밀번호 123
+	    
+	    if(employeeDTO.getLevelId()==6) {
+	    	employee.setPosition("임원");
+	    }else {
+	    	employee.setPosition("부서원");
+	    }
         
         employee.setEmpNo(empNo); // 사번 자동 증가 로직 구현해야 함----------------------
         employee.setName(employeeDTO.getName());
@@ -276,4 +283,18 @@ public class EmployeeService {
     public List<Employee> findExecutive() {
         return employeeRepository.findByLevelId(6);
     }
+    
+
+    // empNo 기준 같은 부서, ACTIVE 상태, 특정 직책 사원 조회
+    public List<Employee> getActiveColleaguesByEmpNoAndPosition(String empNo, String position) {
+        // 1. 사원 조회
+        Employee emp = employeeRepository.findByEmpNo(empNo);
+        if (emp == null) {
+            return List.of(); // 사원이 없으면 빈 리스트 반환
+        }
+
+        // 2. 같은 부서의 ACTIVE 상태, 특정 직책 사원 조회
+        return employeeRepository.findByDeptIdAndStatusAndPosition(emp.getDeptId(), "ACTIVE", position);
+    }
+
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+ "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.eval.domain.interview.mapper.InterviewMapper">
+
+    <!-- 특정 타입의 카테고리 라벨 조회 -->
+    <select id="getCategoryLabelsForType" resultType="string" parameterType="long">
+        SELECT DISTINCT qi.category
+        FROM eval_question_52 qi
+        WHERE qi.type_id = #{typeId}
+        ORDER BY qi.category
+    </select>
+
+    <!-- 모든 인터뷰 타입 조회 -->
+    <select id="findAllInterviewTypeList" resultType="com.eval.domain.interview.dto.InterviewTypeNameDto">
+        SELECT id, name
+        FROM eval_type_52
+        WHERE name LIKE '%면담%'
+        ORDER BY name
+    </select>
+
+</mapper>

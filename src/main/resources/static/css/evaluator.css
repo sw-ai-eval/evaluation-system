@@ -438,15 +438,23 @@ input, textarea {
 /* 기업 평가 완료 상태용 */
 /* 기업 평가 완료 상태용 - 배경 없이 글자색 강조 */
 .text-success {
-    display: inline-block;
-    padding: 4px 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    color: #155724;        /* 짙은 초록 */
-    border: 1px solid transparent; /* 테두리 없지만 필요 시 유지 가능 */
-    border-radius: 5px;    /* 둥근 모서리 유지 */
-    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 3px 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+
+    color: #1f6f4a;              /* 차분한 딥그린 */
+    background-color: #eaf5ef;   /* 아주 옅은 녹색 배경 */
+    border: 1px solid #cfe7da;   /* 은은한 테두리 */
+
+    border-radius: 6px;
+
+    line-height: 1;
     white-space: nowrap;
-    pointer-events: none;  /* 클릭 불가 */
-    user-select: none;    /* 텍스트 선택 불가 */
+
+    pointer-events: none;
+    user-select: none;
 }

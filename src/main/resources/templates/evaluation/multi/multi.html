@@ -51,10 +51,7 @@
         
         .info-section { display: flex; gap: 15px; align-items: stretch; }
         .info-table { flex-grow: 1; }
-        .grade-box { width: 120px; border: 1px solid #dee2e6; display: flex; flex-direction: column; text-align: center; }
-        .grade-box-title { background: #e6f2ff; padding: 10px; font-size: 12px; font-weight: 500; border-bottom: 1px solid #dee2e6; }
-        .grade-box-score { padding: 15px; font-size: 16px; font-weight: bold; background: #fff; flex-grow: 1; display: flex; align-items: center; justify-content: center; }
-        
+
         .sub-title { background-color: #e9ecef; padding: 8px 15px; font-size: 13px; font-weight: bold; border: 1px solid #dee2e6; border-bottom: none; }
         .detail-table th { background-color: #f8f9fa; }
         .feedback-textarea { width: 100%; height: 120px; padding: 8px; box-sizing: border-box; resize: vertical; border: none; font-family: inherit; font-size: 12px; line-height: 1.5; outline: none; }
@@ -125,11 +122,8 @@
 		}
 		.grade-select { width: 65px; text-align: center; border: 1px solid #ccc; padding: 4px; border-radius: 3px; outline: none; font-weight: bold; margin-bottom: 5px; }
         .calculated-score { font-size: 14px; font-weight: bold; color: #0d6efd; margin-top: 5px; }
-        
-        .grade-guide { background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; font-size: 11px; color: #555; border-radius: 4px; }
-        .grade-guide-title { font-weight: bold; margin-bottom: 8px; color: #333; }
-        .grade-guide-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-                /* 평가 착안점 텍스트 가독성 개선 */
+
+        /* 평가 착안점 텍스트 가독성 개선 */
         .goal-desc-text {
             font-size: 12px;
             color: #343a40;
@@ -165,13 +159,13 @@
 
     <div class="main-content">
         <h2>다면 평가
-		    <span title="평가 진행 순서: [부서원: 부서장 평가] ➡️ [부서장은 부서원의 1차 평가를 진행]" 
+		    <span title="평가 진행 순서: [부서원: 부서장 평가] ➡️ [부서장은 부서원의 1차 평가를 진행" 
 		          style="cursor:pointer; color:#ccc; font-size:14px;">
 		        <i class="far fa-question-circle"></i>
 		    </span>
 		</h2>
         
-        <!-- <div class="search-area">
+        <div class="search-area">
             <div class="search-item">
                 <span>기준년도</span>
                 <select id="searchYear">
@@ -191,14 +185,14 @@
                 </select>
             </div>
             <button class="btn-search" onclick="searchEval()">조회</button>
-        </div> -->
+        </div>
 
         <div class="split-container">
             <!-- 좌측 목록 패널 -->
             <div class="left-panel">
                 <ul class="tabs">
                     <li class="active">진행 문서</li>
-                    <li>완료 문서</li>
+                    <li>확정 문서</li>
                 </ul>
                 <div class="table-wrap" id="inProgressTable">
                     <table>
@@ -206,6 +200,7 @@
                             <tr>
                             	<th>평가명</th>
                             	<th>부서명</th>
+                            	<th>평가자 사번</th>
                             	<th>평가자</th>
                                 <th>평가수행기간</th>
                                 <th>대상직위</th>
@@ -223,6 +218,7 @@
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalTypeName}"></td>
                                 <td th:text="${eval.deptName}"></td>
+                                <td th:text="${eval.evaluatorNo}"></td>
                                 <td th:text="${eval.evaluatorName}"></td>
                                 <td th:text="${eval.evalPeriod}"></td>
                                 <td th:text="${eval.position}"></td>
@@ -238,12 +234,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="table-wrap" id="completedTable" style="display:none;">
+                <!-- <div class="table-wrap" id="completedTable" style="display:none;">
 				    <table>
                         <thead>
                             <tr>
                             	<th>평가명</th>
                             	<th>부서명</th>
+                            	<th>평가자 사번</th>
                             	<th>평가자</th>
                                 <th>평가수행기간</th>
                                 <th>대상직위</th>
@@ -261,6 +258,7 @@
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalTypeName}"></td>
                                 <td th:text="${eval.deptName}"></td>
+                                <td th:text="${eval.evaluatorNo}"></td>
                                 <td th:text="${eval.evaluatorName}"></td>
                                 <td th:text="${eval.evalPeriod}"></td>
                                 <td th:text="${eval.position}"></td>
@@ -275,7 +273,7 @@
                             </tr>
                         </tbody>
 				    </table>
-				</div>
+				</div> -->
                 <div class="pagination-wrap">
                     <div class="pagination">
                         <button disabled><i class="fas fa-step-backward"></i></button>
@@ -293,7 +291,6 @@
                 <div class="detail-header">
                     다면평가 상세 <span class="badge" id="detailStatusBadge">대기</span>
                 </div>
-                
                 <div class="info-section">
                     <div class="info-table">
                         <table>
@@ -313,18 +310,12 @@
                             </tr>
                         </table>
                     </div>
-                    <div class="grade-box">
-                        <div class="grade-box-title">종합평가등급</div>
-                        <div class="grade-box-score" id="infoGrade">-</div>
-                    </div>
                 </div>
-                
-                <div id="evalFormWrapper">
-
-	                <form id="evalForm">
+	            <form id="evalForm">
+	                <div id="evalFormWrapper">
 	                    <input type="hidden" id="currentTypeId">
 	                    <input type="hidden" id="currentEmpNo">
-	                    
+	                    <input type="hidden" id="currentEvaluatorNo">
 	                    <!-- 차트 -->
                         <div id="chartWrap" style="display:none; width:100%; height:300px; margin-bottom:20px;">
                             <canvas id="avgChart"></canvas>
@@ -343,6 +334,7 @@
 							
 							    <!-- 결과용 -->
 							    <colgroup id="resultColgroup" style="display:none;">
+							    	<!-- <col style="width:20%"> -->
 							        <col style="width:40%">
 							        <col style="width:10%">
 							        <col style="width:50%">
@@ -358,6 +350,7 @@
 								
 								<thead id="resultHeader" style="display:none;">
 								    <tr>
+								    	<!-- <th>구분</th> -->
 								        <th>문항</th>
 								        <th>점수</th>
 								        <th>주관식/피드백</th>
@@ -366,11 +359,6 @@
 	                            <tbody id="evalGuideBody"></tbody>
 								<tbody id="evalResultBody"></tbody>
 	                            <tfoot id="evalTfoot">
-								    <tr>
-								        <th colspan="3" class="total-row-label">
-								            평가점수 합계 (점수 = 배점 × 등급)
-								        </th>
-								    </tr>
 								
 								    <!-- 총점 영역 (초기에는 숨김) -->
 								    <tr id="totalScoreRow" class="total-score-row">
@@ -380,16 +368,6 @@
 								    </tr>
 								</tfoot>
 	                        </table>
-							<div class="grade-guide" style="margin-top: 15px;">
-							    <div class="grade-guide-title">※ 다면평가 등급 기준</div>
-							    <div class="grade-guide-grid">
-							        <div>• <strong>S (×1.0)</strong> : 협업, 소통, 책임감 등 모든 측면에서 매우 우수하며 조직에 긍정적인 영향을 지속적으로 제공함</div>
-							        <div>• <strong>A (×0.9)</strong> : 원활한 협업과 적극적인 업무 태도로 조직 및 동료에게 크게 기여함</div>
-							        <div>• <strong>B (×0.8)</strong> : 맡은 역할을 성실히 수행하며 동료와의 협업 및 조직 운영에 안정적으로 기여함</div>
-							        <div>• <strong>C (×0.7)</strong> : 기본적인 역할 수행은 가능하나 협업, 소통 또는 업무 태도 측면에서 보완이 필요함</div>
-							        <div>• <strong>D (×0.6)</strong> : 협업 및 업무 수행 전반에서 개선이 필요하며 조직 기여도가 낮은 수준임</div>
-							    </div>
-							</div>
 	                        
 	                        <div class="detail-button-group">
 	                        	<button type="button" class="close-btn" onclick="closeDetailPanel()">
@@ -407,8 +385,9 @@
 	
 	
 	                    </div>
-	                </form>
-	            </div>
+	                    
+	            	</div>
+	            </form>
             </div> 
         </div>
     </div>
@@ -419,7 +398,7 @@ const currentUserPosition = '[[${userPosition}]]';
 
 function loadEvalDetail(rowElement) {
     const evalTypeId = rowElement.getAttribute('data-evalTypeId');
-    const empNo = rowElement.getAttribute('data-empno');
+    const evaluateeNo = rowElement.getAttribute('data-empno');
     const evaluatorNo=rowElement.getAttribute('data-evaluatorNo');
     
     // 선택한 행 강조
@@ -428,14 +407,16 @@ function loadEvalDetail(rowElement) {
 
     // 🔹 현재 선택 정보 숨겨진 input에 저장
     document.getElementById('currentTypeId').value = evalTypeId;
-    document.getElementById('currentEmpNo').value = empNo;
-
-    fetch(`/evaluation/multi/detail/${evalTypeId}/${evaluatorNo}/${empNo}`)
+    document.getElementById('currentEmpNo').value = evaluateeNo;
+    document.getElementById('currentEvaluatorNo').value = evaluatorNo;
+    
+    fetch(`/evaluation/multi/detail/${evalTypeId}/${evaluatorNo}/${evaluateeNo}`)
         .then(res => res.json())
         .then(data => {
             const status = String(data.statusName || '').trim();
-            const isCompleted = status === '평가 완료' || status.includes('완료');
+            const isCompleted = status === '평가 완료';
             const isSelf = String(currentUserNo) === String(data.evaluateeNo);
+            const isEvaluator = String(currentUserNo) === String(data.evaluatorNo);
 
             // 우측 패널
             const detailPanel = document.getElementById('detailPanel');
@@ -447,7 +428,6 @@ function loadEvalDetail(rowElement) {
             document.getElementById('infoPos').innerText = data.position || '-';
             document.getElementById('infoEmpNo').innerText = data.evaluateeNo || '-';
             document.getElementById('infoName').innerText = data.evaluateeName || '-';
-            document.getElementById('infoGrade').innerText = data.totalGrade || '-';
 
             // 상태 배지
             const badge = document.getElementById('detailStatusBadge');
@@ -457,7 +437,7 @@ function loadEvalDetail(rowElement) {
 
             // 시작 버튼 표시/숨김
             const actionButtons = document.getElementById('actionButtons');
-            actionButtons.style.display = (isCompleted || isSelf) ? 'none' : 'block';
+            actionButtons.style.display = (isCompleted || isSelf || !isEvaluator) ? 'none' : 'block';
             const tfoot = document.getElementById('evalTfoot');
             
             const totalScoreEl = document.getElementById('totalScore');
@@ -471,6 +451,10 @@ function loadEvalDetail(rowElement) {
                 totalScoreRow.style.display = 'table-row';
             }
 
+            // 🔹 테이블 초기화
+            document.getElementById('evalGuideBody').innerHTML = '';
+            document.getElementById('evalResultBody').innerHTML = '';
+            
             // 테이블 렌더링
             if (isCompleted) {
                 renderResultTableSafe(data.items);
@@ -479,9 +463,13 @@ function loadEvalDetail(rowElement) {
                 renderGuideTableSafe(data.categorySummaries);
                 tfoot.style.display = 'none';
             }
-            if (data.chart && currentUserPosition?.trim() === "부서장") {
-                document.getElementById('chartWrap').style.display = 'block'; // 이거 필수
-                renderChart(data.chart);
+            
+            
+            if (data.chart && currentUserPosition?.trim() === "부서장" && isCompleted) {
+                document.getElementById('chartWrap').style.display = 'block';
+                renderChart(data.chart, data.evaluateeName);
+            } else {
+                document.getElementById('chartWrap').style.display = 'none';
             }
         });
 }
@@ -499,6 +487,8 @@ function renderResultTableSafe(items) {
         const tr = document.createElement('tr');
 
         // 점수 문항
+/*         const tdCategory=document.createElement('td');
+        tdQuestion.innerText = item.category || '-'; */
         const tdQuestion = document.createElement('td');
         tdQuestion.innerText = item.question || '-';
         const tdScore = document.createElement('td');
@@ -529,29 +519,79 @@ function renderResultTableSafe(items) {
 }
 let avgChartInstance = null;
 
-function renderChart(chartData) {
+function renderChart(chartData,evaluateeName) {
+    const maxScores = chartData.maxScores || []; // 혹시 undefined면 빈 배열
+
+    // 데이터 정규화 (0~5 범위)
+    const myAvgScoresNormalized = chartData.myAvgScores.map((score, idx) => {
+        const max = maxScores[idx] || 1;  // 최대값이 없으면 1
+        return (score / max) * 5;
+    });
+
+    const allAvgScoresNormalized = chartData.allAvgScores.map((score, idx) => {
+        const max = maxScores[idx] || 1;
+        return (score / max) * 5;
+    });
+    
     const ctx = document.getElementById('avgChart');
     if (!ctx) return;
 
     if (avgChartInstance) avgChartInstance.destroy();
 
     avgChartInstance = new Chart(ctx, {
-        type: 'bar',
+        type: 'radar',
         data: {
-            labels: ['내 평균', '전체 부서장의 평균'],
-            datasets: [{
-                label: '점수',
-                data: [
-                	chartData.myAvgScore,
-                    chartData.allLeaderAvgScore,
-                ],
-                backgroundColor: ['#4e73df', '#1cc88a']
-            }]
+            labels: chartData.labels,
+            datasets: [
+                {
+                	label: `${evaluateeName}의 평균`,
+                    data: myAvgScoresNormalized,
+                    backgroundColor: 'rgba(78, 115, 223, 0.2)',
+                    borderColor: '#4e73df',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#4e73df'
+                },
+                {
+                    label: '전체 부서장 평균',
+                    data: allAvgScoresNormalized,
+                    backgroundColor: 'rgba(28, 200, 138, 0.2)',
+                    borderColor: '#1cc88a',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1cc88a'
+                }
+            ]
         },
         options: {
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    suggestedMin: 0,
+                    suggestedMax: 5,
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const idx = context.dataIndex;
+                            const datasetLabel = context.dataset.label;
+                            let originalValue;
+                            if (datasetLabel === '피평가자의 평균') {
+                                originalValue = chartData.myAvgScores[idx];
+                            } else if (datasetLabel === '전체 부서장 평균') {
+                                originalValue = chartData.allAvgScores[idx];
+                            }
+                            return `${datasetLabel}: ${originalValue}`;
+                        }
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
             responsive: true,
-            maintainAspectRatio: false,
-            scales: { y: { beginAtZero: true } }
+            maintainAspectRatio: false
         }
     });
 }
@@ -630,21 +670,23 @@ function renderGuideTable(categories) {
 
 function startEvaluation() {
     const evalTypeId = document.getElementById('currentTypeId').value;
-    const empNo = document.getElementById('currentEmpNo').value;
+    const evaluateeNo = document.getElementById('currentEmpNo').value;
+    const evaluatorNo = document.getElementById('currentEvaluatorNo').value;
 
-    if (!evalTypeId || !empNo) {
+    if (!evalTypeId || !evaluateeNo) {
         alert('평가 대상을 먼저 선택하세요.');
         return;
     }
     
     console.log('evalTypeId=', document.getElementById('currentTypeId').value);
-    console.log('empNo=', document.getElementById('currentEmpNo').value);
+    console.log('evaluateeNo=', document.getElementById('currentEmpNo').value);
+    console.log('evaluatorNo=', document.getElementById('currentEvaluatorNo').value);
 
-    location.href = `/evaluation/multi/${evalTypeId}/${empNo}/sheet`;
+    location.href = `/evaluation/multi/${evalTypeId}/${evaluatorNo}/${evaluateeNo}/sheet`;
 }
 
 
-const tabs = document.querySelectorAll('.tabs li');
+/* const tabs = document.querySelectorAll('.tabs li');
 tabs.forEach(tab => {
     tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
@@ -659,7 +701,7 @@ tabs.forEach(tab => {
         }
     });
 });
-
+ */
 
 
 function closeDetailPanel() {
@@ -689,7 +731,13 @@ function setEvalMode(isResult) {
     document.getElementById('resultHeader').style.display = isResult ? '' : 'none';
 }
 
-function searchEval() { alert('검색 기능 호출'); }
+function searchEval() {
+    const year = document.getElementById("searchYear").value;
+    const period = document.getElementById("searchPeriod").value;
+
+    window.location.href = `/evaluation/multi?year=${year}&period=${period}`;
+}
+
 
 </script>
 </body>

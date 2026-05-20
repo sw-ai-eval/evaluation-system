@@ -11,5 +11,5 @@ public interface EvalTypeRepository extends JpaRepository<EvalType, Integer> {
     
     List<EvalType> findByStatusTrueAndHasWeightTrue();
     
-    
+    List<EvalType> findByNameNotContaining(String keyword);
 }

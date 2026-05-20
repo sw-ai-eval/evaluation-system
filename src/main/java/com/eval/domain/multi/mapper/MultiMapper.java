@@ -9,7 +9,9 @@ import org.apache.ibatis.annotations.Param;
 
 import com.eval.domain.evaluator.EvalTargetMapping;
 import com.eval.domain.multi.dto.MultiEvalDTO;
+import com.eval.domain.multi.dto.MultiEvalDTO.CategoryAvgDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.EvalItem;
+import com.eval.domain.multi.dto.MultiEvalDTO.MyCategoryScoreDto;
  
 @Mapper 
 public interface MultiMapper{
@@ -26,8 +28,20 @@ public interface MultiMapper{
 
 	List<MultiEvalDTO> findMultiCompletedEval(Map<String, Object> params);
 	
-    BigDecimal findMyTotalScore(@Param("evaluateeNo") String evaluateeNo, @Param("evalTypeId") Integer evalTypeId);
+	List<MultiEvalDTO> findAllDeptMultiProgressEval(Map<String, Object> params);
 
-    BigDecimal findAvgTotalScore(@Param("evalTypeId") Integer evalTypeId);
+	List<Integer> findAvailableYears();
+
+    List<MultiEvalDTO.EvalItem> selectEvalItems(
+            @Param("evaluateeNo") String evaluateeNo,
+            @Param("evalTypeId") Integer evalTypeId
+    );
+    
+    List<MyCategoryScoreDto>findCategoryScores(String evaluateeNo, Long evalTypeId);
+    
+    List<CategoryAvgDto> findMyAvgCategoryScores(String evaluateeNo, Long evalTypeId);
+    
+    List<CategoryAvgDto> findAllAvgCategoryScores(Long evalTypeId);
+    
 
 }
