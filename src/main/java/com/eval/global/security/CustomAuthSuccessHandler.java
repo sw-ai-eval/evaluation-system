@@ -27,4 +27,4 @@ public class CustomAuthSuccessHandler implements AuthenticationSuccessHandler {
         // 홈으로 이동
         response.sendRedirect("/home");
     }
-}
+}수정
