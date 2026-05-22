@@ -31,7 +31,9 @@
         WHERE m.eval_type_id = 3
           AND m.step = 0
           AND e.status = 'ACTIVE'
-          AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        <if test="currentEmpNo != null and currentEmpNo != ''">
+            AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        </if>
         <if test="year != null">
             AND t.year = #{year}
         </if>
@@ -104,6 +106,41 @@
     </select>
 
     <!-- 본인 역량 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
+    <!-- 확정 문서 목록: final_result_52.status=1 인 사원만 -->
+    <select id="selectConfirmedList" resultType="com.eval.domain.competency.dto.CompetencyDTO$Info">
+        SELECT
+            m.eval_type_id AS typeId,
+            FORMAT(t.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(t.end_date, 'yyyy-MM-dd') AS evalPeriod,
+            m.evaluatee_no AS empNo,
+            e.name AS empName,
+            d.name AS deptName,
+            e.position AS position,
+            fr.grade AS totalGrade,
+            '평가완료' AS status
+        FROM eval_target_mapping_52 m
+        JOIN employee_52 e ON m.evaluatee_no = e.emp_no
+        JOIN department_52 d ON e.dept_id = d.id
+        JOIN eval_type_52 t ON m.eval_type_id = t.id
+        JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+        WHERE m.eval_type_id = 3
+          AND m.step = 0
+          AND e.status = 'ACTIVE'
+          AND fr.status = 1
+        <if test="currentEmpNo != null and currentEmpNo != ''">
+            AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        </if>
+        <if test="year != null">
+            AND t.year = #{year} AND fr.year = #{year}
+        </if>
+        <if test="period != null and period != ''">
+            <choose>
+                <when test="period == '상반기'">AND MONTH(t.start_date) BETWEEN 1 AND 6</when>
+                <when test="period == '하반기'">AND MONTH(t.start_date) BETWEEN 7 AND 12</when>
+            </choose>
+        </if>
+        ORDER BY d.name, e.emp_no ASC
+    </select>
+
     <update id="updateSelfAnswer">
         IF EXISTS (
             SELECT 1 FROM eval_answer_52

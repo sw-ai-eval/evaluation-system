@@ -1,6 +1,5 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-
 <head>
 <meta charset="UTF-8">
 <title>사이드바</title>
@@ -8,21 +7,39 @@
 </head>
 <body>
 <div th:fragment="sidebar" class="sidebar-container">
+
     <div class="sidebar-header">
-        <h2>📊 평가 시스템</h2>
+        <div class="sidebar-logo">EVAL SYSTEM</div>
+        <div class="sidebar-sub">평가 관리 시스템</div>
     </div>
 
     <div class="sidebar-content">
-        
+
         <!-- 관리자 메뉴 -->
         <div sec:authorize="hasRole('ADMIN')" class="menu-group">
-            <div class="menu-label">관리자 메뉴</div>
+            <div class="menu-label">시스템 관리</div>
             <ul class="menu-list">
-                <li><a href="/employee" class="menu-item">👥 사원 관리</a></li>
-                <li><a href="/department" class="menu-item">🏢 부서 관리</a></li>
-                <li><a href="/evaluation" class="menu-item">📑 평가요소 관리</a></li>
-                <li><a href="/evaluator" class="menu-item">⚖️ 평가자 관리</a></li>
-                <li><a href="/admin/management" class="menu-item">🔐 로그인 계정 관리</a></li>
+                <li><a href="/employee"         class="menu-item">사원 관리</a></li>
+                <li><a href="/department"       class="menu-item">부서 관리</a></li>
+                <li><a href="/evaluation"       class="menu-item">평가요소 관리</a></li>
+                <li><a href="/evaluator"        class="menu-item">평가자 관리</a></li>
+                <li><a href="/admin/management" class="menu-item">계정 관리</a></li>
+            </ul>
+        </div>
+
+        <!-- 임원 전용 -->
+        <div th:if="${#authentication.principal.executive}" class="menu-group">
+            <div class="menu-label">임원 메뉴</div>
+            <ul class="menu-list">
+                <li><a href="/evaluation/final-grade/list" class="menu-item">최종등급 확정</a></li>
+            </ul>
+        </div>
+
+        <!-- ADMIN도 최종등급 확정 접근 -->
+        <div sec:authorize="hasRole('ADMIN')" class="menu-group">
+            <div class="menu-label">평가 확정</div>
+            <ul class="menu-list">
+                <li><a href="/evaluation/final-grade/list" class="menu-item">최종등급 확정</a></li>
             </ul>
         </div>
 
@@ -30,32 +47,25 @@
         <div class="menu-group">
             <div class="menu-label">나의 평가</div>
             <ul class="menu-list">
-                <li><a href="/evaluation/performance/list" class="menu-item">🎯 성과/업무평가</a></li>
-                <li><a href="/evaluation/competency/list" class="menu-item">💪 역량평가</a></li>
-                <li><a href="/evaluation/multi" class="menu-item">🔄 다면평가</a></li>
-                <li><a href="/interview" class="menu-item">🤝 면담</a></li>
-                <li><a href="/evaluation/employee-score" class="menu-item">📈 평가 점수/등급 현황</a></li>
+                <li><a href="/evaluation/performance/list" class="menu-item">성과/업무평가</a></li>
+                <li><a href="/evaluation/competency/list"  class="menu-item">역량평가</a></li>
+                <li><a href="/interview"        class="menu-item">면담평가</a></li>
+                <li><a href="/evaluation/multi"            class="menu-item">다면평가</a></li>
+                <li><a href="/evaluation/employee-score"   class="menu-item">평가 점수/등급 현황</a></li>
             </ul>
         </div>
 
     </div>
 
-    <div style="margin-top: 50px; border-top: 1px solid #ddd; padding: 20px 10px;">
-        
-        <!-- 홈 버튼 -->
-        <a href="/home" style="text-decoration: none; display: block; margin-bottom: 10px;">
-            <button type="button" style="width: 100%; padding: 10px; background-color: #4a5568; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                🏠 홈 대시보드
-            </button>
+    <div class="sidebar-footer">
+        <a href="/home" style="text-decoration:none; display:block; margin-bottom:8px;">
+            <button type="button" class="btn-sidebar btn-home">홈 대시보드</button>
         </a>
-        
-        <!-- 로그아웃 버튼 -->
         <form th:action="@{/logout}" method="post">
-            <button type="submit" style="width: 100%; padding: 10px; background-color: #ff4d4f; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">
-                🚪 로그아웃
-            </button>
+            <button type="submit" class="btn-sidebar btn-logout">로그아웃</button>
         </form>
     </div>
+
 </div>
 </body>
 </html>

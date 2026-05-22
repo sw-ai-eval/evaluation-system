@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>최종등급 확정</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { margin:0; display:flex; background:#fff; font-family:'Noto Sans KR',sans-serif; min-height:100vh; color:#333; }
+        .main-content { flex-grow:1; padding:20px 30px; box-sizing:border-box; overflow-y:auto; }
+
+        /* 상단 타이틀 + 브레드크럼 */
+        .page-top { margin-bottom:0; }
+        .page-top h2 { font-size:20px; font-weight:700; margin:0 0 15px; color:#1a202c; padding-bottom:15px; border-bottom:1px solid #eee; }
+        .page-top h2 .help-icon { font-size:13px; color:#ccc; cursor:pointer; margin-left:4px; }
+        .page-sub { font-size:12px; color:#888; margin-bottom:16px; text-align:right; }
+
+        /* 검색바 */
+        .search-area { background:#f8f9fa; border:1px solid #e9ecef; padding:10px 16px; display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+        .search-area .s-label { font-size:13px; color:#555; white-space:nowrap; }
+        .search-area select { padding:4px 8px; border:1px solid #ced4da; border-radius:4px; background:#fff; height:30px; font-size:13px; font-family:inherit; }
+        .search-area input { padding:4px 8px; border:1px solid #ced4da; border-radius:4px; height:30px; font-size:13px; font-family:inherit; width:110px; }
+        .btn-search { background:#0d6efd; color:#fff; border:none; padding:0 16px; height:30px; border-radius:4px; cursor:pointer; font-size:13px; font-family:inherit; }
+        .btn-confirm-top { background:#198754; color:#fff; border:none; padding:0 20px; height:30px; border-radius:4px; cursor:pointer; font-size:13px; font-family:inherit; font-weight:600; margin-left:auto; }
+
+        .notice { font-size:12px; color:#555; margin-bottom:10px; }
+        .notice b { color:#dc3545; }
+
+        /* 탭 */
+        .tabs { display:flex; border-bottom:1px solid #dee2e6; margin-bottom:12px; }
+        .tab-btn { padding:9px 20px; font-size:13px; font-weight:500; cursor:pointer; border:none; background:none; color:#6c757d; border-bottom:2px solid transparent; margin-bottom:-1px; font-family:inherit; }
+        .tab-btn.active { color:#0d6efd; border-bottom:2px solid #0d6efd; font-weight:700; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        /* 테이블 */
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:12px; text-align:center; }
+        th { background:#f1f3f5; border:1px solid #dee2e6; padding:8px 6px; font-weight:600; color:#495057; white-space:nowrap; }
+        td { border:1px solid #dee2e6; padding:7px 6px; vertical-align:middle; }
+        thead tr:first-child th { background:#e9ecef; }
+        tr.hover-row:hover td { background:#f8f9fa; }
+
+        /* 배지 */
+        .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+        .badge-wait { background:#fff3cd; color:#856404; border:1px solid #ffc107; }
+        .badge-done { background:#d1e7dd; color:#0f5132; border:1px solid #a3cfbb; }
+        .badge-pend { background:#f8d7da; color:#842029; border:1px solid #f1aeb5; }
+
+        .grade-select { border:1px solid #ced4da; border-radius:3px; padding:3px 4px; font-size:12px; background:#fff; width:56px; font-family:inherit; }
+        .grade-select:disabled { background:#f8f9fa; color:#aaa; cursor:not-allowed; }
+        .reason-input { border:1px solid #ced4da; border-radius:3px; padding:3px 8px; font-size:12px; width:100%; box-sizing:border-box; font-family:inherit; }
+        .reason-input:disabled { background:#f8f9fa; color:#aaa; cursor:not-allowed; }
+        .btn-row-save { background:#0d6efd; color:#fff; border:none; padding:3px 12px; border-radius:3px; cursor:pointer; font-size:11px; font-family:inherit; }
+        .btn-row-save:hover { background:#0b5ed7; }
+        .btn-row-save:disabled { background:#adb5bd; cursor:not-allowed; }
+        input[type="checkbox"] { width:13px; height:13px; cursor:pointer; }
+        .dash { color:#ccc; }
+
+        /* 페이지네이션 */
+        .pagination-wrap { display:flex; justify-content:space-between; align-items:center; padding:8px 4px; margin-top:4px; font-size:12px; color:#6c757d; }
+        .pagination { display:flex; gap:2px; }
+        .pagination button { background:#fff; border:1px solid #dee2e6; width:26px; height:26px; border-radius:3px; cursor:pointer; font-size:12px; color:#555; font-family:inherit; }
+        .pagination button:hover:not(:disabled) { background:#e9ecef; }
+        .pagination button.active { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+        .pagination button:disabled { color:#ccc; cursor:not-allowed; }
+
+        /* 부서별 통계 */
+        .stat-section { margin-top:20px; }
+        .stat-title { font-size:16px; font-weight:700; margin-bottom:8px; color:#333; }
+        .stat-table th { background:#e9ecef; }
+        .empty-row td { color:#aaa; padding:24px; }
+    </style>
+</head>
+<body>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+
+        <!-- 타이틀 + 브레드크럼 -->
+        <div class="page-top">
+            <h2>최종등급 확정
+                <i class="far fa-question-circle help-icon"
+                   title="1차 평가가 완료된 대상자의 종합 평가 결과를 검토하고 최종 등급을 확정합니다. 등급 조정 시 반드시 변경사유를 입력하고 저장 후 확정하십시오."></i>
+            </h2>
+        </div>
+        <p class="page-sub">※ '확정'을 클릭 후, 평가를 마감함에 따라 신중하게 선택하여 주시기 바랍니다.</p>
+
+        <!-- 검색 -->
+        <div class="search-area">
+            <span class="s-label">조회년도</span>
+            <select id="searchYear">
+                <option th:each="y : ${yearList}" th:value="${y}" th:text="${y}" th:selected="${y == selectedYear}"></option>
+            </select>
+            <span class="s-label">평가기간</span>
+            <select id="searchPeriod">
+                <option value="연간"  th:selected="${selectedPeriod == '연간'}">연간</option>
+                <option value="상반기" th:selected="${selectedPeriod == '상반기'}">상반기</option>
+                <option value="하반기" th:selected="${selectedPeriod == '하반기'}">하반기</option>
+            </select>
+            <span class="s-label">사번</span>
+            <input type="text" id="searchEmpNo" placeholder="사번 입력">
+            <button class="btn-search" onclick="searchList()">조회</button>
+            <span style="font-size:12px; color:#555; margin-left:8px;">
+                ※ 종합등급과 다르게 확정등급 값 변경시 반드시 <b style="color:#dc3545;">변경사유</b>를 입력해 주시기 바랍니다.
+            </span>
+            <button class="btn-confirm-top" onclick="confirmSelected()">확정</button>
+        </div>
+
+        <!-- 탭 -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('staff', this)">사원 평가</button>
+            <button class="tab-btn" onclick="switchTab('leader', this)">부서장 평가</button>
+        </div>
+
+        <!-- 사원 탭 -->
+        <div id="tab-staff" class="tab-content active">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2"><input type="checkbox" onclick="toggleAll(this,'staff')"></th>
+                            <th colspan="4">피평가자</th>
+                            <th colspan="4">성과업무평가</th>
+                            <th colspan="4">역량평가</th>
+                            <th rowspan="2">종합<br>점수</th>
+                            <th rowspan="2">종합<br>등급</th>
+                            <th rowspan="2">확정<br>상태</th>
+                            <th rowspan="2">확정<br>등급</th>
+                            <th rowspan="2">사유(변경 및 S등급)</th>
+                            <th rowspan="2">저장</th>
+                        </tr>
+                        <tr>
+                            <th>부서명</th><th>직위</th><th>사번</th><th>성명</th>
+                            <th>1차</th><th>2차</th><th>합계</th><th>상태</th>
+                            <th>1차</th><th>2차</th><th>합계</th><th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffBody">
+                        <tr th:each="r : ${staffList}" class="hover-row" th:data-empno="${r.empNo}" th:data-year="${selectedYear}">
+                            <td><input type="checkbox" class="row-check staff-check" th:disabled="${r.confirmStatus == '확정'}"></td>
+                            <td th:text="${r.deptName}"></td>
+                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.empNo}"></td>
+                            <td th:text="${r.empName}"></td>
+                            <td th:text="${r.perfFirst != null ? r.perfFirst : '-'}"></td>
+                            <td th:text="${r.perfSecond != null ? r.perfSecond : '-'}"></td>
+                            <td th:text="${r.perfTotal != null ? r.perfTotal : '-'}"></td>
+                            <td>
+                                <span th:if="${r.perfStatus != null}" class="badge"
+                                      th:classappend="${r.perfStatus == '평가완료'} ? 'badge-done' : (${r.perfStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.perfStatus}"></span>
+                                <span th:unless="${r.perfStatus != null}" class="dash">-</span>
+                            </td>
+                            <td th:text="${r.compFirst != null ? r.compFirst : '-'}"></td>
+                            <td th:text="${r.compSecond != null ? r.compSecond : '-'}"></td>
+                            <td th:text="${r.compTotal != null ? r.compTotal : '-'}"></td>
+                            <td>
+                                <span th:if="${r.compStatus != null}" class="badge"
+                                      th:classappend="${r.compStatus == '평가완료'} ? 'badge-done' : (${r.compStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.compStatus}"></span>
+                                <span th:unless="${r.compStatus != null}" class="dash">-</span>
+                            </td>
+                            <td th:text="${r.totalScore != null ? r.totalScore : '-'}"></td>
+                            <td th:text="${r.totalGrade != null ? r.totalGrade : '-'}"></td>
+                            <td>
+                                <span class="badge" th:classappend="${r.confirmStatus == '확정'} ? 'badge-done' : 'badge-wait'" th:text="${r.confirmStatus}"></span>
+                            </td>
+                            <td>
+                                <select class="grade-select" th:disabled="${r.confirmStatus == '확정'}" th:data-original="${r.confirmedGrade}">
+                                    <option value="">-</option>
+                                    <option th:each="g : ${ {'S','A','B','C','D'} }" th:value="${g}" th:text="${g}" th:selected="${g == r.confirmedGrade}"></option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="reason-input" th:value="${r.reason}" th:disabled="${r.confirmStatus == '확정'}" placeholder="사유 입력"></td>
+                            <td><button class="btn-row-save" th:disabled="${r.confirmStatus == '확정'}" onclick="saveRow(this)">저장</button></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(staffList)}" class="empty-row">
+                            <td colspan="19">No records available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-wrap">
+                <div class="pagination" id="staffPagination"></div>
+                <div id="staffPageInfo">No items to display</div>
+            </div>
+        </div>
+
+        <!-- 부서장 탭 -->
+        <div id="tab-leader" class="tab-content">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2"><input type="checkbox" onclick="toggleAll(this,'leader')"></th>
+                            <th colspan="4">피평가자</th>
+                            <th colspan="4">성과업무평가</th>
+                            <th colspan="4">역량평가</th>
+                            <th rowspan="2">종합<br>점수</th>
+                            <th rowspan="2">종합<br>등급</th>
+                            <th rowspan="2">확정<br>상태</th>
+                            <th rowspan="2">확정<br>등급</th>
+                            <th rowspan="2">사유(변경 및 S등급)</th>
+                            <th rowspan="2">저장</th>
+                        </tr>
+                        <tr>
+                            <th>부서명</th><th>직위</th><th>사번</th><th>성명</th>
+                            <th>1차</th><th>2차</th><th>합계</th><th>상태</th>
+                            <th>1차</th><th>2차</th><th>합계</th><th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderBody">
+                        <tr th:each="r : ${leaderList}" class="hover-row" th:data-empno="${r.empNo}" th:data-year="${selectedYear}">
+                            <td><input type="checkbox" class="row-check leader-check" th:disabled="${r.confirmStatus == '확정'}"></td>
+                            <td th:text="${r.deptName}"></td>
+                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.empNo}"></td>
+                            <td th:text="${r.empName}"></td>
+                            <td th:text="${r.perfFirst != null ? #numbers.formatDecimal(r.perfFirst,1,1) : '-'}"></td>
+                            <td th:text="${r.perfSecond != null ? r.perfSecond : '-'}"></td>
+                            <td th:text="${r.perfTotal != null ? r.perfTotal : '-'}"></td>
+                            <td>
+                                <span th:if="${r.perfStatus != null}" class="badge"
+                                      th:classappend="${r.perfStatus == '평가완료'} ? 'badge-done' : (${r.perfStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.perfStatus}"></span>
+                                <span th:unless="${r.perfStatus != null}" class="dash">-</span>
+                            </td>
+                            <td th:text="${r.compFirst != null ? #numbers.formatDecimal(r.compFirst,1,1) : '-'}"></td>
+                            <td th:text="${r.compSecond != null ? r.compSecond : '-'}"></td>
+                            <td th:text="${r.compTotal != null ? r.compTotal : '-'}"></td>
+                            <td>
+                                <span th:if="${r.compStatus != null}" class="badge"
+                                      th:classappend="${r.compStatus == '평가완료'} ? 'badge-done' : (${r.compStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.compStatus}"></span>
+                                <span th:unless="${r.compStatus != null}" class="dash">-</span>
+                            </td>
+                            <td th:text="${r.totalScore != null ? r.totalScore : '-'}"></td>
+                            <td th:text="${r.totalGrade != null ? r.totalGrade : '-'}"></td>
+                            <td>
+                                <span class="badge" th:classappend="${r.confirmStatus == '확정'} ? 'badge-done' : 'badge-wait'" th:text="${r.confirmStatus}"></span>
+                            </td>
+                            <td>
+                                <select class="grade-select" th:disabled="${r.confirmStatus == '확정'}" th:data-original="${r.confirmedGrade}">
+                                    <option value="">-</option>
+                                    <option th:each="g : ${ {'S','A','B','C','D'} }" th:value="${g}" th:text="${g}" th:selected="${g == r.confirmedGrade}"></option>
+                                </select>
+                            </td>
+                            <td><input type="text" class="reason-input" th:value="${r.reason}" th:disabled="${r.confirmStatus == '확정'}" placeholder="사유 입력"></td>
+                            <td><button class="btn-row-save" th:disabled="${r.confirmStatus == '확정'}" onclick="saveRow(this)">저장</button></td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(leaderList)}" class="empty-row">
+                            <td colspan="19">No records available.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-wrap">
+                <div class="pagination" id="leaderPagination"></div>
+                <div id="leaderPageInfo">No items to display</div>
+            </div>
+        </div>
+
+        <!-- 부서별 통계 -->
+        <div class="stat-section">
+            <div class="stat-title">부서별 평가등급별 인원</div>
+            <table class="stat-table">
+                <thead>
+                    <tr>
+                        <th rowspan="2" style="vertical-align:middle;">부서명</th>
+                        <th rowspan="2" style="vertical-align:middle;">기준대상인원(명)</th>
+                        <th colspan="5">등급별 인원(비율/명)</th>
+                    </tr>
+                    <tr>
+                        <th>S</th><th>A</th><th>B</th><th>C</th><th>D</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="stat : ${deptStats}">
+                        <td th:text="${stat.deptName}"></td>
+                        <td th:text="${stat.total}"></td>
+                        <td th:text="${stat.cntS}"></td>
+                        <td th:text="${stat.cntA}"></td>
+                        <td th:text="${stat.cntB}"></td>
+                        <td th:text="${stat.cntC}"></td>
+                        <td th:text="${stat.cntD}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(deptStats)}">
+                        <td colspan="7" style="color:#aaa; padding:20px;">확정된 등급이 없습니다.</td>
+                    </tr>
+                    <tr th:if="${!#lists.isEmpty(deptStats)}" style="font-weight:700; background:#f1f3f5;">
+                        <td>총계</td>
+                        <td th:text="${#aggregates.sum(deptStats.![total])}"></td>
+                        <td th:text="${#aggregates.sum(deptStats.![cntS])}"></td>
+                        <td th:text="${#aggregates.sum(deptStats.![cntA])}"></td>
+                        <td th:text="${#aggregates.sum(deptStats.![cntB])}"></td>
+                        <td th:text="${#aggregates.sum(deptStats.![cntC])}"></td>
+                        <td th:text="${#aggregates.sum(deptStats.![cntD])}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        const selectedYear = /*[[${selectedYear}]]*/ 0;
+        let currentTab = 'staff';
+        const PAGE_SIZE = 10;
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function toggleAll(master, type) {
+            document.querySelectorAll('.' + type + '-check:not(:disabled)')
+                .forEach(cb => cb.checked = master.checked);
+        }
+
+        function renderPagination(tbodyId, paginationId, pageInfoId, page) {
+            const rows = [...document.getElementById(tbodyId).querySelectorAll('tr:not(.empty-row)')];
+            const total = rows.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            page = Math.min(Math.max(1, page), totalPages);
+            rows.forEach((row, i) => {
+                row.style.display = (i >= (page-1)*PAGE_SIZE && i < page*PAGE_SIZE) ? '' : 'none';
+            });
+            const pg = document.getElementById(paginationId);
+            const info = document.getElementById(pageInfoId);
+            if (total === 0) { pg.innerHTML = ''; info.textContent = 'No items to display'; return; }
+            pg.innerHTML = `
+                <button onclick="goPage('${tbodyId}','${paginationId}','${pageInfoId}',1)" ${page===1?'disabled':''}><i class="fas fa-step-backward"></i></button>
+                <button onclick="goPage('${tbodyId}','${paginationId}','${pageInfoId}',${page-1})" ${page===1?'disabled':''}><i class="fas fa-caret-left"></i></button>
+                ${Array.from({length:totalPages},(_,i)=>i+1).map(p=>
+                    `<button class="${p===page?'active':''}" onclick="goPage('${tbodyId}','${paginationId}','${pageInfoId}',${p})">${p}</button>`
+                ).join('')}
+                <button onclick="goPage('${tbodyId}','${paginationId}','${pageInfoId}',${page+1})" ${page===totalPages?'disabled':''}><i class="fas fa-caret-right"></i></button>
+                <button onclick="goPage('${tbodyId}','${paginationId}','${pageInfoId}',${totalPages})" ${page===totalPages?'disabled':''}><i class="fas fa-step-forward"></i></button>
+            `;
+            info.textContent = `${(page-1)*PAGE_SIZE+1} - ${Math.min(page*PAGE_SIZE,total)} of ${total} items`;
+        }
+
+        function goPage(tbodyId, paginationId, pageInfoId, page) {
+            renderPagination(tbodyId, paginationId, pageInfoId, page);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPagination('staffBody', 'staffPagination', 'staffPageInfo', 1);
+            renderPagination('leaderBody', 'leaderPagination', 'leaderPageInfo', 1);
+        });
+
+        function searchList() {
+            const year   = document.getElementById('searchYear').value;
+            const period = document.getElementById('searchPeriod').value;
+            const empNo  = document.getElementById('searchEmpNo').value.trim();
+            location.href = `/evaluation/finalgrade/list?year=${year}&period=${period}&empNo=${empNo}`;
+        }
+
+        function saveRow(btn) {
+            const tr       = btn.closest('tr');
+            const empNo    = tr.getAttribute('data-empno');
+            const year     = parseInt(tr.getAttribute('data-year'));
+            const select   = tr.querySelector('.grade-select');
+            const reason   = tr.querySelector('.reason-input').value.trim();
+            const grade    = select.value;
+            const original = select.getAttribute('data-original');
+            if (!grade) { alert('확정등급을 선택해주세요.'); return; }
+            if ((grade === 'S' || grade !== original) && !reason) {
+                alert('등급 변경 또는 S등급 부여 시 변경사유를 입력해야 합니다.');
+                tr.querySelector('.reason-input').focus();
+                return;
+            }
+            if (!confirm(`[${empNo}] 사원의 등급을 [${grade}]로 저장하시겠습니까?`)) return;
+            fetch('/evaluation/finalgrade/adjust', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ empNo, confirmedGrade: grade, reason, year })
+            }).then(r=>r.text()).then(res => {
+                if (res==='success') { alert('저장되었습니다.'); select.setAttribute('data-original', grade); }
+                else alert('저장 실패: ' + res);
+            });
+        }
+
+        function confirmSelected() {
+            const cls = currentTab === 'staff' ? '.staff-check:checked' : '.leader-check:checked';
+            const checked = [...document.querySelectorAll(cls)];
+            if (checked.length === 0) { alert('확정할 항목을 선택해주세요.'); return; }
+            for (const cb of checked) {
+                const tr = cb.closest('tr');
+                if (!tr.querySelector('.grade-select').value) {
+                    alert(`[${tr.getAttribute('data-empno')}] 사원의 확정등급을 먼저 저장해주세요.`);
+                    return;
+                }
+            }
+            if (!confirm(`선택한 ${checked.length}명을 최종 확정하시겠습니까?\n확정 후에는 수정이 불가합니다.`)) return;
+            const empNos = checked.map(cb => cb.closest('tr').getAttribute('data-empno'));
+            fetch('/evaluation/finalgrade/confirm', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ empNos, year: selectedYear })
+            }).then(r=>r.text()).then(res => {
+                if (res==='success') { alert('최종 확정되었습니다.'); location.reload(); }
+                else alert('확정 실패: ' + res);
+            });
+        }
+    </script>
+</body>
+</html>

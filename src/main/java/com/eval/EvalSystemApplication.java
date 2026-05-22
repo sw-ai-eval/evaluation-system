@@ -12,7 +12,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 	    "com.eval.domain.performance.mapper",
 	    "com.eval.domain.multi.mapper",
 	    "com.eval.domain.competency.mapper",
-	    "com.eval.domain.interview.mapper"
+	    "com.eval.domain.interview.mapper",
+	    "com.eval.domain.finalgrade.mapper"
 	})
 @SpringBootApplication
 public class EvalSystemApplication {
