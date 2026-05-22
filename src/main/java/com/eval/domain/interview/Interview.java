@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "interview_52")
@@ -23,10 +24,7 @@ public class Interview {
     private String evaluateeNo;
 
     @Column(name = "type", nullable = false, length = 50)
-    private String type;
-
-    @Column(name = "subject", nullable = false, length = 200)
-    private String subject;
+    private Long type;
 
     @Column(name = "detail", nullable = false, columnDefinition = "nvarchar(max)")
     private String detail;
@@ -51,6 +49,9 @@ public class Interview {
     
     @Column(name = "status", nullable = false)
     private int status;
+    
+    @OneToMany(mappedBy = "interview")
+    private List<InterviewTopicMapping> topics;
 
 
 }

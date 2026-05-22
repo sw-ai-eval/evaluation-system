@@ -1,24 +1,41 @@
 package com.eval.domain.interview.controller;
 
+import com.eval.domain.codetable.CodeCommonRepository;
 import com.eval.domain.codetable.CodeService;
 import com.eval.domain.employee.Employee;
+import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.employee.service.EmployeeService;
+import com.eval.domain.interview.Interview;
+import com.eval.domain.interview.InterviewTopicMapping;
+import com.eval.domain.interview.dto.InterviewDetailDto;
 import com.eval.domain.interview.dto.InterviewListDto;
+import com.eval.domain.interview.dto.InterviewSaveRequestDto;
 import com.eval.domain.interview.dto.InterviewTypeNameDto;
 import com.eval.domain.interview.dto.InterviewTypeNameDto.InterviewCategoryLabels;
+import com.eval.domain.interview.repository.InterviewRepository;
 import com.eval.domain.interview.service.InterviewService;
 import com.eval.global.security.CustomUserDetails;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -27,12 +44,20 @@ public class InterviewController {
     private final InterviewService interviewService;
     private final EmployeeService employeeService;
     private final CodeService codeService;
+    private final InterviewRepository interviewRepository;
+    private final EmployeeRepository employeeRepository;
+    private final CodeCommonRepository codeCommonRepository;
 
-    /**
-     * 면담 페이지 로딩
-     */
+    
     @GetMapping("/interview")
-    public String interviews(Model model) {
+    public String interviews(Model model, 
+    		@RequestParam(required = false) String startDay,
+            @RequestParam(required = false) String employee,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String status,
+            @RequestParam(defaultValue = "0") int page, 
+            @RequestParam(defaultValue = "7") int size ) {
+    	
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         Object principal = auth.getPrincipal();
 
@@ -52,16 +77,16 @@ public class InterviewController {
             return "redirect:/login";
         }
 
-        // DB에서 필요한 데이터 조회
         List<Employee> employeeList = employeeService.getActiveColleaguesByEmpNoAndPosition(empNo, "부서원");
-        List<InterviewListDto> interviewList = interviewService.getInterviewList(empNo, position);
-        List<InterviewTypeNameDto> interviewTypeList = interviewService.getAllInterviewTypes();
         
-        
+        Pageable pageable = PageRequest.of(page, size, Sort.by("startDateTime").descending());
 
-        // Model에 데이터 담기
+        Page<InterviewListDto> interviewPage =interviewService.getInterviewPage(empNo, position, startDay, employee, type, status, pageable);
+        
+        List<InterviewTypeNameDto> interviewTypeList = interviewService.getAllInterviewTypes();
+
         model.addAttribute("employeeList", employeeList);
-        model.addAttribute("interviewList", interviewList);
+        model.addAttribute("interviewPage", interviewPage);
         model.addAttribute("interviewTypeList", interviewTypeList);
         model.addAttribute("userPosition", position);
         model.addAttribute("statusList", codeService.getInterviewStatusList());
@@ -71,13 +96,73 @@ public class InterviewController {
         return "interview/interview";
     }
 
-    /**
-     * 특정 타입의 카테고리 라벨 반환
-     */
+
+    //특정 타입의 카테고리 라벨 반환
     @GetMapping("/interview/labels")
     @ResponseBody
     public List<InterviewCategoryLabels> getLabelsByType(@RequestParam Long typeId) {
         InterviewCategoryLabels labels = interviewService.getLabelsForType(typeId);
-        return List.of(labels); // 프론트에서 배열 형태로 받도록 처리
+        return List.of(labels); 
     }
+    
+    //저장
+    @PostMapping("/api/interview/save")
+    @ResponseBody
+    public ResponseEntity<String> saveInterviewSchedule(
+            @RequestBody InterviewSaveRequestDto request,
+            Authentication authentication) {
+
+        CustomUserDetails user =(CustomUserDetails) authentication.getPrincipal();
+
+        String loginEmpNo = user.getUsername();
+
+        interviewService.saveInterview(request, loginEmpNo);
+
+        return ResponseEntity.ok("success");
+    }
+    
+    @GetMapping("/interview/detail")
+    public ResponseEntity<InterviewDetailDto> getDetail(@RequestParam Long id) {
+
+        Optional<Interview> interviewOpt = interviewRepository.findById(id);
+        if (interviewOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Interview interview = interviewOpt.get();
+
+        List<String> topics = interview.getTopics() == null
+                ? new ArrayList<>()
+                : interview.getTopics().stream()
+                           .map(InterviewTopicMapping::getTopicName)
+                           .toList();
+
+        String evaluateeName = employeeRepository.findNameByEmpNo(interview.getEvaluateeNo());
+
+        InterviewDetailDto dto = new InterviewDetailDto(
+                interview.getId(),
+                interview.getStartAt(),
+                interview.getEndAt(),
+                interview.getType(),
+                interview.getEvaluateeNo(),
+                evaluateeName,
+                topics,
+                interview.getPlace(),
+                interview.getStatus(),
+                interview.getDetail()
+        );
+
+        return ResponseEntity.ok(dto);
+    }
+    
+    @PostMapping("/api/interview/delete")
+    @ResponseBody
+    public void deleteInterviewSchedule( @RequestBody InterviewSaveRequestDto request) {
+
+        interviewService.deleteInterview(request);
+
+    }
+    
+    
+    
 } 

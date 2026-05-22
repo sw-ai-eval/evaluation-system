@@ -77,4 +77,14 @@ public interface EvaluatorRepository extends JpaRepository<EvalTargetMapping, Lo
 	boolean existsByEvaluateeNoAndTypeId_IdAndStatusGreaterThan(String empNo, Integer typeId, int i);
 
     boolean existsByEvaluateeNoAndDeptIdAndTypeId(String empNo, String deptId, EvalType typeId);
+    
+    
+    boolean existsByEvaluatorNoAndStepAndStatus(String evaluatorNo,int step, int status);
+
+	boolean existsByEvaluateeNoAndTypeId_YearAndTypeId_IdNot(String empNo, Integer year, Integer typeId);
+
+	// 삭제 전에 삭제 대상 사원 리스트 조회
+	@Query("SELECT DISTINCT e.evaluateeNo FROM EvalTargetMapping e WHERE e.deptId = :deptId AND e.typeId.id = :typeId")
+	List<String> findEvaluateeNosByDeptIdAndTypeId(@Param("deptId") String deptId, @Param("typeId") Integer typeId);
+
 }

@@ -234,7 +234,7 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- <div class="table-wrap" id="completedTable" style="display:none;">
+                <div class="table-wrap" id="completedTable" style="display:none;">
 				    <table>
                         <thead>
                             <tr>
@@ -273,7 +273,7 @@
                             </tr>
                         </tbody>
 				    </table>
-				</div> -->
+				</div>
                 <div class="pagination-wrap">
                     <div class="pagination">
                         <button disabled><i class="fas fa-step-backward"></i></button>
@@ -392,6 +392,17 @@
         </div>
     </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:if="${alertMessage}" th:inline="javascript">
+    const msg = /*[[${alertMessage}]]*/ '';
+
+    Swal.fire({
+        icon: 'warning',
+        title: '알림',
+        text: msg,
+        confirmButtonColor: '#3085d6'
+    });
+</script>
 <script type="text/javascript">
 const currentUserNo = '[[${#authentication.name}]]';
 const currentUserPosition = '[[${userPosition}]]';
@@ -576,7 +587,7 @@ function renderChart(chartData,evaluateeName) {
                             const idx = context.dataIndex;
                             const datasetLabel = context.dataset.label;
                             let originalValue;
-                            if (datasetLabel === '피평가자의 평균') {
+                            if (datasetLabel === `${evaluateeName}의 평균`) {
                                 originalValue = chartData.myAvgScores[idx];
                             } else if (datasetLabel === '전체 부서장 평균') {
                                 originalValue = chartData.allAvgScores[idx];
@@ -686,7 +697,7 @@ function startEvaluation() {
 }
 
 
-/* const tabs = document.querySelectorAll('.tabs li');
+const tabs = document.querySelectorAll('.tabs li');
 tabs.forEach(tab => {
     tab.addEventListener('click', () => {
         tabs.forEach(t => t.classList.remove('active'));
@@ -701,7 +712,7 @@ tabs.forEach(tab => {
         }
     });
 });
- */
+
 
 
 function closeDetailPanel() {

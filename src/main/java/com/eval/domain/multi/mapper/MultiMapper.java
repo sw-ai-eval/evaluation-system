@@ -42,6 +42,8 @@ public interface MultiMapper{
     List<CategoryAvgDto> findMyAvgCategoryScores(String evaluateeNo, Long evalTypeId);
     
     List<CategoryAvgDto> findAllAvgCategoryScores(Long evalTypeId);
+
+	List<MultiEvalDTO> findAllDeptMultiCompletedEval(Map<String, Object> params);
     
 
 }

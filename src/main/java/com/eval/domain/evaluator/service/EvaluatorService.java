@@ -22,6 +22,7 @@ import com.eval.domain.dept.Department;
 import com.eval.domain.dept.repository.DepartmentRepository;
 import com.eval.domain.employee.Employee;
 import com.eval.domain.employee.EmployeeRepository;
+import com.eval.domain.employee.controller.EmployeeController;
 import com.eval.domain.evaluation.EvalType;
 import com.eval.domain.evaluation.repository.EvalTypeRepository;
 import com.eval.domain.evaluator.EvalTargetMapping;
@@ -31,6 +32,8 @@ import com.eval.domain.evaluator.dto.EvaluatorDto;
 import com.eval.domain.evaluator.dto.EvaluatorUpdateRequest;
 import com.eval.domain.evaluator.dto.EvaluatorVeiwDto;
 import com.eval.domain.evaluator.repository.EvaluatorRepository;
+import com.eval.domain.finalresult.FinalResult;
+import com.eval.domain.finalresult.FinalResultRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -39,15 +42,19 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class EvaluatorService {
+
+    	private final EmployeeController employeeController;
 	
 	 	private final EmployeeRepository employeeRepository;
 	    private final EvaluatorRepository evaluatorRepository;
 	    private final DepartmentRepository departmentRepository;
 	    private final EvalTypeRepository evalTypeRepository;
+	    private final FinalResultRepository finalResultRepository;
 	    
 	    @PersistenceContext
 	    private EntityManager em;
-	    
+
+
 	    // 평가자 리스트 
 	    public List<EvaluatorVeiwDto> getEvaluatorList(String deptId, Integer typeId, String employeeSearch) {
 	        List<EvaluatorVeiwDto> rows = evaluatorRepository.findFlatRows(deptId, typeId, employeeSearch);
@@ -104,7 +111,7 @@ public class EvaluatorService {
 	            } else if (statuses.stream().allMatch(s -> s == 2)) {
 	                finalStatus = 2; // 모두 2 → 완료
 	            } else {
-	                finalStatus = 1; // 그 외 → 진행 중
+	                finalStatus = 1; 
 	            }
 
 	            dto.setStatus(finalStatus);
@@ -125,90 +132,80 @@ public class EvaluatorService {
 	    // 평가자 자도 ㅇ생성
 	    @Transactional
 	    public void createEvaluatorMapping(String deptId, int typeId) {
-	    	
-	    	EvalType evalType = evalTypeRepository.findById(typeId)
-	    	        .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
-	    	
-	        List<Employee> employees = employeeRepository.findByDeptId(deptId);
-	        
+
+	        EvalType evalType = evalTypeRepository.findById(typeId)
+	                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
+
+	        List<Employee> employees = employeeRepository.findByDeptIdAndStatusNot(deptId,"RESIGNED");
+
 	        if (employees == null || employees.isEmpty()) {
 	            throw new IllegalArgumentException("해당 부서에 재직 중인 사원이 없습니다.");
 	        }
-	        
-	        String leader = employeeRepository.findDeptLeader(deptId);
-	        List<Employee> executives = employeeRepository.findByLevelId(6);
-	        
-	        int execIndex = 0;
-	        int execSize = executives.size();
-	        
-	        if (leader == null) {
+
+	        // 부서장 Employee 객체 가져오기
+	        String leaderEmpNo = employeeRepository.findDeptLeader(deptId);
+	        if (leaderEmpNo == null) {
 	            throw new IllegalStateException("해당 부서의 부서장이 존재하지 않습니다.");
 	        }
-
-	        if (execSize == 0) {
-	            throw new IllegalStateException("임원 정보가 존재하지 않습니다.");
+	        
+	        // findByEmpNo는 Employee를 바로 반환하므로, null 체크
+	        Employee leader = employeeRepository.findByEmpNo(leaderEmpNo);
+	        if (leader == null) {
+	            throw new IllegalStateException("부서장 정보가 존재하지 않습니다.");
 	        }
 	        
+	        List<Employee> executives = employeeRepository.findByLevelId(6);
+
+	        if (executives == null || executives.isEmpty()) {
+	            throw new IllegalStateException("임원 정보가 존재하지 않습니다.");
+	        }
+
+	        Set<String> executiveNos = executives.stream()
+	                .map(Employee::getEmpNo)
+	                .collect(Collectors.toSet());
+
+	        boolean isMultiEval = evalType.getName().contains("다면평가");
+
 	        List<EvalTargetMapping> list = new ArrayList<>();
+	        int execIndex = 0;
+	        int execSize = executives.size();
 
 	        for (Employee e : employees) {
 
-				boolean alreadyExists = evaluatorRepository.existsByEvaluateeNoAndDeptIdAndTypeId(e.getEmpNo(), deptId, evalType);
+	            boolean isLeaderEmp = e.getEmpNo().equals(leader.getEmpNo());
+	            boolean isExecutive = executiveNos.contains(e.getEmpNo());
 
-				if (alreadyExists) {
-					continue;
-				}
+	            // ================= 다면평가 =================
+	            if (isMultiEval) {
 
-	            boolean isLeader = e.getEmpNo().equals(leader);
-	            boolean isExecutive = executives.stream().anyMatch(ex -> ex.getEmpNo().equals(e.getEmpNo()));
+	                if (!isLeaderEmp) continue;
 
-	            if (!isExecutive && !evalType.getName().contains("다면평가")) {
-	            	
-	                // 0차 자기평가 (부서장, 부서원)
-	                list.add(EvalTargetMapping.builder()
-	                        .evaluatorNo(e.getEmpNo())
-	                        .evaluateeNo(e.getEmpNo())
-	                        .step(0)
-	                        .systemType("AUTO")
-	                        .deptId(deptId)
-	                        .typeId(evalType)
-	                        .build());
-	            }
+	                boolean alreadyExists = evaluatorRepository.existsByEvaluateeNoAndDeptIdAndTypeId(
+	                        leader.getEmpNo(), deptId, evalType);
+	                if (alreadyExists) continue;
 
-	        	 // 1차 평가
-	            if (!isExecutive && !isLeader) {
+	                // 1차 : 부서원 -> 부서장
+	                for (Employee member : employees) {
+	                    boolean memberIsLeader = member.getEmpNo().equals(leader.getEmpNo());
+	                    boolean memberIsExecutive = executiveNos.contains(member.getEmpNo());
 
-	                if (evalType.getName().contains("다면평가")) {
-	                    // 다면평가일 때: 부서원 → 부서장
+	                    if (memberIsLeader || memberIsExecutive) continue;
+
 	                    list.add(EvalTargetMapping.builder()
-	                            .evaluatorNo(e.getEmpNo())
-	                            .evaluateeNo(leader)
-	                            .step(1)
-	                            .systemType("AUTO")
-	                            .deptId(deptId)
-	                            .typeId(evalType)
-	                            .build());
-	                } else {
-	                    // 다면평가가 아닐 때: 부서장 → 부서원
-	                    list.add(EvalTargetMapping.builder()
-	                            .evaluatorNo(leader)
-	                            .evaluateeNo(e.getEmpNo())
+	                            .evaluatorNo(member.getEmpNo())
+	                            .evaluateeNo(leader.getEmpNo())
 	                            .step(1)
 	                            .systemType("AUTO")
 	                            .deptId(deptId)
 	                            .typeId(evalType)
 	                            .build());
 	                }
-	            }
-	          
-	            // 2차 평가 임원 -> 사원
-	            if (!isExecutive && !evalType.getName().contains("다면평가")) {
 
+	                // 2차 : 임원 -> 부서장
 	                Employee exec = executives.get(execIndex % execSize);
-
 	                list.add(EvalTargetMapping.builder()
 	                        .evaluatorNo(exec.getEmpNo())
-	                        .evaluateeNo(e.getEmpNo())
+	                        .evaluateeNo(leader.getEmpNo())
 	                        .step(2)
 	                        .systemType("AUTO")
 	                        .deptId(deptId)
@@ -216,6 +213,78 @@ public class EvaluatorService {
 	                        .build());
 
 	                execIndex++;
+
+	                // FinalResult 생성
+	                boolean finalExists = finalResultRepository.existsByEmployeeAndYear(leader, evalType.getYear());
+	                if (!finalExists) {
+	                    finalResultRepository.save(FinalResult.builder()
+	                            .employee(leader)
+	                            .year(evalType.getYear())
+	                            .grade(null)
+	                            .finalScore(null)
+	                            .status(false)
+	                            .weightRatio("{\"multi_eval\":1.0}")
+	                            .createdAt(LocalDateTime.now())
+	                            .updatedBy("SYSTEM")
+	                            .build());
+	                }
+
+	                continue;
+	            }
+
+	            // ================= 일반 평가 =================
+	            if (isLeaderEmp || isExecutive) continue;
+
+	            boolean alreadyExists = evaluatorRepository.existsByEvaluateeNoAndDeptIdAndTypeId(
+	                    e.getEmpNo(), deptId, evalType);
+	            if (alreadyExists) continue;
+
+	            // 0차 자기평가
+	            list.add(EvalTargetMapping.builder()
+	                    .evaluatorNo(e.getEmpNo())
+	                    .evaluateeNo(e.getEmpNo())
+	                    .step(0)
+	                    .systemType("AUTO")
+	                    .deptId(deptId)
+	                    .typeId(evalType)
+	                    .build());
+
+	            // 1차 부서장 평가
+	            list.add(EvalTargetMapping.builder()
+	                    .evaluatorNo(leader.getEmpNo())
+	                    .evaluateeNo(e.getEmpNo())
+	                    .step(1)
+	                    .systemType("AUTO")
+	                    .deptId(deptId)
+	                    .typeId(evalType)
+	                    .build());
+
+	            // 2차 임원 평가
+	            Employee exec = executives.get(execIndex % execSize);
+	            list.add(EvalTargetMapping.builder()
+	                    .evaluatorNo(exec.getEmpNo())
+	                    .evaluateeNo(e.getEmpNo())
+	                    .step(2)
+	                    .systemType("AUTO")
+	                    .deptId(deptId)
+	                    .typeId(evalType)
+	                    .build());
+
+	            execIndex++;
+
+	            // FinalResult 생성
+	            boolean finalExists = finalResultRepository.existsByEmployeeAndYear(e, evalType.getYear());
+	            if (!finalExists) {
+	                finalResultRepository.save(FinalResult.builder()
+	                        .employee(e)
+	                        .year(evalType.getYear())
+	                        .grade(null)
+	                        .finalScore(null)
+	                        .status(false)
+	                        .weightRatio("{\"performance\":0.6,\"competency\":0.4}")
+	                        .createdAt(LocalDateTime.now())
+	                        .updatedBy("SYSTEM")
+	                        .build());
 	            }
 	        }
 
@@ -226,12 +295,35 @@ public class EvaluatorService {
 	    @Transactional
 	    public void resetEvaluatorMapping(String deptId, Integer typeId) {
 
-	        try {
-	            long deletedCount = evaluatorRepository.deleteByDeptIdAndTypeId_Id(deptId, typeId);
-	            evaluatorRepository.flush(); // 여기가 핵심! 즉시 DB 반영
+	        EvalType targetType = evalTypeRepository.findById(typeId)
+	                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
 
-	            if (deletedCount == 0) {
-	                throw new IllegalStateException("초기화할 데이터가 없습니다.");
+	        // 1. 삭제 대상 사원 리스트
+	        List<String> evaluateeNos = evaluatorRepository.findEvaluateeNosByDeptIdAndTypeId(deptId, typeId);
+	        if (evaluateeNos.isEmpty()) {
+	            throw new IllegalStateException("초기화할 데이터가 없습니다.");
+	        }
+
+	        try {
+	            // 2. evaluator 삭제
+	            long deletedCount = evaluatorRepository.deleteByDeptIdAndTypeId_Id(deptId, typeId);
+	            evaluatorRepository.flush(); // 즉시 DB 반영
+
+	            // 3. final_result 삭제 로직
+	            for (String empNo : evaluateeNos) {
+	                Employee employee = employeeRepository.findByEmpNo(empNo);
+	                if (employee == null) continue;
+
+	                Optional<FinalResult> optionalFinal = finalResultRepository.findByEmployeeAndYear(employee, targetType.getYear());
+
+	                if (optionalFinal.isPresent()) {
+	                    // 같은 year에 다른 type이 남아 있는지 확인
+	                    boolean otherTypeExists = evaluatorRepository.existsByEvaluateeNoAndTypeId_YearAndTypeId_IdNot(empNo, targetType.getYear(), typeId);
+	                    if (!otherTypeExists) {
+	                        // 남아있는 다른 평가가 없다면 final_result 삭제
+	                        finalResultRepository.delete(optionalFinal.get());
+	                    }
+	                }
 	            }
 
 	        } catch (DataIntegrityViolationException e) {
@@ -429,13 +521,36 @@ public class EvaluatorService {
 	    // 피평가자 대상 제외
 	    @Transactional
 	    public void delete(String deptId, String empNo, Integer typeId) {
-	    	checkEvaluationStarted(empNo, typeId);
+	        // 1. 평가 시작 여부 확인
+	        checkEvaluationStarted(empNo, typeId);
 
+	        // 2. 삭제 대상 사원 및 타입 정보 가져오기
+	        EvalType targetType = evalTypeRepository.findById(typeId)
+	                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 typeId"));
+
+	        Employee employee = employeeRepository.findByEmpNo(empNo);
+	        if (employee == null) {
+	            throw new IllegalStateException("사원 정보가 존재하지 않습니다.");
+	        }
+
+	        // 3. evaluator 삭제
 	        try {
 	            evaluatorRepository.deleteByDeptIdAndEvaluateeNoAndTypeId_Id(deptId, empNo, typeId);
-
 	        } catch (DataIntegrityViolationException e) {
 	            throw new IllegalStateException("평가 답변(eval_answer)이 존재하여 삭제할 수 없습니다.");
+	        }
+
+	        // 4. final_result 확인
+	        Optional<FinalResult> optionalFinal = finalResultRepository.findByEmployeeAndYear(employee, targetType.getYear());
+
+	        if (optionalFinal.isPresent()) {
+	            // 같은 year를 가진 다른 type이 있는지 확인
+	            boolean otherTypeExists = evaluatorRepository.existsByEvaluateeNoAndTypeId_YearAndTypeId_IdNot(empNo, targetType.getYear(), typeId);
+
+	            if (!otherTypeExists) {
+	                // 같은 year에 다른 type이 없다면 final_result 삭제
+	                finalResultRepository.delete(optionalFinal.get());
+	            }
 	        }
 	    }
 	    

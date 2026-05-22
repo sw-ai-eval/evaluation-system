@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
@@ -22,8 +23,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.eval.domain.multi.MultiEvalAnswer;
-import com.eval.domain.multi.dto.MultiEvalDTO; 
-  import com.eval.domain.multi.service.MultiService;
+import com.eval.domain.multi.dto.MultiEvalDTO;
+import com.eval.domain.multi.mapper.MultiMapper;
+import com.eval.domain.multi.service.MultiService;
   import com.eval.global.security.CustomUserDetails;
   
   import lombok.RequiredArgsConstructor;
@@ -58,14 +60,14 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	      }
 	      
 	      List<MultiEvalDTO> inProgressList;
-	      //List<MultiEvalDTO> completedList;
+	      List<MultiEvalDTO> completedList;
 	      if(role.equals("ADMIN")) {
 	    	  inProgressList=multiService.getAllDeptMultiProgressList(year, period);
-	    	  //completedList = multiService.getAllMultiCompletedList(empNo,position, year, period);
+	    	  completedList = multiService.getAllMultiCompletedList(year, period);
 	      }
 	      else {
 	    	  inProgressList = multiService.getMultiProgressList(empNo, position, year, period);
-	    	 // completedList = multiService.getMultiCompletedList(empNo, position, year, period);
+	    	 completedList = multiService.getMultiCompletedList(empNo, position, year, period);
 	      }
 	   
 	      
@@ -73,10 +75,10 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	      Logger logger = LoggerFactory.getLogger(this.getClass());
 	      // ===== 로그 찍기 =====
 	      logger.info("In-Progress List for empNo {}: {}", empNo, inProgressList);
-	      //logger.info("Completed List for empNo {}: {}", empNo, completedList);
+	      logger.info("Completed List for empNo {}: {}", empNo, completedList);
 	      
 	      model.addAttribute("inProgressList", inProgressList);
-	      //model.addAttribute("completedList", completedList);
+	      model.addAttribute("completedList", completedList);
 	      model.addAttribute("selectedYear", year);
 	      model.addAttribute("selectedPeriod", period);
 
@@ -100,12 +102,22 @@ import com.eval.domain.multi.dto.MultiEvalDTO;
 	  }
 
 	  @GetMapping("/evaluation/multi/{evalTypeId}/{evaluatorNo}/{evaluateeNo}/sheet")
-	  public String multiSheet(@PathVariable Long evalTypeId, @PathVariable String evaluatorNo, @PathVariable String evaluateeNo, Model model, Authentication auth) {
+	  public String multiSheet(@PathVariable Long evalTypeId, @PathVariable String evaluatorNo, @PathVariable String evaluateeNo, 
+			  Model model, Authentication auth, RedirectAttributes redirectAttributes) {
 	      
 	      // 로그인 정보 가져오기
 	      CustomUserDetails user = (CustomUserDetails) auth.getPrincipal();
 	      String loginEmpNo = user.getUsername();
 	      String position = user.getPosition();
+	      
+	      if(multiService.ifFinishSelfEval(loginEmpNo)) {
+	    	  redirectAttributes.addFlashAttribute(
+	                  "alertMessage",
+	                  "성과평가, 역량평가의 본인 평가를 모두 완료해야 부서장의 다면평가를 진행할 수 있습니다!"
+	          );
+	    	  
+	    	  return "redirect:/evaluation/multi";
+	      }
 	      
 	      // DTO 가져오기
 	      MultiEvalDTO dto = multiService.getMultiDetail(evalTypeId, evaluatorNo, evaluateeNo, position);
