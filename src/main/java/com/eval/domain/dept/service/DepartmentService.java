@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -66,20 +68,17 @@ public class DepartmentService {
         }
 
         for (Department d : list) {
-
-            if (d.getParent() == null) {
+            String parentId = d.getParent() != null ? d.getParent().getId() : null;
+            if (parentId == null) {
                 root.add(d);
             } else {
-
-                Department parent = map.get(d.getParent().getId());
-
+                Department parent = map.get(parentId);
                 if (parent != null) {
-                    if (parent.getChildren() == null) {
-                        parent.setChildren(new ArrayList<>());
-                    }
                     parent.getChildren().add(d);
                 } else {
+                    // 부모를 찾을 수 없는 경우 root로 처리 (혹은 로그)
                     root.add(d);
+                    System.out.println("Warning: parent not found for " + d.getName() + ", id=" + d.getId());
                 }
             }
         }
@@ -91,11 +90,12 @@ public class DepartmentService {
     public void create(DepartmentDto dto) {
 
         Department dept = new Department();
-
         dept.setName(dto.getName());
         dept.setUseYn(dto.isUseYn());
 
         Department parent = null;
+
+        String newId;
 
         if (dto.getParentId() != null && !dto.getParentId().isBlank()) {
             parent = departmentRepository.findById(dto.getParentId())
@@ -103,10 +103,17 @@ public class DepartmentService {
 
             dept.setParent(parent);
             dept.setLevel(parent.getLevel() + 1);
+
+            newId = generateTreeDepartmentId(parent.getId());
         } else {
             dept.setLevel(0);
             dept.setParent(null);
+
+            // 루트 부서 ID, 예: S3_00
+            newId = generateTreeDepartmentId(null);
         }
+
+        dept.setId(newId);
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String empNo = auth.getName();
@@ -115,73 +122,75 @@ public class DepartmentService {
         dept.setCreatedBy(empNo);
         dept.setDeleteYn(false);
 
-        String newId = generateDepartmentId(dto.getParentId());
-        dept.setId(newId);
-
         departmentRepository.save(dept);
     }
-    private String generateDepartmentId(String parentId) {
+
+    /**
+     * 트리형 ID 생성 (_ 포함)
+     */
+    private String generateTreeDepartmentId(String parentId) {
 
         if (parentId == null || parentId.isBlank()) {
-            parentId = "ROOT";
-        }
+            // 루트 부서 처리
+            List<Department> roots = departmentRepository.findByParent_Id(null); // 루트 부서만 가져오기
+            int nextRootNum = 0;
 
-        Department parent = departmentRepository.findById(parentId)
-                .orElseThrow();
-
-        int parentLevel = parent.getLevel();
-
-        List<Department> children = departmentRepository.findByParent_Id(parentId);
-
-        int index = parentLevel + 1;
-
-        if (children.isEmpty()) {
-            return incrementAt(parentId, index);
-        }
-
-        String maxId = children.stream()
-                .map(Department::getId)
-                .max(String::compareTo)
-                .orElse(parentId);
-
-        return incrementAt(maxId, index);
-    }
-    private String incrementAt(String id, int index) {
-
-        char[] chars = id.toCharArray();
-
-        int num = chars[index] - '0';
-        num += 1;
-
-        if (num > 9) {
-            throw new RuntimeException("ID 자리 초과 (설계 변경 필요)");
-        }
-
-        chars[index] = (char) ('0' + num);
-
-        // 뒤는 0으로 초기화
-        for (int i = index + 1; i < chars.length; i++) {
-            chars[i] = '0';
-        }
-
-        return new String(chars);
-    }
-    @Transactional
-    public void createWithRetry(DepartmentDto dto) {
-
-        int retry = 0;
-
-        while (retry < 3) {
-            try {
-                create(dto);
-                return;
-            } catch (DataIntegrityViolationException e) {
-                retry++;
+            if (!roots.isEmpty()) {
+                // 기존 루트 부서에서 가장 큰 숫자 추출
+                nextRootNum = roots.stream()
+                        .map(Department::getId)
+                        .map(id -> {
+                            // 루트 부서는 "S숫자" 형식
+                            try {
+                                return Integer.parseInt(id.replaceAll("[^0-9]", ""));
+                            } catch (NumberFormatException e) {
+                                return -1; // 숫자가 안될 경우
+                            }
+                        })
+                        .max(Integer::compareTo)
+                        .orElse(-1) + 1; // 다음 루트 번호
             }
-        }
 
-        throw new RuntimeException("부서 생성 실패 (재시도 초과)");
+            if (nextRootNum > 99) {
+                throw new RuntimeException("루트 부서 번호 초과");
+            }
+
+            return "S" + nextRootNum;
+        } else {
+            // 하위 부서 처리
+            String parentCode = parentId;
+
+            List<Department> children = departmentRepository.findByParent_Id(parentId);
+
+            int nextSeq = 1;
+            if (!children.isEmpty()) {
+                Set<Integer> used = children.stream()
+                        .map(Department::getId)
+                        .map(id -> {
+                            int lastUnderscore = id.lastIndexOf('_');
+                            String numPart = lastUnderscore == -1 ? id.replaceAll("[^0-9]", "") : id.substring(lastUnderscore + 1);
+                            try {
+                                return Integer.parseInt(numPart);
+                            } catch (NumberFormatException e) {
+                                return 0;
+                            }
+                        })
+                        .collect(Collectors.toSet());
+
+                while (used.contains(nextSeq)) {
+                    nextSeq++;
+                }
+            }
+
+            if (nextSeq > 99) {
+                throw new RuntimeException("ID 자리수 초과 (설계 변경 필요)");
+            }
+
+            String childCode = String.format("%02d", nextSeq);
+            return parentCode + "_" + childCode;
+        }
     }
+
     //////////////////////////////////////////////////////////////////////////// 부서 수정
     @Transactional
     public void update(DepartmentDto dto) {

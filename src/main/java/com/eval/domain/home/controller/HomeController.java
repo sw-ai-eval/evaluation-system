@@ -2,6 +2,8 @@ package com.eval.domain.home.controller;
 
 import com.eval.domain.employee.dto.EmpManageDTO;
 import com.eval.domain.employee.mapper.EmployeeMapper;
+import com.eval.domain.interview.mapper.InterviewMapper;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class HomeController {
 
     private final EmployeeMapper employeeMapper;
+    private final InterviewMapper interviewMapper;
 
     @GetMapping("/home")
     public String homePage(@AuthenticationPrincipal UserDetails userDetails, Model model) {
@@ -22,12 +25,14 @@ public class HomeController {
             String empNo = userDetails.getUsername(); 
             
             EmpManageDTO employee = employeeMapper.findByEmpNoDetail(empNo);
+            Long interviewCount = interviewMapper.countOngoingInterviewsByEmpNo(empNo);
             
             if (employee != null) {
                 model.addAttribute("empName", employee.getName());
                 model.addAttribute("empNo", employee.getEmpNo());
                 model.addAttribute("deptName", employee.getDeptName());
                 model.addAttribute("position", employee.getLevelName());
+                model.addAttribute("interviewCount", interviewCount);
             }
         }
         

@@ -59,10 +59,17 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
     
     List<Employee> findByDeptIdAndStatusAndLevelIdNot(String deptId, String status, Integer levelId);
 
+    //사원 번호로 부서 코드 찾기
 	@Query("SELECT e.deptId FROM Employee e WHERE e.empNo = :empNo")
 	String findDeptIdByEmpNo(@Param("empNo") String empNo);
 	
 	// 특정 부서, 상태, 직책(position) 사원 조회
 	List<Employee> findByDeptIdAndStatusAndPosition(String deptId, String status, String position);
+	
+	@Query("SELECT e.name FROM Employee e WHERE e.empNo = :empNo")
+    String findNameByEmpNo(@Param("empNo") String empNo);
+	
+	List<Employee> findByDeptIdAndStatusNot(String deptId, String status);
+	
 
 }

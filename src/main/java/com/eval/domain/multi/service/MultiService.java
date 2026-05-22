@@ -41,10 +41,27 @@ import lombok.RequiredArgsConstructor;
      private final MultiEvalAnswerRepository multiEvalAnswerRepository;
      private final EvaluatorService evaluatorService;
      private final EvalCategorySummaryRepository evalCategorySummaryRepository;
+     private final EvaluatorRepository evaluatorRepository;
      
      public List<Integer> getAvailableYears() {
     	    return multiMapper.findAvailableYears();
     }
+     
+     //관리자 진행전, 진행중 평가 리스트
+     public List<MultiEvalDTO> getAllDeptMultiProgressList(Integer year, String period) {
+    	    Map<String, Object> params = new HashMap<>();
+    	    params.put("year", year);
+    	    params.put("period", period);
+    	    return multiMapper.findAllDeptMultiProgressEval(params);
+    	}
+     
+     //관리자 확정 평가 리스트
+     public List<MultiEvalDTO> getAllMultiCompletedList(Integer year, String period) {
+ 	    Map<String, Object> params = new HashMap<>();
+ 	    params.put("year", year);
+ 	    params.put("period", period);
+ 	    return multiMapper.findAllDeptMultiCompletedEval(params);
+ 	}
      
      // 진행전, 진행중 평가 리스트
      public List<MultiEvalDTO> getMultiProgressList(String empNo, String position, Integer year, String period) {
@@ -56,16 +73,8 @@ import lombok.RequiredArgsConstructor;
     	    return multiMapper.findMultiProgressEval(params);
     	}
      
-     //관리자 진행전, 진행중 평가 리스트
-     public List<MultiEvalDTO> getAllDeptMultiProgressList(Integer year, String period) {
-    	    Map<String, Object> params = new HashMap<>();
-    	    params.put("year", year);
-    	    params.put("period", period);
-    	    return multiMapper.findAllDeptMultiProgressEval(params);
-    	}
      
-     
-     //확정 평가 리스트
+     //사원 확정 평가 리스트
      public List<MultiEvalDTO> getMultiCompletedList(String empNo, String position, Integer year, String period) {
  	    Map<String, Object> params = new HashMap<>();
  	    params.put("userNo", empNo);
@@ -194,7 +203,13 @@ import lombok.RequiredArgsConstructor;
 
     	}
      
-     	
+     public boolean ifFinishSelfEval(String empNo) { 	
+    	 
+    	 boolean complete= evaluatorRepository.existsByEvaluatorNoAndStepAndStatus(empNo,0,0);
+    	 System.out.println("boolean: "+complete);
+    	 return complete;
+     }
+    
      // 평가 입력 내용 저장
      @Transactional
      public void saveAnswers(List<MultiEvalAnswer> answers,String evaluatorNo,String evaluateeNo, Integer evalTypeId) {
@@ -206,7 +221,8 @@ import lombok.RequiredArgsConstructor;
 		    
 		Optional<MultiEvalAnswer> exist = multiEvalAnswerRepository.findByMappingIdAndQuestionId( ans.getMappingId(), ans.getQuestionId() );
 		
-			if (exist.isPresent()) {
+	
+		if (exist.isPresent()) {
 				
 				 MultiEvalAnswer updateAns = exist.get();
 				

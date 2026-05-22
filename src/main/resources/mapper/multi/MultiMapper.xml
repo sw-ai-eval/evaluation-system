@@ -45,6 +45,73 @@
 	    <where>
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        
+	        <if test="year != null">
+		        AND et.year = #{year}
+		    </if>
+		    
+		    <if test="period != null and period != ''">
+		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        <choose>
+		            <when test="period == '연간'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+		            </when>
+		            <when test="period == '상반기'">
+		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+		            </when>
+		            <when test="period == '하반기'">
+		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+		            </when>
+		        </choose>
+		    </if>
+	    </where>
+	
+	</select>
+	<select id="findAllDeptMultiCompletedEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
+	
+	    SELECT
+	        et.id AS evalTypeId,
+	        et.name AS evalTypeName,
+	        etm.evaluator_no AS evaluatorNo,
+	        eval_emp.name AS evaluatorName,
+	        etm.evaluatee_no AS evaluateeNo,
+	        e.name AS evaluateeName,
+	        et.name AS evalName,
+	        etm.step,
+	        e.dept_id AS deptId,
+	        d.name AS deptName,
+	        e.position AS position,
+	        e.emp_no AS empNo,
+	        et.start_date AS startDate,
+	        et.end_date AS endDate,
+	        cc.name AS statusName
+	
+	    FROM eval_target_mapping_52 etm
+	
+	    JOIN eval_type_52 et
+	        ON et.id = etm.eval_type_id
+	
+	    JOIN employee_52 e
+	        ON e.emp_no = etm.evaluatee_no
+	
+	    LEFT JOIN department_52 d
+	        ON d.id = e.dept_id
+	
+	    LEFT JOIN employee_52 eval_emp
+	        ON eval_emp.emp_no = etm.evaluator_no
+	
+	    LEFT JOIN code_common_52 cc
+	        ON cc.code = CAST(etm.status AS CHAR)
+	
+	    LEFT JOIN code_group_52 cg
+	        ON cg.id = cc.group_id
+	
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        
 	        <if test="year != null">
 		        AND et.year = #{year}
 		    </if>
@@ -96,6 +163,8 @@
 	    <where>
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
@@ -152,7 +221,8 @@
 	    <where>
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
-	        AND etm.status = 2
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
@@ -328,6 +398,5 @@
 		GROUP BY category_name
 	</select>
 	
-
 
 </mapper>

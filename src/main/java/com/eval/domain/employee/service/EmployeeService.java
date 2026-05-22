@@ -256,7 +256,7 @@ public class EmployeeService {
     	        // 본인이 현재 부서장일 때만 제거
     	        if (employee.getEmpNo() != null &&
     	            employee.getEmpNo().equals(department.getLeaderEmpNo())) {
-
+    	        	
     	            department.setLeaderEmpNo(null);
     	            department.setUpdatedBy(adminNo);
     	            department.setUpdatedAt(LocalDateTime.now());
