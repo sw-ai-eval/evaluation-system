@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.eval.domain.home.mapper.HomeMapper">
+	<select id="selectInterviewTodoList" resultType="com.eval.domain.home.dto.TodoListDto">
+	    SELECT 
+	        et.name AS type,
+	
+	        ev.name AS evaluatorName,
+	        ee.name AS evaluateeName,
+	
+	        i.start_at AS dueDate,
+	        cc.name AS status
+	
+	    FROM interview_52 i
+	
+	    JOIN eval_type_52 et
+	        ON et.id = i.type
+	
+	    LEFT JOIN employee_52 ev
+	        ON ev.emp_no = i.evaluator_no
+	
+	    LEFT JOIN employee_52 ee
+	        ON ee.emp_no = i.evaluatee_no
+	
+	    JOIN code_common_52 cc 
+	        ON cc.code = CAST(i.status AS VARCHAR)
+	        AND cc.group_id = (
+	            SELECT id 
+	            FROM code_group_52 
+	            WHERE group_code = 'INTERVIEW_STATUS'
+	        )
+	
+	    WHERE 
+	        (i.evaluator_no = #{empNo} OR i.evaluatee_no = #{empNo})
+	        AND i.status != 2
+	
+	    ORDER BY i.start_at ASC
+	</select>
+	
+	<select id="selectEvaluationTodoList" resultType="com.eval.domain.home.dto.TodoListDto">
+	    SELECT 
+	        et.name AS type,
+	
+	        ev.name AS evaluatorName,   
+	        ee.name AS evaluateeName,   
+	
+	        et.end_date AS dueDate,
+	        '완료 전' AS status
+	
+	    FROM eval_target_mapping_52 etm
+	
+
+	    JOIN eval_type_52 et
+	        ON et.id = etm.eval_type_id
+	
+
+	    LEFT JOIN employee_52 ev
+	        ON ev.emp_no = etm.evaluator_no
+	
+
+	    LEFT JOIN employee_52 ee
+	        ON ee.emp_no = etm.evaluatee_no
+	
+	    WHERE 
+	        etm.evaluator_no = #{empNo}
+	        AND etm.status != 2
+	
+	    ORDER BY et.end_date ASC
+	</select>
+	
+	<select id="selectNoticeList" resultType="com.eval.domain.home.dto.NoticeListDto">
+
+        SELECT TOP 6
+            type,
+            title,
+            created_at AS createdAt
+        FROM notice_52
+        ORDER BY created_at DESC
+
+    </select>
+    
+    <select id="getNoticeDetail" resultType="com.eval.domain.home.dto.NoticeDetailDto">
+
+	    SELECT
+	        n.notice_id       AS id,
+	        ec.name       AS createBy,
+	        eu.name       AS updateBy,
+	        n.type            AS type,
+	        n.title           AS title,
+	        n.content         AS content,
+	        n.created_at      AS createdAt,
+	        n.update_at       AS updateAt
+	
+	    FROM notice_52 n
+	
+	    LEFT JOIN employee_52 ec
+	        ON n.create_by = ec.emp_no
+	
+	    LEFT JOIN employee_52 eu
+	        ON n.update_by = eu.emp_no
+	
+	    WHERE n.notice_id = #{id}
+	
+	</select>
+	
+
+</mapper>
