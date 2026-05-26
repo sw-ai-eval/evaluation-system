@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>공지사항</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f5f7fa;
+    }
+
+    .container {
+        max-width: 1000px;
+        margin: 50px auto;
+        background: #ffffff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .title {
+        font-size: 22px;
+        font-weight: 600;
+        color: #333;
+    }
+
+    .write-btn {
+        padding: 10px 16px;
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-decoration: none;
+    }
+
+    .write-btn:hover {
+        background-color: #4338ca;
+    }
+
+    .search-box {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+    }
+
+    .search-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+    }
+
+    .search-btn {
+        padding: 10px 16px;
+        border: none;
+        background-color: #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background-color: #f1f5f9;
+    }
+
+    th, td {
+        padding: 14px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+        font-size: 14px;
+        color: #555;
+    }
+
+    td {
+        font-size: 14px;
+        color: #333;
+    }
+
+    tr:hover {
+        background-color: #f9fafb;
+    }
+
+    .notice-title {
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .notice-title:hover {
+        color: #4f46e5;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        font-size: 12px;
+        border-radius: 6px;
+        margin-right: 6px;
+    }
+
+    .important {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .normal {
+        background-color: #e0e7ff;
+        color: #4f46e5;
+    }
+
+    .pagination {
+        margin-top: 20px;
+        text-align: center;
+    }
+
+    .page-btn {
+        margin: 0 4px;
+        padding: 6px 10px;
+        border: 1px solid #d1d5db;
+        background: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .page-btn.active {
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+    }
+    .back-btn {
+        padding: 8px 14px;
+        border: none;
+        background-color: #e2e8f0;
+        color: #333;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+    }
+
+    .back-btn:hover {
+        background-color: #cbd5e0;
+    }
+    
+    .new {
+	    background-color: #ff3b30;
+	    color: white;
+	    font-weight: 700;
+	    border-radius: 999px;
+	    padding: 3px 8px;
+	    font-size: 11px;
+	    margin-left: 6px;
+	}
+	
+	@keyframes blink {
+	    0%, 100% { opacity: 1; }
+	    50% { opacity: 0.5; }
+	}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="title">공지사항</div>
+        
+       	<button class="back-btn"
+                th:onclick="|location.href='@{/home}'|">
+           ← 이전
+        </button>
+
+        
+    </div>
+
+    <!-- 검색 -->
+    <form method="get" th:action="@{/notice/list}" class="search-box">
+	
+	    <input type="text"
+	           name="title"
+	           class="search-input"
+	           placeholder="제목으로 검색"
+	           th:value="${title}">
+	
+	    <button type="submit" class="search-btn">검색</button>
+	
+	    <a class="write-btn"
+	       th:href="@{/admin/notice/write}"
+	       sec:authorize="hasRole('ADMIN')">
+	        + 작성
+	    </a>
+	</form>
+
+    <!-- 목록 -->
+	<table>
+	    <thead>
+	        <tr>
+	            <th>번호</th>
+	            <th>제목</th>
+	            <th>작성일</th>
+	        </tr>
+	    </thead>
+	
+	    <tbody>
+	        <tr th:each="notice, stat : ${noticePage.content}"
+			    th:attr="data-id=${notice.id}"
+			    onclick="goDetail(this)"
+			    style="cursor:pointer;">
+			
+			    <td th:text="${noticePage.totalElements - (noticePage.number * noticePage.size) - stat.index}"></td>
+			
+			    <td class="notice-title">
+			
+			        <span class="badge normal"
+			              th:text="${notice.type}">
+			        </span>
+			
+			        <span th:text="${notice.title}"></span>
+			
+			        <span class="badge new"
+			              th:if="${notice.createdAt != null and T(java.time.temporal.ChronoUnit).DAYS.between(notice.createdAt, T(java.time.LocalDateTime).now()) <= 2}">
+			            N
+			        </span>
+			
+			    </td>
+			
+			    <td th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd')}"></td>
+			
+			</tr>
+	    </tbody>
+	</table>
+
+    <!-- 페이지네이션 -->
+	<div class="pagination">
+	
+	    <!-- 이전 -->
+	    <a class="page-btn"
+	       th:if="${noticePage.hasPrevious()}"
+	       th:href="@{/notice/list(page=${noticePage.number - 1}, title=${title})}">
+	        ‹
+	    </a>
+	
+	    <!-- 페이지 번호 -->
+	    <a th:each="i : ${#numbers.sequence(0, noticePage.totalPages - 1)}"
+	       th:href="@{/notice/list(page=${i}, title=${title})}"
+	       th:text="${i + 1}"
+	       class="page-btn"
+	       th:classappend="${i == noticePage.number} ? 'active' : ''">
+	    </a>
+	
+	    <!-- 다음 -->
+	    <a class="page-btn"
+	       th:if="${noticePage.hasNext()}"
+	       th:href="@{/notice/list(page=${noticePage.number + 1}, title=${title})}">
+	        ›
+	    </a>
+	
+	</div>
+
+</div>
+<script>
+function goDetail(el) {
+    const id = el.getAttribute("data-id");
+    location.href = "/notice/" + id;
+}
+</script>
+</body>
+</html>

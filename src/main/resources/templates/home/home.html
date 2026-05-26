@@ -54,6 +54,94 @@
         .board-list li { padding: 10px 0; border-bottom: 1px dashed #e2e8f0; color: #4a5568; font-size: 14px; display: flex; justify-content: space-between; }
         .board-list li:last-child { border-bottom: none; }
         .badge { background: #ebf8ff; color: #3182ce; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        
+        .stat-link {
+		    color: #38a169;
+		    cursor: pointer;
+		    transition: all 0.2s ease;
+		    text-decoration: underline;
+		    text-underline-offset: 4px; /* 밑줄 간격 */
+		}
+		
+		/* 마우스 올렸을 때 */
+		.stat-link:hover {
+		    color: #2f855a;
+		}
+		.notice-btn {
+		    padding: 10px 18px;
+		    background-color: #3182ce;
+		    color: white;
+		    border-radius: 8px;
+		    text-decoration: none;
+		    font-size: 14px;
+		    font-weight: 500;
+		}
+		.top-profile-row {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    margin-bottom: 20px;
+		}
+		.more-btn {
+		    font-size: 12px;
+		    color: #4a5568;
+		    text-decoration: none;
+		    padding: 4px 8px;
+		    border: 1px solid #e2e8f0;
+		    border-radius: 6px;
+		    transition: all 0.2s ease;
+		}
+		
+		.more-btn:hover {
+		    background-color: #f7fafc;
+		    border-color: #cbd5e0;
+		    color: #2d3748;
+		}
+		.notice-row {
+		    display: flex;
+		    justify-content: space-between;
+		    align-items: center;
+		    gap: 10px;
+		}
+		
+		.notice-title {
+		    flex: 1;
+		    text-decoration: none;
+		    color: inherit;
+		}
+		
+		.notice-meta {
+		    display: flex;
+		    align-items: center;
+		    gap: 6px;
+		    white-space: nowrap;
+		}
+		
+		/* N 표시 */
+		.new-badge {
+		    color: white;
+		    background: #ff3b30;
+		    font-size: 11px;
+		    font-weight: bold;
+		    padding: 2px 6px;
+		    border-radius: 999px;
+		}
+		
+		/* 날짜 */
+		.date {
+		    color: #a0aec0;
+		    font-size: 12px;
+		}
+		/* todo는 유지 */
+		.todo-list li {
+		    display: flex;
+		    justify-content: space-between;
+		}
+		
+		/* notice는 block */
+		.notice-list li {
+		    display: block;
+		}
     </style>
 </head>
 <body>
@@ -65,22 +153,34 @@
     <div class="main-content">
         
         <!-- 프로필 위젯 (사진 스타일) -->
-        <div class="profile-widget">
-            <div class="profile-avatar">
-                👤 
-            </div>
-            <div class="profile-info">
-                <a class="profile-name" th:href="@{/my-page}">
-                    <span th:text="${empName} ?: '홍길동'">홍길동</span>
-                    <span style="font-size: 14px; margin-left: 2px; color: #a0aec0;">&gt;</span>
-                </a>
-                <div class="profile-meta">
-                    <span th:text="${deptName} ?: '인사팀'">인사팀</span> / 
-                    <span th:text="${position} ?: '대리'">대리</span> / 
-                    <span th:text="${empNo} ?: '2026001'">2026001</span>
-                </div>
-            </div>
-        </div>
+		<div class="top-profile-row">
+		
+		    	<!-- 프로필 위젯 -->
+			    <div class="profile-widget">
+			        <div class="profile-avatar">
+			            👤
+			        </div>
+			
+			        <div class="profile-info">
+			            <a class="profile-name" th:href="@{/my-page}">
+			                <span th:text="${empName} ?: '홍길동'">홍길동</span>
+			                <span style="font-size: 14px; margin-left: 2px; color: #a0aec0;">&gt;</span>
+			            </a>
+			
+			            <div class="profile-meta">
+			                <span th:text="${deptName} ?: '인사팀'">인사팀</span> /
+			                <span th:text="${position} ?: '대리'">대리</span> /
+			                <span th:text="${empNo} ?: '2026001'">2026001</span>
+			            </div>
+			        </div>
+			    </div>
+			
+			    <!-- 공지사항 버튼 -->
+			    <a th:href="@{/admin/notice/write}" class="notice-btn" sec:authorize="hasRole('ADMIN')" >
+			        공지사항 등록
+			    </a>
+			
+			</div>
 
         <!-- 상단 통계 카드 영역 -->
         <div class="card-grid">
@@ -93,8 +193,7 @@
 			<div class="stat-card">
 			    <div class="stat-title">예정된 면담 일정</div>
 			
-				<div class="stat-value" 
-				     style="color: #38a169; cursor: pointer;" 
+				<div class="stat-value stat-link" 
 				     th:text="${interviewCount ?: 0} + ' 건'" 
 				     th:onclick="|window.location.href='@{/interview}'|">
 				</div>
@@ -116,42 +215,147 @@
         <!-- 하단 리스트 영역 -->
         <div class="board-grid">
             <div class="board-panel">
-                <h3>📝 나의 할 일</h3>
-                <ul class="board-list">
-                    <li>
-                        <span>상반기 성과평가 작성</span>
-                        <span class="badge" style="background: #fed7d7; color: #c53030;">D-7</span>
-                    </li>
-                    <li>
-                        <span>다면평가 수행</span>
-                        <span class="badge">진행중</span>
-                    </li>
-                    <li style="color: #a0aec0; text-align: center; justify-content: center; margin-top: 20px; border: none;">
-                        더 이상 할 일이 없습니다.
-                    </li>
-                </ul>
-            </div>
+			    <h3>📝 나의 할 일</h3>
+			
+			    <ul class="board-list todo-list">
+			
+			        <!-- 데이터 있을 때 -->
+			        <li th:each="todo, stat : ${todoList}"
+			            th:classappend="${stat.index >= 6} ? 'extra-item' : ''"
+			            th:style="${stat.index >= 6} ? 'display:none;' : ''"
+			            class="todo-item">
+			
+			            <span>
+			                <span th:text="${todo.type}"></span>
+			
+			                <span th:if="${todo.evaluatorName != null}">
+			                    ( 평가자:
+			                    <span th:text="${todo.evaluatorName}"></span>
+			                </span>
+			
+			                <span th:if="${todo.evaluateeName != null}">
+			                    - 대상자:
+			                    <span th:text="${todo.evaluateeName}"></span>
+			                    )
+			                </span>
+			            </span>
+			
+			            <div>
+			                <span class="badge" th:text="${todo.status}"></span>
+			
+			                <span class="badge"
+			                            style="
+									        background: #fed7d7;
+									        color: #c53030;
+									        min-width: 35px;
+									        text-align: center;
+									        display: inline-block;
+									      "
+			                      th:if="${todo.dueDate != null}"
+			                      th:text="'D-' + ${T(java.time.temporal.ChronoUnit)
+			                      .DAYS.between(T(java.time.LocalDate).now(),
+			                      todo.dueDate.toLocalDate())}">
+			                </span>
+			            </div>
+			        </li>
+			
+			        <!-- 데이터 없을 때 -->
+			        <li th:if="${#lists.isEmpty(todoList)}"
+			            style="color: #a0aec0; text-align: center; justify-content: center; margin-top: 20px; border: none;">
+			            더 이상 할 일이 없습니다.
+			        </li>
+			
+			    </ul>
+			
+			    <!-- 더보기 버튼 -->
+			    <div th:if="${todoList.size() > 6}"
+			         style="text-align:center; margin-top:15px;">
+			
+			        <button type="button"
+			                id="toggleBtn"
+			                onclick="toggleTodos()"
+			                style="
+			                    border:none;
+			                    background:#edf2f7;
+			                    padding:8px 16px;
+			                    border-radius:8px;
+			                    cursor:pointer;
+			                    font-size:14px;
+			                ">
+			            더보기
+			        </button>
+			    </div>
+			</div>
             
-            <div class="board-panel">
-                <h3>🔔 공지사항 및 알림</h3>
-                <ul class="board-list">
-                    <li>
-                        <span>[시스템] 평가요소 기준이 업데이트 되었습니다.</span>
-                        <span style="color: #a0aec0; font-size: 12px;">04-17</span>
-                    </li>
-                    <li>
-                        <span>[안내] 2026년 상반기 평가 일정이 등록되었습니다.</span>
-                        <span style="color: #a0aec0; font-size: 12px;">04-10</span>
-                    </li>
-                    <li>
-                        <span>[시스템] 정기 점검 안내 (04/20 02:00~04:00)</span>
-                        <span style="color: #a0aec0; font-size: 12px;">04-05</span>
-                    </li>
-                </ul>
-            </div>
+            <div class="board-panel" >
+			    <div style="display:flex; justify-content:space-between; align-items:center;">
+			        <h3 style="margin:0;">🔔 공지사항 및 알림</h3>
+			
+			        <a href="/notice/list" class="more-btn">더보기 ›</a>
+			    </div>
+			
+			    <ul class="board-list notice-list">
+			
+			        <li th:each="notice : ${noticeList}" >
+					
+					    <div class="notice-row">
+						
+						    <!-- 왼쪽: 제목 -->
+						    <a th:href="@{/notice/{id}(id=${notice.id})}"
+						       class="notice-title">
+						
+						        <span>
+						            [[ '[' + ${notice.type} + '] ' + ${notice.title} ]]
+						        </span>
+						
+						    </a>
+						
+						    <!-- 오른쪽: N + 날짜 -->
+						    <div class="notice-meta">
+						
+						        <span class="new-badge"
+						              th:if="${notice.createdAt != null and T(java.time.temporal.ChronoUnit).DAYS.between(notice.createdAt, T(java.time.LocalDateTime).now()) <= 2}">
+						            N
+						        </span>
+						
+						        <span class="date">
+						            [[${#temporals.format(notice.createdAt, 'MM-dd')}]]
+						        </span>
+						
+						    </div>
+						
+						</div>
+					
+					</li>
+			        
+			        
+			        
+			        <li th:if="${#lists.isEmpty(noticeList)}"
+			            style="color: #a0aec0; text-align: center; justify-content: center; margin-top: 20px; border: none;">
+			             알림이 없습니다.
+			        </li>
+			
+			    </ul>
+			</div>
         </div>
 
     </div>
+<script>
+    let expanded = false;
 
+    function toggleTodos() {
+
+        const extraItems = document.querySelectorAll('.extra-item');
+        const button = document.getElementById('toggleBtn');
+
+        expanded = !expanded;
+
+        extraItems.forEach(item => {
+            item.style.display = expanded ? 'flex' : 'none';
+        });
+
+        button.innerText = expanded ? '접기' : '더보기';
+    }
+</script>
 </body>
 </html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>공지사항 상세</title>
+
+<style>
+    body {
+        margin: 0;
+        font-family: "Segoe UI", Arial, sans-serif;
+        background-color: #f5f7fa;
+    }
+
+    .container {
+        max-width: 900px;
+        margin: 60px auto;
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+
+    .title {
+        font-size: 22px;
+        font-weight: 600;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 8px 14px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: 14px;
+    }
+
+    .btn-edit {
+        background-color: #4f46e5;
+        color: white;
+    }
+
+    .btn-edit:hover {
+        background-color: #4338ca;
+    }
+
+    .btn-delete {
+        background-color: #ef4444;
+        color: white;
+    }
+
+    .btn-delete:hover {
+        background-color: #dc2626;
+    }
+
+    .btn-back {
+        background-color: #e2e8f0;
+    }
+
+    .btn-back:hover {
+        background-color: #cbd5e0;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 12px;
+        margin-bottom: 10px;
+        
+    }
+
+    .important {
+        background-color: #fee2e2;
+        color: #dc2626;
+    }
+
+    .normal {
+        background-color: #e0e7ff;
+        color: #4f46e5;
+    }
+
+    .meta {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .meta div {
+        background: #f9fafb;
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .content {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f9fafb;
+        border-radius: 8px;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+
+    .footer {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+    }
+    
+    .badge {
+	    display: inline-block;
+	    padding: 4px 10px;
+	    border-radius: 12px;
+	    font-size: 12px;
+	    font-weight: 600;
+	    color: #fff;
+	    line-height: 1;
+	}
+	.badge.important {
+	    background-color: #e74c3c;
+	}
+	.badge.notice {
+	    background-color: #f39c12;
+	}
+	.badge.system {
+	    background-color: #8e44ad;
+	}
+	.badge.normal {
+	    background-color: #3498db;
+	}
+	.form-control {
+	    width: 100%;
+	    padding: 10px 12px;
+	    border-radius: 8px;
+	    border: 1px solid #ddd;
+	    font-size: 14px;
+	    box-sizing: border-box;
+	    margin-top: 10px;
+	}
+	textarea.form-control {
+	    min-height: 300px;
+	    resize: vertical;
+	}
+	h2 {
+	    margin-top: 10px;
+	}
+	.field {
+	    margin-top: 10px;
+	}
+	
+	.type-box {
+	    display: flex;
+	    align-items: center;
+	    gap: 10px;
+	    margin-top: 15px;
+	}
+	
+	/* select 통일 디자인 */
+	.form-select {
+	    padding: 8px 12px;
+	    border-radius: 8px;
+	    border: 1px solid #ddd;
+	    font-size: 14px;
+	    background-color: #fff;
+	    min-width: 150px;
+	    outline: none;
+	    transition: 0.2s;
+	}
+	
+	.form-select:focus {
+	    border-color: #4f46e5;
+	    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+	}
+	
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- 헤더 -->
+    <div class="header">
+        <div class="title">공지사항 상세</div>
+
+        <div class="btn-group" sec:authorize="hasRole('ADMIN')">
+            <button class="btn btn-edit" onclick="updateNotice()">
+			    수정 완료
+			</button>
+            <button class="btn btn-delete"
+			        th:attr="data-id=${notice.id}"
+			        onclick="deleteNotice(this)">
+			    삭제
+			</button>
+        </div>
+    </div>
+	
+	<input type="hidden" id="id" th:value="${notice.id}" />
+    <!-- 타입 -->
+	<div class="type-box">
+	
+	    <select class="form-select"
+	            th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+	            id="type"
+	            name="type">
+	
+	        <option value="중요" th:selected="${notice.type == '중요'}">중요</option>
+	        <option value="알림" th:selected="${notice.type == '알림'}">알림</option>
+	        <option value="시스템" th:selected="${notice.type == '시스템'}">시스템</option>
+	        <option value="일반" th:selected="${notice.type == '일반'}">일반</option>
+	
+	    </select>
+	
+	    <span class="badge"
+	          th:unless="${#authorization.expression('hasRole(''ADMIN'')')}"
+	          th:classappend="${notice.type == '중요' ? ' important' :
+	                          notice.type == '알림' ? ' notice' :
+	                          notice.type == '시스템' ? ' system' : ' normal'}"
+	          th:text="${notice.type}">
+	    </span>
+	
+	</div>
+
+    <!-- 제목 -->
+    <div class="field">
+
+	    <input type="text"
+	           class="form-control"
+	           id="title"
+	           name="title"
+	           th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+	           th:value="${notice.title}" />
+	
+	    <h2 th:unless="${#authorization.expression('hasRole(''ADMIN'')')}"
+	        th:text="${notice.title}">
+	    </h2>
+	
+	</div>
+
+    <!-- 메타 정보 -->
+    <div class="meta">
+        <div><strong>작성자:</strong> <span th:text="${notice.createBy}"></span></div>
+        <div><strong>수정자:</strong> <span th:text="${notice.updateBy} ?: '-'"></span></div>
+        <div><strong>작성일:</strong>
+            <span th:text="${#temporals.format(notice.createdAt, 'yyyy-MM-dd HH:mm')}"></span>
+        </div>
+        <div><strong>수정일:</strong>
+            <span th:text="${notice.updateAt != null ? #temporals.format(notice.updateAt, 'yyyy-MM-dd HH:mm') : '-'}"></span>
+        </div>
+    </div>
+
+    <!-- 내용 -->
+    <!-- 관리자 -->
+	<div class="field">
+
+	    <textarea class="form-control"
+	              rows="10"
+	              th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+	              id="content"
+          		  name="content"
+	              th:text="${notice.content}">
+	    </textarea>
+	
+	    <div class="content"
+	         th:unless="${#authorization.expression('hasRole(''ADMIN'')')}"
+	         th:utext="${#strings.replace(notice.content, '\n', '<br/>')}">
+	    </div>
+	
+	</div>
+
+    <!-- 하단 -->
+    <div class="footer">
+        <button class="btn btn-back"
+                th:onclick="|location.href='@{/notice/list}'|">
+            ← 목록으로
+        </button>
+    </div>
+
+</div>
+<script>
+function deleteNotice(btn) {
+    const id = btn.dataset.id;
+
+    if (!confirm("정말 삭제하시겠습니까?")) return;
+
+    fetch("/admin/notice/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+    }).then(res => {
+        if (res.ok) {
+            alert("삭제 완료");
+            location.href = "/notice/list";
+        }
+    });
+}
+function updateNotice() {
+
+    if (!confirm("수정하시겠습니까?")) return;
+
+    const data = {
+        id: document.getElementById("id").value,
+        type: document.getElementById("type").value,
+        title: document.getElementById("title").value,
+        content: document.getElementById("content").value
+    };
+
+    fetch("/admin/notice/update", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(res => {
+        if (res.ok) {
+            alert("수정 완료");
+            location.reload(); // 또는 상세 페이지 이동
+        } else {
+            alert("수정 실패");
+        }
+    })
+    .catch(err => {
+        console.error(err);
+        alert("에러 발생");
+    });
+}
+</script>
+</body>
+</html>

@@ -247,6 +247,7 @@ function saveInterview() {
     const topics = getSelectedTopics();
 	const startDateTime = document.getElementById("panelStartTime").value; // yyyy-MM-ddTHH:mm
 	const endTime = document.getElementById("panelEndTime").value; // HH:mm
+	const place =document.getElementById("panelPlace").value;
 	
 	let endDateTime = "";
 	if (startDateTime && endTime) {
@@ -267,11 +268,27 @@ function saveInterview() {
         document.getElementById("panelType").focus();
         return;
     }
+	
+	if (!startDateTime) {
+        alert("면담 일정과 시작 시각을 선택해주세요.");
+        return;
+	    }
+		
+	if (!endDateTime) {
+        alert("종료 시각을 선택해주세요.");
+        return;
+	 }
+	 
+	 if(!place){
+		alert("면담 장소를 선택해주세요.");
+		return;
+	 }
 
     if (!topics || topics.length === 0) {
         alert("면담 주제를 최소 1개 이상 선택해주세요.");
         return;
     }
+	
 
     const data = {
 		id: document.getElementById('panelInterviewId').value,
