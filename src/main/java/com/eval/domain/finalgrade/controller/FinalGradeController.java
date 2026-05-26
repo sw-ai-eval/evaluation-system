@@ -1,5 +1,7 @@
 package com.eval.domain.finalgrade.controller;
 
+import com.eval.domain.dept.dto.DepartmentDto;
+import com.eval.domain.dept.mapper.DepartmentMapper;
 import com.eval.domain.finalgrade.dto.FinalGradeDTO;
 import com.eval.domain.finalgrade.service.FinalGradeService;
 import lombok.RequiredArgsConstructor;
@@ -16,11 +18,14 @@ import java.util.Map;
 public class FinalGradeController {
 
     private final FinalGradeService service;
+    private final DepartmentMapper departmentMapper;
 
     @GetMapping("/list")
     public String list(
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String period,
+            @RequestParam(required = false) String empNo,
+            @RequestParam(required = false) String deptId,
             Model model) {
 
         List<Integer> yearList = service.getYears();
@@ -30,34 +35,16 @@ public class FinalGradeController {
         model.addAttribute("yearList", yearList);
         model.addAttribute("selectedYear", year);
         model.addAttribute("selectedPeriod", period);
-        model.addAttribute("staffList", service.getStaffList(year, period, null));
-        model.addAttribute("leaderList", service.getLeaderList(year, period, null));
+        model.addAttribute("selectedEmpNo", empNo);
+        model.addAttribute("selectedDeptId", deptId);
+        model.addAttribute("staffList", service.getStaffList(year, period, empNo, deptId));
+        model.addAttribute("leaderList", service.getLeaderList(year, period, empNo, deptId));
         model.addAttribute("deptStats", service.getDeptStat(year));
+        model.addAttribute("deptList", departmentMapper.selectDepartmentList());
 
         return "evaluation/finalgrade/list";
     }
 
-    /** 사원 탭 Ajax 검색 */
-    @GetMapping("/search/staff")
-    @ResponseBody
-    public List<FinalGradeDTO.StaffInfo> searchStaff(
-            @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) String period,
-            @RequestParam(required = false) String empNo) {
-        return service.getStaffList(year, period, empNo);
-    }
-
-    /** 부서장 탭 Ajax 검색 */
-    @GetMapping("/search/leader")
-    @ResponseBody
-    public List<FinalGradeDTO.LeaderInfo> searchLeader(
-            @RequestParam(required = false) Integer year,
-            @RequestParam(required = false) String period,
-            @RequestParam(required = false) String empNo) {
-        return service.getLeaderList(year, period, empNo);
-    }
-
-    /** 등급 조정 저장 */
     @PostMapping("/adjust")
     @ResponseBody
     public String adjust(@RequestBody FinalGradeDTO.GradeAdjustReq req) {
@@ -70,7 +57,6 @@ public class FinalGradeController {
         }
     }
 
-    /** 최종 확정 */
     @PostMapping("/confirm")
     @ResponseBody
     public String confirm(@RequestBody Map<String, Object> body) {

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.eval.domain.empscore.mapper.EmpScoreMapper">
+
+    <select id="selectYears" resultType="int">
+        SELECT DISTINCT year FROM eval_type_52 ORDER BY year DESC
+    </select>
+
+    <!-- 사원 탭: position='부서원', 성과/역량 1차=부서장 점수 -->
+    <select id="selectStaffList" resultType="com.eval.domain.empscore.dto.EmpScoreDTO$StaffInfo">
+        SELECT
+            e.emp_no            AS empNo,
+            e.name              AS empName,
+            d.name              AS deptName,
+            ISNULL(j.name, '-') AS jobTitle,
+            e.position          AS position,
+
+            pr.first_score      AS perfFirst,
+            pr.second_score     AS perfSecond,
+            pr.total_score      AS perfTotal,
+            CASE pm.status WHEN 0 THEN '본인평가중' WHEN 1 THEN '1차평가대기' WHEN 2 THEN '평가완료' ELSE '-' END AS perfStatus,
+
+            cr.first_score      AS compFirst,
+            cr.second_score     AS compSecond,
+            cr.total_score      AS compTotal,
+            CASE cm.status WHEN 0 THEN '본인평가중' WHEN 1 THEN '1차평가대기' WHEN 2 THEN '평가완료' ELSE '-' END AS compStatus,
+
+            fr.final_score      AS totalScore,
+            fr.grade            AS evalGrade
+
+        FROM employee_52 e
+        JOIN department_52 d ON e.dept_id = d.id
+        LEFT JOIN code_common_52 j ON e.job_id = j.id
+        LEFT JOIN eval_target_mapping_52 pm ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
+        LEFT JOIN type_result_52 pr ON pr.emp_no = e.emp_no AND pr.type_id = 2
+            <if test="year != null">AND pr.year = #{year}</if>
+        LEFT JOIN eval_target_mapping_52 cm ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
+        LEFT JOIN type_result_52 cr ON cr.emp_no = e.emp_no AND cr.type_id = 3
+            <if test="year != null">AND cr.year = #{year}</if>
+        LEFT JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+            <if test="year != null">AND fr.year = #{year}</if>
+
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서원'
+          AND fr.status = 1
+        <if test="!isAdmin">
+            AND d.leader_emp_no = #{currentEmpNo}
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND e.dept_id = #{deptId}
+        </if>
+        <if test="empNo != null and empNo != ''">
+            AND e.emp_no = #{empNo}
+        </if>
+        ORDER BY d.name,
+                 CASE j.name WHEN '팀장' THEN 1 WHEN '과장' THEN 2 WHEN '대리' THEN 3 WHEN '사원' THEN 4 ELSE 5 END,
+                 e.emp_no
+    </select>
+
+    <!-- 부서장 탭: position='부서장', 성과/역량 1차=다면 avg_score -->
+    <select id="selectLeaderList" resultType="com.eval.domain.empscore.dto.EmpScoreDTO$LeaderInfo">
+        SELECT
+            e.emp_no            AS empNo,
+            e.name              AS empName,
+            d.name              AS deptName,
+            ISNULL(j.name, '-') AS jobTitle,
+            e.position          AS position,
+
+            es.avg_score        AS perfFirst,
+            pr.second_score     AS perfSecond,
+            pr.total_score      AS perfTotal,
+            CASE pm.status WHEN 0 THEN '본인평가중' WHEN 1 THEN '1차평가대기' WHEN 2 THEN '평가완료' ELSE '-' END AS perfStatus,
+
+            es.avg_score        AS compFirst,
+            cr.second_score     AS compSecond,
+            cr.total_score      AS compTotal,
+            CASE cm.status WHEN 0 THEN '본인평가중' WHEN 1 THEN '1차평가대기' WHEN 2 THEN '평가완료' ELSE '-' END AS compStatus,
+
+            fr.final_score      AS totalScore,
+            fr.grade            AS evalGrade
+
+        FROM employee_52 e
+        JOIN department_52 d ON e.dept_id = d.id
+        LEFT JOIN code_common_52 j ON e.job_id = j.id
+        LEFT JOIN eval_summary_52 es ON es.evaluatee_no = e.emp_no
+            AND es.eval_type_id IN (SELECT id FROM eval_type_52 WHERE name LIKE '%다면%'
+            <if test="year != null">AND year = #{year}</if>)
+        LEFT JOIN eval_target_mapping_52 pm ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
+        LEFT JOIN type_result_52 pr ON pr.emp_no = e.emp_no AND pr.type_id = 2
+            <if test="year != null">AND pr.year = #{year}</if>
+        LEFT JOIN eval_target_mapping_52 cm ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
+        LEFT JOIN type_result_52 cr ON cr.emp_no = e.emp_no AND cr.type_id = 3
+            <if test="year != null">AND cr.year = #{year}</if>
+        LEFT JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+            <if test="year != null">AND fr.year = #{year}</if>
+
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서장'
+          AND fr.status = 1
+        <if test="!isAdmin">
+            AND d.id IN (SELECT dept_id FROM employee_52 WHERE emp_no = #{currentEmpNo})
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND e.dept_id = #{deptId}
+        </if>
+        <if test="empNo != null and empNo != ''">
+            AND e.emp_no = #{empNo}
+        </if>
+        ORDER BY d.name, e.emp_no
+    </select>
+
+</mapper>

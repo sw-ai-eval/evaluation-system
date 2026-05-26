@@ -100,11 +100,8 @@
 	    LEFT JOIN dbo.department_52 d 
 	        ON e.dept_id = d.id
 	
-	    LEFT JOIN dbo.code_common_52 j
-		    ON e.job_id = j.id
-		
-		LEFT JOIN dbo.code_common_52 l
-		    ON e.level_id = l.id
+	    LEFT JOIN dbo.code_common_52 j ON e.job_id   = j.id AND j.group_id = 2
+	    LEFT JOIN dbo.code_common_52 l ON e.level_id = l.id AND l.group_id = 1
 	
 	    <where>
 	        <if test="keyword != null and keyword != ''">
@@ -129,33 +126,27 @@
 	<select id="findByEmpNoDetail" resultType="com.eval.domain.employee.dto.EmpManageDTO">
 	
 	    SELECT
-	        e.emp_no AS empNo,
-	        e.name AS name,
-	        e.dept_id AS deptId,
-	        e.status AS status,
-	        e.locked AS locked,
-	        e.role AS role,
-	        e.email AS email,
-	        e.phone AS phone,
-	
-	        e.level_id AS levelId,
-	        l.name AS levelName,
-	
-	        e.job_id AS jobId,
-			j.name AS jobName, 
-			
-	        e.hire_date AS hireDate,
-	        e.resign_date AS resignDate,
-	        e.position AS position
+	        e.emp_no        AS empNo,
+	        e.name          AS name,
+	        e.dept_id       AS deptId,
+	        d.name          AS deptName,
+	        e.status        AS status,
+	        e.locked        AS locked,
+	        e.role          AS role,
+	        e.email         AS email,
+	        e.phone         AS phone,
+	        e.level_id      AS levelId,
+	        l.name          AS levelName,
+	        e.job_id        AS jobId,
+	        j.name          AS jobName,
+	        e.hire_date     AS hireDate,
+	        e.resign_date   AS resignDate,
+	        e.position      AS position
 	
 	    FROM dbo.employee_52 e
-	
-		LEFT JOIN dbo.code_common_52 j
-		    ON e.job_id = j.id
-		
-		LEFT JOIN dbo.code_common_52 l
-		    ON e.level_id = l.id
-	
+	    LEFT JOIN dbo.department_52 d   ON e.dept_id  = d.id
+	    LEFT JOIN dbo.code_common_52 j  ON e.job_id   = j.id AND j.group_id = 2
+	    LEFT JOIN dbo.code_common_52 l  ON e.level_id = l.id AND l.group_id = 1
 	    WHERE e.emp_no = #{empNo}
 	
 	</select>
