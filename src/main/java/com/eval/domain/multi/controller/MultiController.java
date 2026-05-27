@@ -18,12 +18,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import com.eval.domain.multi.MultiEvalAnswer;
 import com.eval.domain.multi.dto.MultiEvalDTO;
+import com.eval.domain.multi.dto.PageResponse;
 import com.eval.domain.multi.mapper.MultiMapper;
 import com.eval.domain.multi.service.MultiService;
   import com.eval.global.security.CustomUserDetails;
@@ -36,59 +39,47 @@ import com.eval.domain.multi.service.MultiService;
 	  private final MultiService multiService;
 	  
 	  @GetMapping("/evaluation/multi")
-	  public String multiPage(Model model, @RequestParam(required = false) Integer year, @RequestParam(required = false) String period) {
+	  public String multiPage(Model model,
+	                          @RequestParam(required = false) Integer year,
+	                          @RequestParam(required = false) String period,
+	                          @RequestParam(defaultValue = "progress") String tab,
+	                          @RequestParam(defaultValue = "10") int size) {
 
 	      Authentication auth = SecurityContextHolder.getContext().getAuthentication();
 	      Object principal = auth.getPrincipal();
-	      
+
 	      String empNo = null;
 	      String position = null;
-	      String role=null;
+	      String role = null;
 
 	      if (principal instanceof CustomUserDetails customUser) {
-	          empNo = customUser.getUsername(); // empNo
-	          position = customUser.getPosition(); // UI 제어용
-	          role= customUser.getRole();
+	          empNo = customUser.getUsername();
+	          position = customUser.getPosition();
+	          role = customUser.getRole();
 	      } else if (principal instanceof UserDetails userDetails) {
 	          empNo = userDetails.getUsername();
-	      } else if (principal != null) {
+	      } else {
 	          empNo = principal.toString();
 	      }
 
 	      if (empNo == null) {
 	          return "redirect:/login";
 	      }
-	      
-	      List<MultiEvalDTO> inProgressList;
-	      List<MultiEvalDTO> completedList;
-	      if(role.equals("ADMIN")) {
-	    	  inProgressList=multiService.getAllDeptMultiProgressList(year, period);
-	    	  completedList = multiService.getAllMultiCompletedList(year, period);
-	      }
-	      else {
-	    	  inProgressList = multiService.getMultiProgressList(empNo, position, year, period);
-	    	 completedList = multiService.getMultiCompletedList(empNo, position, year, period);
-	      }
-	   
-	      
-    	  
-	      Logger logger = LoggerFactory.getLogger(this.getClass());
-	      // ===== 로그 찍기 =====
-	      logger.info("In-Progress List for empNo {}: {}", empNo, inProgressList);
-	      logger.info("Completed List for empNo {}: {}", empNo, completedList);
-	      
-	      model.addAttribute("inProgressList", inProgressList);
-	      model.addAttribute("completedList", completedList);
+
+	      // 👉 여기서 리스트 조회 ❌ 제거 (중요)
+
 	      model.addAttribute("selectedYear", year);
 	      model.addAttribute("selectedPeriod", period);
+	      model.addAttribute("userPosition", position);
 
-	      model.addAttribute("userPosition", position); 
-	      
-	      List<Integer> yearList = multiService.getAvailableYears(); // DB에서 distinct year 조회
+	      model.addAttribute("tab", tab);
+
+	      List<Integer> yearList = multiService.getAvailableYears();
 	      model.addAttribute("yearList", yearList);
-	      
+
 	      return "evaluation/multi/multi";
 	  }
+	  
 	  
 	  @GetMapping("/evaluation/multi/detail/{evalTypeId}/{evaluatorNo}/{evaluateeNo}")
 	  @ResponseBody

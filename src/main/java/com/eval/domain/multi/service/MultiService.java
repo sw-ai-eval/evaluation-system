@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +23,7 @@ import com.eval.domain.multi.EvalCategorySummary;
 import com.eval.domain.multi.EvalSummaryChart;
 import com.eval.domain.multi.MultiEvalAnswer;
 import com.eval.domain.multi.dto.MultiEvalDTO;
+import com.eval.domain.multi.dto.PageResponse;
 import com.eval.domain.multi.dto.MultiEvalDTO.CategoryAvgDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.MultiChartDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.MyCategoryScoreDto;
@@ -47,41 +49,80 @@ import lombok.RequiredArgsConstructor;
     	    return multiMapper.findAvailableYears();
     }
      
-     //관리자 진행전, 진행중 평가 리스트
-     public List<MultiEvalDTO> getAllDeptMultiProgressList(Integer year, String period) {
+     //진행 문서
+     public PageResponse<MultiEvalDTO> getMultiProgressList(
+    		 	String empNo, 
+  	        	String position,
+    	        Integer year,
+    	        String period,
+    	        Pageable pageable,
+    	        String role
+    	) {
     	    Map<String, Object> params = new HashMap<>();
     	    params.put("year", year);
     	    params.put("period", period);
-    	    return multiMapper.findAllDeptMultiProgressEval(params);
+    	    params.put("offset", pageable.getPageNumber() * pageable.getPageSize());
+    	    params.put("size", pageable.getPageSize());
+    	    
+    	    List<MultiEvalDTO> list=null;
+    	    int total =0;
+    	    if("ADMIN".equals(role)) {
+    	    	list = multiMapper.findAllDeptMultiProgressEval(params);
+    	    	total = multiMapper.countAllDeptMultiProgressEval(params);
+    	    }
+    	    else {
+    	    	params.put("userNo", empNo);
+    	 	    params.put("position", position);
+    	    	list = multiMapper.findMultiProgressEval(params);
+    	    	total = multiMapper.countMultiProgressEval(params);
+    	    }
+
+
+
+    	    return new PageResponse<>(
+    	            list,
+    	            total,
+    	            pageable.getPageNumber(),
+    	            pageable.getPageSize()
+    	    );
     	}
      
-     //관리자 확정 평가 리스트
-     public List<MultiEvalDTO> getAllMultiCompletedList(Integer year, String period) {
+     // 확정 문서
+     public PageResponse<MultiEvalDTO> getMultiCompletedList(
+    		String empNo, 
+  	        String position,
+    		Integer year,
+ 	        String period,
+ 	        Pageable pageable,
+ 	        String role
+ 	) {
  	    Map<String, Object> params = new HashMap<>();
  	    params.put("year", year);
  	    params.put("period", period);
- 	    return multiMapper.findAllDeptMultiCompletedEval(params);
- 	}
-     
-     // 진행전, 진행중 평가 리스트
-     public List<MultiEvalDTO> getMultiProgressList(String empNo, String position, Integer year, String period) {
-    	    Map<String, Object> params = new HashMap<>();
-    	    params.put("userNo", empNo);
-    	    params.put("position", position); // Mapper 조건용
-    	    params.put("year", year);
-    	    params.put("period", period);
-    	    return multiMapper.findMultiProgressEval(params);
-    	}
-     
-     
-     //사원 확정 평가 리스트
-     public List<MultiEvalDTO> getMultiCompletedList(String empNo, String position, Integer year, String period) {
- 	    Map<String, Object> params = new HashMap<>();
- 	    params.put("userNo", empNo);
- 	    params.put("position", position); // Mapper 조건용
- 	    params.put("year", year);
- 	    params.put("period", period);
- 	    return multiMapper.findMultiCompletedEval(params);
+ 	    params.put("offset", pageable.getOffset());
+ 	    params.put("size", pageable.getPageSize());
+ 	    
+ 	    List<MultiEvalDTO> list=null;
+ 	    int total =0;
+ 	    if(role.equals("ADMIN")) {
+ 	    	list = multiMapper.findAllDeptMultiCompletedEval(params);
+ 	    	total = multiMapper.countAllDeptMultiCompleteEval(params);
+ 	    }
+ 	    else {
+ 	    	params.put("userNo", empNo);
+ 	 	    params.put("position", position);
+ 	    	list = multiMapper.findMultiCompletedEval(params);
+ 	    	total = multiMapper.countMultiCompleteEval(params);
+ 	    }
+
+
+
+ 	    return new PageResponse<>(
+ 	            list,
+ 	            total,
+ 	            pageable.getPageNumber(),
+ 	            pageable.getPageSize()
+ 	    );
  	}
      
      // 세부 패널 화면

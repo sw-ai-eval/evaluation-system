@@ -47,6 +47,7 @@ public class SecurityConfig {
                     return new AuthorizationDecision(false);
                 })
 
+
                 // 평가 점수/등급 현황: 부서장, 임원, ADMIN만
                 .requestMatchers("/evaluation/employee-score/**").access((authentication, request) -> {
                     var principal = authentication.get().getPrincipal();
@@ -60,6 +61,7 @@ public class SecurityConfig {
 
                 .requestMatchers("/evaluation/performance/**", "/evaluation/competency/**",
                                  "/evaluation/multi/**", "/interview/**").authenticated()
+
                 .requestMatchers("/evaluation/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
