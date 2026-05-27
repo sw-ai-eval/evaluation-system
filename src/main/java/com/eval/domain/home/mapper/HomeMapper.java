@@ -18,4 +18,15 @@ public interface HomeMapper {
 	List<NoticeListDto> selectNoticeList();
     
 	NoticeDetailDto getNoticeDetail(Integer id);
+
+	Long countIncompleteEvalByEmpNo(String empNo);
+	
+	Long countCompletedEvalByEmpNo(String empNo);
+
+	long countAllEval();
+
+	long countAllStartedEval();
+	
+	Long countAllNotStartedEvalEmpNum();
+	
 }

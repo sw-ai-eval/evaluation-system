@@ -97,6 +97,7 @@
 	    FROM interview_52
 	    WHERE end_at >= GETDATE()
 	      AND (evaluator_no = #{empNo} OR evaluatee_no = #{empNo})
+	      AND status !=2
 	</select>
 
 </mapper>

@@ -99,7 +99,33 @@ public class HomeService {
 	    notice.setUpdateBy(empNo); // 또는 로그인 사용자
 	    notice.setUpdateAt(LocalDateTime.now());
 	}
+	
+	public double getMyOngoingEvalPercent(String empNo) {
 
+	    long ongoing = homeMapper.countIncompleteEvalByEmpNo(empNo);
+	    long total = homeMapper.countCompletedEvalByEmpNo(empNo);
 
+	    if (total == 0) {
+	        return 0.0;
+	    }
+
+	    double percent = ((double)(total - ongoing) / total) * 100;
+
+	    return Math.round(percent * 100) / 100.0;
+	}
+	
+	public double getDeptOngoingEvalPercent()
+	{
+		long Complete = homeMapper.countAllStartedEval();
+	    long total = homeMapper.countAllEval();
+	    
+	    if (total == 0) {
+	        return 0.0;
+	    }
+
+	    double percent = ((double)Complete/ total) * 100;
+
+	    return Math.round(percent * 100) / 100.0;
+	}
 
 }

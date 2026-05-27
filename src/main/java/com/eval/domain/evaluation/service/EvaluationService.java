@@ -169,6 +169,6 @@ public class EvaluationService {
     
     // 김규리가 추가함
     public List<EvalType> findAllExcludingInterview() {
-        return evalTypeRepository.findByNameNotContaining("면담");
+        return evalTypeRepository.findByNameNotContainingAndStatus("면담",true);
     }
 }
