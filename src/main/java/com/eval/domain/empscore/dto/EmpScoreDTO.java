@@ -4,7 +4,6 @@ import lombok.Data;
 
 public class EmpScoreDTO {
 
-    /** 사원용 (성과/역량 1차=부서장) */
     @Data
     public static class StaffInfo {
         private String empNo;
@@ -13,21 +12,18 @@ public class EmpScoreDTO {
         private String jobTitle;
         private String position;
 
-        private Double perfFirst;
-        private Double perfSecond;
-        private Double perfTotal;
+        private Double perfSelf;    // 성과 0차 (참고)
+        private Double perfFirst;   // 성과 1차
         private String perfStatus;
 
-        private Double compFirst;
-        private Double compSecond;
-        private Double compTotal;
+        private Double compSelf;    // 역량 0차 (참고)
+        private Double compFirst;   // 역량 1차
         private String compStatus;
 
         private Double totalScore;
         private String evalGrade;
     }
 
-    /** 부서장용 (성과/역량 1차=다면avg) */
     @Data
     public static class LeaderInfo {
         private String empNo;
@@ -36,17 +32,9 @@ public class EmpScoreDTO {
         private String jobTitle;
         private String position;
 
-        private Double perfFirst;   // 다면 avg_score
-        private Double perfSecond;
-        private Double perfTotal;
-        private String perfStatus;
+        private Double multiAvgScore;
+        private String multiStatus;
 
-        private Double compFirst;   // 다면 avg_score (동일)
-        private Double compSecond;
-        private Double compTotal;
-        private String compStatus;
-
-        private Double totalScore;
         private String evalGrade;
     }
 }

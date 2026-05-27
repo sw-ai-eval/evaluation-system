@@ -11,7 +11,6 @@ public interface EmpScoreMapper {
 
     List<Integer> selectYears();
 
-    /** 사원 탭 목록 */
     List<EmpScoreDTO.StaffInfo> selectStaffList(
             @Param("year") Integer year,
             @Param("period") String period,
@@ -20,7 +19,6 @@ public interface EmpScoreMapper {
             @Param("currentEmpNo") String currentEmpNo,
             @Param("isAdmin") boolean isAdmin);
 
-    /** 부서장 탭 목록 */
     List<EmpScoreDTO.LeaderInfo> selectLeaderList(
             @Param("year") Integer year,
             @Param("period") String period,

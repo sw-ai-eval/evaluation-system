@@ -1,7 +1,7 @@
 package com.eval.domain.empscore.controller;
 
-import com.eval.domain.empscore.dto.EmpScoreDTO;
 import com.eval.domain.empscore.service.EmpScoreService;
+import com.eval.domain.dept.mapper.DepartmentMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,6 +15,7 @@ import java.util.List;
 public class EmpScoreController {
 
     private final EmpScoreService service;
+    private final DepartmentMapper departmentMapper;
 
     @GetMapping("/list")
     public String list(
@@ -35,6 +36,7 @@ public class EmpScoreController {
         model.addAttribute("selectedDeptId", deptId);
         model.addAttribute("staffList", service.getStaffList(year, period, empNo, deptId));
         model.addAttribute("leaderList", service.getLeaderList(year, period, empNo, deptId));
+        model.addAttribute("deptList", departmentMapper.selectDepartmentList());
 
         return "evaluation/empscore/list";
     }
