@@ -46,6 +46,13 @@
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+			    SELECT 1
+			    FROM final_result_52 fr
+			    WHERE fr.emp_no = etm.evaluatee_no
+			      AND fr.year = et.year
+			      AND fr.status = 0
+			)
 	        
 	        <if test="year != null">
 		        AND et.year = #{year}
@@ -66,7 +73,9 @@
 		        </choose>
 		    </if>
 	    </where>
-	
+		ORDER BY et.id DESC
+		OFFSET #{offset} ROWS
+		FETCH NEXT #{size} ROWS ONLY
 	</select>
 	<select id="findAllDeptMultiCompletedEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
 	
@@ -111,6 +120,13 @@
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+			    SELECT 1
+			    FROM final_result_52 fr
+			    WHERE fr.emp_no = etm.evaluatee_no
+			      AND fr.year = et.year
+			      AND fr.status = 1
+			)
 	        
 	        <if test="year != null">
 		        AND et.year = #{year}
@@ -131,7 +147,55 @@
 		        </choose>
 		    </if>
 	    </where>
+	    ORDER BY et.id DESC
+		OFFSET #{offset} ROWS
+		FETCH NEXT #{size} ROWS ONLY
 	
+	</select>
+	
+	<select id="countAllDeptMultiProgressEval" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM eval_target_mapping_52 etm
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
+	    LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS CHAR)
+	    LEFT JOIN code_group_52 cg ON cg.id = cc.group_id
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+	            SELECT 1
+	            FROM final_result_52 fr
+	            WHERE fr.emp_no = etm.evaluatee_no
+	              AND fr.year = et.year
+	              AND fr.status = 0
+	        )
+	    </where>
+	</select>
+	
+	
+	<select id="countAllDeptMultiCompleteEval" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM eval_target_mapping_52 etm
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
+	    LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS CHAR)
+	    LEFT JOIN code_group_52 cg ON cg.id = cc.group_id
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+	            SELECT 1
+	            FROM final_result_52 fr
+	            WHERE fr.emp_no = etm.evaluatee_no
+	              AND fr.year = et.year
+	              AND fr.status = 1
+	        )
+	    </where>
 	</select>
 
      <select id="findMultiProgressEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
@@ -152,10 +216,13 @@
 	        et.end_date AS endDate,
 	        cc.name AS statusName
 	    FROM eval_target_mapping_52 etm
+	    
 	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    
 	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    
 	    LEFT JOIN department_52 d ON d.id = e.dept_id 
-	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   <!-- evaluator join -->
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
 	    LEFT JOIN code_common_52 cc 
 	        ON cc.code = CAST(etm.status AS VARCHAR)
 	    LEFT JOIN code_group_52 cg
@@ -164,6 +231,13 @@
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+			    SELECT 0
+			    FROM final_result_52 fr
+			    WHERE fr.emp_no = etm.evaluatee_no
+			      AND fr.year = et.year
+			      AND fr.status = 0
+			)
 	        
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
@@ -176,7 +250,7 @@
 		    </if>
 		    
 		    <if test="period != null and period != ''">
-		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        
 		        <choose>
 		            <when test="period == '연간'">
 		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
@@ -190,7 +264,11 @@
 		        </choose>
 		    </if>
 	    </where>
+	    ORDER BY et.id DESC
+		OFFSET #{offset} ROWS
+		FETCH NEXT #{size} ROWS ONLY
 	</select>
+	
 	
 	<select id="findMultiCompletedEval" parameterType="map" resultType="com.eval.domain.multi.dto.MultiEvalDTO">
 	    SELECT
@@ -213,7 +291,7 @@
 	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
 	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
 	    LEFT JOIN department_52 d ON d.id = e.dept_id 
-	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   <!-- evaluator join -->
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
 	    LEFT JOIN code_common_52 cc 
 	        ON cc.code = CAST(etm.status AS VARCHAR)
 	    LEFT JOIN code_group_52 cg
@@ -222,6 +300,13 @@
 	        et.name LIKE '%다면평가%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	        AND EXISTS (
+			    SELECT 1
+			    FROM final_result_52 fr
+			    WHERE fr.emp_no = etm.evaluatee_no
+			      AND fr.year = et.year
+			      AND fr.status = 1
+			)
 	        
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
@@ -234,7 +319,7 @@
 		    </if>
 		    
 		    <if test="period != null and period != ''">
-		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
+		        
 		        <choose>
 		            <when test="period == '연간'">
 		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
@@ -247,6 +332,115 @@
 		            </when>
 		        </choose>
 		    </if>
+	    </where>
+	    ORDER BY et.id DESC
+		OFFSET #{offset} ROWS
+		FETCH NEXT #{size} ROWS ONLY
+	</select>
+	
+	<select id="countMultiProgressEval" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM eval_target_mapping_52 etm
+	    
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
+	    LEFT JOIN code_common_52 cc 
+	        ON cc.code = CAST(etm.status AS VARCHAR)
+	    LEFT JOIN code_group_52 cg
+	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
+	
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	
+	        AND EXISTS (
+	            SELECT 0
+	            FROM final_result_52 fr
+	            WHERE fr.emp_no = etm.evaluatee_no
+	              AND fr.year = et.year
+	              AND fr.status = 0
+	        )
+	
+	        <if test="position == '부서원'">
+	            AND etm.evaluator_no = #{userNo}
+	        </if>
+	
+	        <if test="position == '부서장'">
+	            AND etm.evaluatee_no = #{userNo}
+	        </if>
+	
+	        <if test="year != null">
+	            AND et.year = #{year}
+	        </if>
+	
+	        <if test="period != null and period != ''">
+	            <choose>
+	                <when test="period == '연간'">
+	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+	                </when>
+	                <when test="period == '상반기'">
+	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+	                </when>
+	                <when test="period == '하반기'">
+	                    AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+	                </when>
+	            </choose>
+	        </if>
+	    </where>
+	</select>
+	
+	<select id="countMultiCompleteEval" parameterType="map" resultType="int">
+	    SELECT COUNT(*)
+	    FROM eval_target_mapping_52 etm
+	    
+	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
+	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
+	    LEFT JOIN code_common_52 cc 
+	        ON cc.code = CAST(etm.status AS VARCHAR)
+	    LEFT JOIN code_group_52 cg
+	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
+	
+	    <where>
+	        et.name LIKE '%다면평가%'
+	        AND cg.group_code = 'EVAL_STATUS'
+	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
+	
+	        AND EXISTS (
+	            SELECT 0
+	            FROM final_result_52 fr
+	            WHERE fr.emp_no = etm.evaluatee_no
+	              AND fr.year = et.year
+	              AND fr.status = 1
+	        )
+	
+	        <if test="position == '부서원'">
+	            AND etm.evaluator_no = #{userNo}
+	        </if>
+	
+	        <if test="position == '부서장'">
+	            AND etm.evaluatee_no = #{userNo}
+	        </if>
+	
+	        <if test="year != null">
+	            AND et.year = #{year}
+	        </if>
+	
+	        <if test="period != null and period != ''">
+	            <choose>
+	                <when test="period == '연간'">
+	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
+	                </when>
+	                <when test="period == '상반기'">
+	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
+	                </when>
+	                <when test="period == '하반기'">
+	                    AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
+	                </when>
+	            </choose>
+	        </if>
 	    </where>
 	</select>
 	

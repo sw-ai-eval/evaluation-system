@@ -63,10 +63,12 @@ public class InterviewController {
 
         String empNo = null;
         String position = null;
+        String role=null;
 
         if (principal instanceof CustomUserDetails customUser) {
             empNo = customUser.getUsername();
             position = customUser.getPosition();
+            role =customUser.getRole();
         } else if (principal instanceof UserDetails userDetails) {
             empNo = userDetails.getUsername();
         } else if (principal != null) {
@@ -81,7 +83,7 @@ public class InterviewController {
         
         Pageable pageable = PageRequest.of(page, size, Sort.by("startDateTime").descending());
 
-        Page<InterviewListDto> interviewPage =interviewService.getInterviewPage(empNo, position, startDay, employee, type, status, pageable);
+        Page<InterviewListDto> interviewPage =interviewService.getInterviewPage(empNo, position, startDay, employee, type, status, pageable,role);
         
         List<InterviewTypeNameDto> interviewTypeList = interviewService.getAllInterviewTypes();
 

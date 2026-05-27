@@ -15,6 +15,7 @@ public class CustomUserDetails implements UserDetails {
     private String position;
     private int levelId;
     private boolean disabled;
+    private String deptCode;
 
     public CustomUserDetails(EmployeeDTO employee) {
         this.empNo = employee.getEmpNo();
@@ -23,6 +24,7 @@ public class CustomUserDetails implements UserDetails {
         this.position = employee.getPosition();
         this.levelId = employee.getLevelId() != null ? employee.getLevelId() : 0;
         this.disabled = "퇴사".equals(employee.getStatus());
+        this.deptCode = employee.getDeptCode();
     }
 
     @Override
@@ -43,4 +45,6 @@ public class CustomUserDetails implements UserDetails {
     public boolean isDeptHead()   { return "부서장".equalsIgnoreCase(position); }
     public boolean isStaff()      { return "부서원".equalsIgnoreCase(position); }
     public boolean isExecutive()  { return this.levelId == 6; }
+    
+    public String getDeptCode()     { return deptCode; }
 }

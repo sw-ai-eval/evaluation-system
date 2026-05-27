@@ -25,7 +25,12 @@
         .tabs { display: flex; border-bottom: 1px solid #dee2e6; background: #f8f9fa; margin: 0; padding: 0; list-style: none; }
         .tabs li { padding: 10px 20px; font-size: 13px; cursor: pointer; border-right: 1px solid #dee2e6; color: #495057; }
         .tabs li.active { background: #fff; font-weight: bold; color: #000; border-bottom: 1px solid #fff; margin-bottom: -1px; }
-        
+        .tabs li a {
+		    text-decoration: none;
+		    color: inherit;
+		    display: block;
+		}
+
         .table-wrap { overflow-y: auto; flex-grow: 1; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
         th { background-color: #f1f3f5; border: 1px solid #dee2e6; padding: 10px; font-weight: 500; color: #495057; }
@@ -190,101 +195,73 @@
         <div class="split-container">
             <!-- 좌측 목록 패널 -->
             <div class="left-panel">
-                <ul class="tabs">
-                    <li class="active">진행 문서</li>
-                    <li>확정 문서</li>
-                </ul>
-                <div class="table-wrap" id="inProgressTable">
-                    <table>
-                        <thead>
-                            <tr>
-                            	<th>평가명</th>
-                            	<th>부서명</th>
-                            	<th>평가자 사번</th>
-                            	<th>평가자</th>
-                                <th>평가수행기간</th>
-                                <th>대상직위</th>
-                                <th>대상사번</th>
-                                <th>대상자명</th>
-                                <th>상태</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="eval : ${inProgressList}" 
-                                class="clickable-row" 
-                                th:data-evalTypeId="${eval.evalTypeId}" 
-                                th:data-empno="${eval.evaluateeNo}" 
-                                th:data-evaluatorNo="${eval.evaluatorNo}" 
-                                onclick="loadEvalDetail(this)">
-                                <td th:text="${eval.evalTypeName}"></td>
-                                <td th:text="${eval.deptName}"></td>
-                                <td th:text="${eval.evaluatorNo}"></td>
-                                <td th:text="${eval.evaluatorName}"></td>
-                                <td th:text="${eval.evalPeriod}"></td>
-                                <td th:text="${eval.position}"></td>
-                                <td th:text="${eval.evaluateeNo}"></td>
-                                <td th:text="${eval.evaluateeName}"></td>
-                                <td>
-								    <span 
-								        th:text="${eval.statusName}" 
-								        th:class="${eval.statusName == '평가 완료'} ? 'success' : 'badge'">
-								    </span>
-								</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="table-wrap" id="completedTable" style="display:none;">
-				    <table>
-                        <thead>
-                            <tr>
-                            	<th>평가명</th>
-                            	<th>부서명</th>
-                            	<th>평가자 사번</th>
-                            	<th>평가자</th>
-                                <th>평가수행기간</th>
-                                <th>대상직위</th>
-                                <th>대상사번</th>
-                                <th>대상자명</th>
-                                <th>상태</th>
-                            </tr>
-                        </thead>
-				        <tbody>
-                            <tr th:each="eval : ${completedList}"
-                                class="clickable-row" 
-                                th:data-evalTypeId="${eval.evalTypeId}" 
-                                th:data-empno="${eval.evaluateeNo}" 
-                                th:data-evaluatorNo="${eval.evaluatorNo}" 
-                                onclick="loadEvalDetail(this)">
-                                <td th:text="${eval.evalTypeName}"></td>
-                                <td th:text="${eval.deptName}"></td>
-                                <td th:text="${eval.evaluatorNo}"></td>
-                                <td th:text="${eval.evaluatorName}"></td>
-                                <td th:text="${eval.evalPeriod}"></td>
-                                <td th:text="${eval.position}"></td>
-                                <td th:text="${eval.evaluateeNo}"></td>
-                                <td th:text="${eval.evaluateeName}"></td>
-                                <td>
-								    <span 
-								        th:text="${eval.statusName}" 
-								        th:class="${eval.statusName == '평가 완료'} ? 'success' : 'badge'">
-								    </span>
-								</td>
-                            </tr>
-                        </tbody>
-				    </table>
-				</div>
-                <div class="pagination-wrap">
-                    <div class="pagination">
-                        <button disabled><i class="fas fa-step-backward"></i></button>
-                        <button disabled><i class="fas fa-caret-left"></i></button>
-                        <button class="active">1</button>
-                        <button disabled><i class="fas fa-caret-right"></i></button>
-                        <button disabled><i class="fas fa-step-forward"></i></button>
-                    </div>
-                    <div>1 - 1 of 1 items</div>
-                </div>
-            </div>
+			
+			    <!-- 탭 -->
+			    <ul class="tabs">
+			        <li id="tab-progress" class="active">
+			            <a href="javascript:void(0)">진행 문서</a>
+			        </li>
+			
+			        <li id="tab-completed">
+			            <a href="javascript:void(0)">확정 문서</a>
+			        </li>
+			    </ul>
+			
+			    <!-- ===================== -->
+			    <!-- PROGRESS TABLE -->
+			    <!-- ===================== -->
+			    <div class="table-wrap" id="progressWrap">
+			        <table>
+			            <thead>
+			                <tr>
+			                    <th>평가명</th>
+			                    <th>부서명</th>
+			                    <th>평가자 사번</th>
+			                    <th>평가자</th>
+			                    <th>평가수행기간</th>
+			                    <th>대상직위</th>
+			                    <th>대상사번</th>
+			                    <th>대상자명</th>
+			                    <th>상태</th>
+			                </tr>
+			            </thead>
+			            <tbody id="progressBody"></tbody>
+			        </table>
+			
+			        <div class="pagination-wrap">
+					    <div class="pagination" id="progressPaging"></div>
+					    <div id="progressPagingInfo"></div>
+					</div>
+			    </div>
+			
+			    <!-- ===================== -->
+			    <!-- COMPLETED TABLE -->
+			    <!-- ===================== -->
+			    <div class="table-wrap" id="completedWrap" style="display:none;">
+			        <table>
+			            <thead>
+			                <tr>
+			                    <th>평가명</th>
+			                    <th>부서명</th>
+			                    <th>평가자 사번</th>
+			                    <th>평가자</th>
+			                    <th>평가수행기간</th>
+			                    <th>대상직위</th>
+			                    <th>대상사번</th>
+			                    <th>대상자명</th>
+			                    <th>상태</th>
+			                </tr>
+			            </thead>
+			            <tbody id="completedBody"></tbody>
+			        </table>
+			
+			        <div class="pagination-wrap">
+					    <div class="pagination" id="completedPaging"></div>
+					    <div id="completedPagingInfo"></div>
+					</div>
+			    </div>
+			
+			</div>
 
             <!-- 우측 상세 패널 -->
             <div class="right-panel" id="detailPanel">
@@ -404,13 +381,18 @@
     });
 </script>
 <script type="text/javascript">
+window.onload = () => {
+    loadProgress(0);
+};
 const currentUserNo = '[[${#authentication.name}]]';
 const currentUserPosition = '[[${userPosition}]]';
 
 function loadEvalDetail(rowElement) {
-    const evalTypeId = rowElement.getAttribute('data-evalTypeId');
-    const evaluateeNo = rowElement.getAttribute('data-empno');
-    const evaluatorNo=rowElement.getAttribute('data-evaluatorNo');
+	const evalTypeId = rowElement.dataset.evalTypeId;
+    const evaluateeNo = rowElement.dataset.empno;
+    const evaluatorNo = rowElement.dataset.evaluatorNo;
+    
+    console.log
     
     // 선택한 행 강조
     document.querySelectorAll('.clickable-row').forEach(row => row.classList.remove('selected'));
@@ -697,24 +679,6 @@ function startEvaluation() {
 }
 
 
-const tabs = document.querySelectorAll('.tabs li');
-tabs.forEach(tab => {
-    tab.addEventListener('click', () => {
-        tabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-
-        if(tab.innerText === '진행 문서') {
-            document.getElementById('inProgressTable').style.display = 'block';
-            document.getElementById('completedTable').style.display = 'none';
-        } else {
-            document.getElementById('inProgressTable').style.display = 'none';
-            document.getElementById('completedTable').style.display = 'block';
-        }
-    });
-});
-
-
-
 function closeDetailPanel() {
     const detailPanel = document.getElementById('detailPanel');
     detailPanel.style.display = 'none';
@@ -743,13 +707,213 @@ function setEvalMode(isResult) {
 }
 
 function searchEval() {
+
+    const activeTab = document.querySelector(".tabs li.active").id;
+
+    if (activeTab === "tab-progress") {
+        loadProgress(0);
+    } else {
+        loadCompleted(0);
+    }
+}
+let currentTab = "progress";
+let progressPage = 0;
+let completedPage = 0;
+
+document.getElementById("tab-progress").onclick = () => {
+    currentTab = "progress";
+    switchTab();
+    loadProgress(0);
+};
+
+document.getElementById("tab-completed").onclick = () => {
+    currentTab = "completed";
+    switchTab();
+    loadCompleted(0);
+};
+
+function switchTab() {
+    document.getElementById("progressWrap").style.display =
+        currentTab === "progress" ? "block" : "none";
+
+    document.getElementById("completedWrap").style.display =
+        currentTab === "completed" ? "block" : "none";
+}
+function loadProgress(page = 0) {
+    progressPage = page;
+	
     const year = document.getElementById("searchYear").value;
     const period = document.getElementById("searchPeriod").value;
 
-    window.location.href = `/evaluation/multi?year=${year}&period=${period}`;
+    fetch(`/evaluation/multi/progress?page=${page}&size=10&year=${year}&period=${period}`)
+        .then(res => res.json())
+        .then(data => {
+
+            const tbody = document.getElementById("progressBody");
+            tbody.innerHTML = "";
+            
+            if (!data.content || data.content.length === 0) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td colspan="9" style="text-align:center; padding:20px; color:#888;">
+                        진행 중인 평가가 없습니다.
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                return;
+            }
+
+            data.content.forEach(e => {
+                tbody.appendChild(createRow(e));
+            });
+
+            renderProgressPaging(data);
+        });
+}
+function loadCompleted(page = 0) {
+    completedPage = page;
+
+    const year = document.getElementById("searchYear").value;
+    const period = document.getElementById("searchPeriod").value;
+
+    fetch(`/evaluation/multi/completed?page=${page}&size=10&year=${year}&period=${period}`)
+        .then(res => res.json())
+        .then(data => {
+
+            const tbody = document.getElementById("completedBody");
+            tbody.innerHTML = "";
+            
+            if (!data.content || data.content.length === 0) {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td colspan="9" style="text-align:center; padding:20px; color:#888;">
+                        진행 중인 평가가 없습니다.
+                    </td>
+                `;
+                tbody.appendChild(tr);
+                return;
+            }
+
+
+
+            data.content.forEach(e => {
+            	tbody.appendChild(createRow(e));
+            });
+
+            renderCompletedPaging(data);
+        });
 }
 
+function createRow(e) {
+    const tr = document.createElement("tr");
+    tr.classList.add("clickable-row");
 
+    tr.dataset.evalTypeId = e.evalTypeId;
+    tr.dataset.empno = e.evaluateeNo;
+    tr.dataset.evaluatorNo = e.evaluatorNo;
+
+    tr.innerHTML = `
+        <td>${e.evalTypeName}</td>
+        <td>${e.deptName}</td>
+        <td>${e.evaluatorNo}</td>
+        <td>${e.evaluatorName}</td>
+        <td>${e.evalPeriod}</td>
+        <td>${e.position}</td>
+        <td>${e.evaluateeNo}</td>
+        <td>${e.evaluateeName}</td>
+        <td><span class="status-badge"></span></td>
+    `;
+
+    const badge = tr.querySelector(".status-badge");
+    badge.textContent = e.statusName;
+    badge.classList.add(
+        e.statusName === "평가 완료" ? "success" : "badge"
+    );
+
+    tr.addEventListener("click", function () {
+        loadEvalDetail(this);
+    });
+
+    return tr;
+}
+function renderProgressPaging(data) {
+    const paging = document.getElementById("progressPaging");
+    const info = document.getElementById("progressPagingInfo");
+
+    const page = data.page;
+    const total = data.totalPages;
+
+    paging.innerHTML = `
+        <button onclick="loadProgress(0)" ${page <= 0 ? "disabled" : ""}>
+            <i class="fas fa-step-backward"></i>
+        </button>
+
+        <button onclick="loadProgress(${page - 1})" ${page <= 0 ? "disabled" : ""}>
+            <i class="fas fa-caret-left"></i>
+        </button>
+
+        <button class="active">${page + 1}</button>
+
+        <button onclick="loadProgress(${page + 1})" ${page + 1 >= total ? "disabled" : ""}>
+            <i class="fas fa-caret-right"></i>
+        </button>
+
+        <button onclick="loadProgress(${total - 1})" ${page + 1 >= total ? "disabled" : ""}>
+            <i class="fas fa-step-forward"></i>
+        </button>
+    `;
+
+    info.innerText = `${page + 1} / ${total}`;
+}
+function renderCompletedPaging(data) {
+    const paging = document.getElementById("completedPaging");
+    const info = document.getElementById("completedPagingInfo");
+
+    const page = data.page;
+    const total = data.totalPages;
+
+    paging.innerHTML = `
+        <button onclick="loadCompleted(0)" ${page <= 0 ? "disabled" : ""}>
+            <i class="fas fa-step-backward"></i>
+        </button>
+
+        <button onclick="loadCompleted(${page - 1})" ${page <= 0 ? "disabled" : ""}>
+            <i class="fas fa-caret-left"></i>
+        </button>
+
+        <button class="active">${page + 1}</button>
+
+        <button onclick="loadCompleted(${page + 1})" ${page + 1 >= total ? "disabled" : ""}>
+            <i class="fas fa-caret-right"></i>
+        </button>
+
+        <button onclick="loadCompleted(${total - 1})" ${page + 1 >= total ? "disabled" : ""}>
+            <i class="fas fa-step-forward"></i>
+        </button>
+    `;
+
+    info.innerText = `${page + 1} / ${total}`;
+}
+
+document.getElementById("tab-progress").onclick = () => {
+    document.getElementById("tab-progress").classList.add("active");
+    document.getElementById("tab-completed").classList.remove("active");
+
+    document.getElementById("progressWrap").style.display = "block";
+    document.getElementById("completedWrap").style.display = "none";
+
+    loadProgress(0);
+};
+
+document.getElementById("tab-completed").onclick = () => {
+    document.getElementById("tab-completed").classList.add("active");
+    document.getElementById("tab-progress").classList.remove("active");
+
+    document.getElementById("progressWrap").style.display = "none";
+    document.getElementById("completedWrap").style.display = "block";
+
+    loadCompleted(0);
+};
 </script>
 </body>
 </html>

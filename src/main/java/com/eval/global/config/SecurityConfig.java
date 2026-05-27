@@ -48,6 +48,7 @@ public class SecurityConfig {
                 })
 
                 .requestMatchers("/evaluation/performance/**", "/evaluation/multi/**", "/interview/**").authenticated()
+                .requestMatchers("/evaluation/employee-score/**").authenticated()
                 .requestMatchers("/evaluation/competency/**").authenticated()
                 .requestMatchers("/evaluation/**").hasRole("ADMIN")
                 .anyRequest().authenticated()

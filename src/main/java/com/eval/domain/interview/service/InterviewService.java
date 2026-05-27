@@ -46,7 +46,7 @@ public class InterviewService {
     public Page<InterviewListDto> getInterviewPage(
             String empNo, String position,
             String startDay, String employee,
-            String type, String status, Pageable pageable) {
+            String type, String status, Pageable pageable, String role) {
 
         Map<String, Object> params = new HashMap<>();
         params.put("empNo", empNo);
