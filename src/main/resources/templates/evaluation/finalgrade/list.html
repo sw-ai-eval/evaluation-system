@@ -136,7 +136,7 @@
                             <td><input type="checkbox" class="row-check staff-check"
                                        th:disabled="${r.confirmStatus == '확정'}"></td>
                             <td th:text="${r.deptName}"></td>
-                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName != null ? r.levelName : '-'}"></td>
                             <td th:text="${r.empNo}"></td>
                             <td th:text="${r.empName}"></td>
                             <!-- 성과 -->
@@ -216,7 +216,7 @@
                             <td><input type="checkbox" class="row-check leader-check"
                                        th:disabled="${r.confirmStatus == '확정'}"></td>
                             <td th:text="${r.deptName}"></td>
-                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName != null ? r.levelName : '-'}"></td>
                             <td th:text="${r.empNo}"></td>
                             <td th:text="${r.empName}"></td>
                             <td th:text="${r.multiAvgScore != null ? #numbers.formatDecimal(r.multiAvgScore,1,2) : '-'}"></td>

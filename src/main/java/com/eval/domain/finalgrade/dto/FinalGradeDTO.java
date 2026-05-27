@@ -16,6 +16,7 @@ public class FinalGradeDTO {
         private String deptName;
         private String deptId;
         private String position;
+        private String levelName;
 
         // 성과평가
         private Double perfSelf;     // 0차 (본인, 참고용)
@@ -46,6 +47,7 @@ public class FinalGradeDTO {
         private String deptName;
         private String deptId;
         private String position;
+        private String levelName;
 
         // 다면평가
         private Double  multiAvgScore;   // 다면 평균점수

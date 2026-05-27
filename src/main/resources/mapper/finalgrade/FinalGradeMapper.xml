@@ -18,6 +18,7 @@
             d.name          AS deptName,
             e.dept_id       AS deptId,
             e.position      AS position,
+            ISNULL(lv.name, '-') AS levelName,
 
             /* 성과 0차: 정규화 (합계/배점합계*100) */
             (SELECT CASE WHEN SUM(q.weight) = 0 THEN NULL
@@ -99,6 +100,7 @@
 
         FROM employee_52 e
         JOIN department_52 d ON e.dept_id = d.id
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
 
         LEFT JOIN eval_target_mapping_52 pm
             ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
@@ -135,6 +137,7 @@
             d.name          AS deptName,
             e.dept_id       AS deptId,
             e.position      AS position,
+            ISNULL(lv.name, '-') AS levelName,
 
             /* 다면 평균점수: 평가자별 합산 점수의 평균 */
             (
@@ -182,7 +185,7 @@
 
         FROM employee_52 e
         JOIN department_52 d ON e.dept_id = d.id
-
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         LEFT JOIN final_result_52 fr
             ON fr.emp_no = e.emp_no
             <if test="year != null">AND fr.year = #{year}</if>

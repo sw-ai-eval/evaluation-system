@@ -9,7 +9,7 @@ public class EmpScoreDTO {
         private String empNo;
         private String empName;
         private String deptName;
-        private String jobTitle;
+        private String levelName;
         private String position;
 
         private Double perfSelf;    // 성과 0차 (참고)
@@ -29,7 +29,7 @@ public class EmpScoreDTO {
         private String empNo;
         private String empName;
         private String deptName;
-        private String jobTitle;
+        private String levelName;
         private String position;
 
         private Double multiAvgScore;

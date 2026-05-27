@@ -95,9 +95,6 @@
                     onclick="switchTab('leader', this)">부서장 평가</button>
         </div>
 
-        <!-- 부서장 탭 섹션도 임원/ADMIN만 렌더링 -->
-        <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}">
-
         <!-- 사원 탭 -->
         <div id="tab-staff" class="tab-content active">
             <div class="table-wrap">
@@ -112,15 +109,15 @@
                         </tr>
                         <tr>
                             <th>부서명</th><th>직책</th><th>직위</th><th>사번</th><th>성명</th>
-                            <th>0차(참고)</th><th>1차(부서장)</th><th>상태</th>
-                            <th>0차(참고)</th><th>1차(부서장)</th><th>상태</th>
+                            <th>0차(본인)</th><th>1차(부서장)</th><th>상태</th>
+                            <th>0차(본인)</th><th>1차(부서장)</th><th>상태</th>
                         </tr>
                     </thead>
                     <tbody id="staffBody">
                         <tr th:each="r : ${staffList}">
                             <td th:text="${r.deptName}"></td>
-                            <td th:text="${r.jobTitle}"></td>
                             <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName}"></td>
                             <td th:text="${r.empNo}"></td>
                             <td th:text="${r.empName}"></td>
                             <td class="ref" th:text="${r.perfSelf != null ? #numbers.formatDecimal(r.perfSelf,1,1) : '-'}"></td>
@@ -159,7 +156,8 @@
             </div>
         </div>
 
-        <!-- 부서장 탭 -->
+        <!-- 부서장 탭: 임원/ADMIN만 -->
+        <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}">
         <div id="tab-leader" class="tab-content">
             <div class="table-wrap">
                 <table>
@@ -177,8 +175,8 @@
                     <tbody id="leaderBody">
                         <tr th:each="r : ${leaderList}">
                             <td th:text="${r.deptName}"></td>
-                            <td th:text="${r.jobTitle}"></td>
                             <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName}"></td>
                             <td th:text="${r.empNo}"></td>
                             <td th:text="${r.empName}"></td>
                             <td th:text="${r.multiAvgScore != null ? #numbers.formatDecimal(r.multiAvgScore,1,2) : '-'}"></td>
@@ -206,6 +204,7 @@
                 <div id="leaderPageInfo">0 건</div>
             </div>
         </div>
+        </div><!-- 임원/ADMIN 조건 끝 -->
     </div>
 
     <script>
