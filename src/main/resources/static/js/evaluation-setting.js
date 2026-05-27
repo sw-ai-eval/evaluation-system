@@ -46,6 +46,11 @@ function switchTab(tabId) {
     
     // 현재 보고 있는 탭을 세션에 저장하여 새로고침 시 유지
     sessionStorage.setItem('activeEvalTab', tabId);
+
+    // 부서장 등급 탭 진입 시 데이터 로드
+    if (tabId === 'leader-grade') {
+        loadLeaderGrades();
+    }
 }
 
 // [문항] 답변 타입에 따른 배점 입력칸 표시/숨김 토글
@@ -676,3 +681,71 @@ window.addTargetToList = function() {
     window.toggleAllEmps(document.getElementById('selectAllEmp'));
     document.querySelectorAll('.emp-checkbox').forEach(cb => cb.checked = false);
 };
+/* =============================================
+   부서장 등급 설정
+============================================= */
+function loadLeaderGrades() {
+    fetch('/evaluation/grades/LEADER')
+        .then(r => r.json())
+        .then(data => {
+            if (data && Object.keys(data).length > 0) {
+                document.getElementById('leaderGradeS').value = data.gradeS || 10;
+                document.getElementById('leaderGradeA').value = data.gradeA || 30;
+                document.getElementById('leaderGradeB').value = data.gradeB || 70;
+                document.getElementById('leaderGradeC').value = data.gradeC || 90;
+                document.getElementById('leaderGradeD').value = data.gradeD || 100;
+            }
+            updateLeaderGradePreview();
+        })
+        .catch(() => {});
+}
+
+function updateLeaderGradePreview() {
+    const s = parseInt(document.getElementById('leaderGradeS').value) || 0;
+    const a = parseInt(document.getElementById('leaderGradeA').value) || 0;
+    const b = parseInt(document.getElementById('leaderGradeB').value) || 0;
+    const c = parseInt(document.getElementById('leaderGradeC').value) || 0;
+    const d = parseInt(document.getElementById('leaderGradeD').value) || 0;
+    document.getElementById('leaderGradePreview').innerHTML =
+        '<tr><td>S</td><td>' + s + '%</td></tr>' +
+        '<tr><td>A</td><td>' + (a - s) + '%</td></tr>' +
+        '<tr><td>B</td><td>' + (b - a) + '%</td></tr>' +
+        '<tr><td>C</td><td>' + (c - b) + '%</td></tr>' +
+        '<tr><td>D</td><td>' + (d - c) + '%</td></tr>';
+}
+
+function saveLeaderGrades() {
+    const grades = {
+        deptId: 'LEADER',
+        gradeS: parseInt(document.getElementById('leaderGradeS').value),
+        gradeA: parseInt(document.getElementById('leaderGradeA').value),
+        gradeB: parseInt(document.getElementById('leaderGradeB').value),
+        gradeC: parseInt(document.getElementById('leaderGradeC').value),
+        gradeD: parseInt(document.getElementById('leaderGradeD').value)
+    };
+
+    if (grades.gradeD !== 100) {
+        alert('D등급 누적 비율은 반드시 100이어야 합니다.');
+        return;
+    }
+    if (grades.gradeS >= grades.gradeA || grades.gradeA >= grades.gradeB ||
+        grades.gradeB >= grades.gradeC || grades.gradeC >= grades.gradeD) {
+        alert('누적 비율은 S < A < B < C < D 순서여야 합니다.');
+        return;
+    }
+
+    fetch('/evaluation/save-grades?applyToChildren=false', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(grades)
+    })
+    .then(r => r.text())
+    .then(res => {
+        if (res === 'success') {
+            alert('부서장 등급 기준이 저장되었습니다.');
+            updateLeaderGradePreview();
+        } else {
+            alert('저장 실패: ' + res);
+        }
+    });
+}

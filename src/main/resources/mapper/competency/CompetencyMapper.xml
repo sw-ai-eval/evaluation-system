@@ -31,6 +31,7 @@
         WHERE m.eval_type_id = 3
           AND m.step = 0
           AND e.status = 'ACTIVE'
+          AND e.position != '부서장'
         <if test="currentEmpNo != null and currentEmpNo != ''">
             AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
         </if>

@@ -36,8 +36,8 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/department/**").hasRole("ADMIN")
 
-                // 임원(level_id=6) 또는 ADMIN만 접근 가능
-                .requestMatchers("/evaluation/finalgrade/**").access((authentication, request) -> {
+                // 임원(level_id=6) 또는 ADMIN만 접근 가능 — URL 하이픈 포함
+                .requestMatchers("/evaluation/final-grade/**").access((authentication, request) -> {
                     var principal = authentication.get().getPrincipal();
                     if (principal instanceof CustomUserDetails userDetails) {
                         return new AuthorizationDecision(
@@ -47,8 +47,19 @@ public class SecurityConfig {
                     return new AuthorizationDecision(false);
                 })
 
-                .requestMatchers("/evaluation/performance/**", "/evaluation/multi/**", "/interview/**").authenticated()
-                .requestMatchers("/evaluation/competency/**").authenticated()
+                // 평가 점수/등급 현황: 부서장, 임원, ADMIN만
+                .requestMatchers("/evaluation/employee-score/**").access((authentication, request) -> {
+                    var principal = authentication.get().getPrincipal();
+                    if (principal instanceof CustomUserDetails userDetails) {
+                        return new AuthorizationDecision(
+                            userDetails.isDeptHead() || userDetails.isExecutive() || "ADMIN".equals(userDetails.getRole())
+                        );
+                    }
+                    return new AuthorizationDecision(false);
+                })
+
+                .requestMatchers("/evaluation/performance/**", "/evaluation/competency/**",
+                                 "/evaluation/multi/**", "/interview/**").authenticated()
                 .requestMatchers("/evaluation/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

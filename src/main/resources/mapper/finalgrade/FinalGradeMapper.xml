@@ -7,37 +7,91 @@
     </select>
 
     <!-- =============================================
-         사원 탭: position='부서원'
-         성과 1차 = 부서장이 매긴 점수 (type_result_52.first_score, type_id=2)
-         역량 1차 = 부서장이 매긴 점수 (type_result_52.first_score, type_id=3)
-         2차 = 임원 확정 점수 (type_result_52.second_score)
+         사원 탭
+         성과: 0차(본인참고) = step=0 답변 합산 / 1차(부서장) = step=1 답변 합산
+         역량: 동일
     ============================================= -->
     <select id="selectStaffList" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$StaffInfo">
         SELECT
             e.emp_no        AS empNo,
             e.name          AS empName,
             d.name          AS deptName,
+            e.dept_id       AS deptId,
             e.position      AS position,
+            ISNULL(lv.name, '-') AS levelName,
 
-            pr.first_score  AS perfFirst,
-            pr.second_score AS perfSecond,
-            pr.total_score  AS perfTotal,
-            CASE pm.status
+            /* 성과 0차: 정규화 (합계/배점합계*100) */
+            (SELECT CASE WHEN SUM(q.weight) = 0 THEN NULL
+                    ELSE CAST(SUM(a.score) AS FLOAT) / SUM(q.weight) * 100 END
+             FROM eval_answer_52 a
+             JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+             JOIN eval_question_52 q ON a.question_id = q.id
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = 2
+            ) AS perfSelf,
+
+            /* 성과 1차: 정규화 (합계/배점합계*100) */
+            (SELECT CASE WHEN SUM(q.weight) = 0 THEN NULL
+                    ELSE CAST(SUM(a.score) AS FLOAT) / SUM(q.weight) * 100 END
+             FROM eval_answer_52 a
+             JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+             JOIN eval_question_52 q ON a.question_id = q.id
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+            ) AS perfFirst,
+
+            CASE ISNULL(pm.status, -1)
                 WHEN 0 THEN '본인평가중'
                 WHEN 1 THEN '1차평가대기'
                 WHEN 2 THEN '평가완료'
-            END             AS perfStatus,
+                ELSE '-'
+            END AS perfStatus,
 
-            cr.first_score  AS compFirst,
-            cr.second_score AS compSecond,
-            cr.total_score  AS compTotal,
-            CASE cm.status
+            /* 역량 0차: 본인 점수 (배점 × 등급배수) */
+            (SELECT SUM(a.score * q.weight)
+             FROM eval_answer_52 a
+             JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+             JOIN eval_question_52 q ON a.question_id = q.id
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = 3
+            ) AS compSelf,
+
+            /* 역량 1차: 부서장 점수 (배점 × 등급배수) */
+            (SELECT SUM(a.score * q.weight)
+             FROM eval_answer_52 a
+             JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+             JOIN eval_question_52 q ON a.question_id = q.id
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+            ) AS compFirst,
+
+            CASE ISNULL(cm.status, -1)
                 WHEN 0 THEN '본인평가중'
                 WHEN 1 THEN '1차평가대기'
                 WHEN 2 THEN '평가완료'
-            END             AS compStatus,
+                ELSE '-'
+            END AS compStatus,
 
-            fr.final_score  AS totalScore,
+            /* 종합점수 = 성과1차 × 성과가중치 + 역량1차 × 역량가중치 */
+            (
+                SELECT
+                    ISNULL(
+                        (SELECT CASE WHEN SUM(q.weight) = 0 THEN 0
+                              ELSE CAST(SUM(a.score) AS FLOAT) / SUM(q.weight) * 100 END
+                         FROM eval_answer_52 a
+                         JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                         JOIN eval_question_52 q ON a.question_id = q.id
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+                        ) * ISNULL(w2.weight, 50) / 100.0
+                        +
+                        (SELECT ISNULL(SUM(a.score * q.weight), 0)
+                         FROM eval_answer_52 a
+                         JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                         JOIN eval_question_52 q ON a.question_id = q.id
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+                        ) * ISNULL(w3.weight, 50) / 100.0
+                    , 0)
+                FROM (SELECT 1 AS dummy) AS t
+                LEFT JOIN dept_eval_weight_52 w2 ON w2.dept_id = e.dept_id AND w2.type_id = 2
+                LEFT JOIN dept_eval_weight_52 w3 ON w3.dept_id = e.dept_id AND w3.type_id = 3
+            ) AS totalScore,
+
             fr.grade        AS totalGrade,
             fr.grade        AS confirmedGrade,
             CASE fr.status WHEN 1 THEN '확정' ELSE '미확정' END AS confirmStatus,
@@ -46,20 +100,13 @@
 
         FROM employee_52 e
         JOIN department_52 d ON e.dept_id = d.id
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
 
         LEFT JOIN eval_target_mapping_52 pm
             ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
 
-        LEFT JOIN type_result_52 pr
-            ON pr.emp_no = e.emp_no AND pr.type_id = 2
-            <if test="year != null">AND pr.year = #{year}</if>
-
         LEFT JOIN eval_target_mapping_52 cm
             ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
-
-        LEFT JOIN type_result_52 cr
-            ON cr.emp_no = e.emp_no AND cr.type_id = 3
-            <if test="year != null">AND cr.year = #{year}</if>
 
         LEFT JOIN final_result_52 fr
             ON fr.emp_no = e.emp_no
@@ -67,77 +114,78 @@
 
         WHERE e.status = 'ACTIVE'
           AND e.position = '부서원'
-          AND (pm.id IS NOT NULL OR cm.id IS NOT NULL)
+          AND pm.id IS NOT NULL
+          AND cm.id IS NOT NULL
         <if test="empNo != null and empNo != ''">
             AND e.emp_no = #{empNo}
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND e.dept_id = #{deptId}
         </if>
         ORDER BY d.name, e.emp_no
     </select>
 
     <!-- =============================================
-         부서장 탭: position='부서장'
-         성과/역량 1차 = 다면평가 avg_score (eval_summary_52)
-         성과/역량 2차 = 임원 확정 점수 (type_result_52.second_score)
+         부서장 탭
+         다면: eval_summary_52 avg_score
+         상태: 전체 평가자 수 vs 완료 수
     ============================================= -->
     <select id="selectLeaderList" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$LeaderInfo">
         SELECT
-            e.emp_no            AS empNo,
-            e.name              AS empName,
-            d.name              AS deptName,
-            e.position          AS position,
+            e.emp_no        AS empNo,
+            e.name          AS empName,
+            d.name          AS deptName,
+            e.dept_id       AS deptId,
+            e.position      AS position,
+            ISNULL(lv.name, '-') AS levelName,
 
-            /* 성과평가: 1차=다면avg, 2차=임원 */
-            es.avg_score        AS perfFirst,
-            pr.second_score     AS perfSecond,
-            pr.total_score      AS perfTotal,
-            CASE pm.status
-                WHEN 0 THEN '본인평가중'
-                WHEN 1 THEN '1차평가대기'
-                WHEN 2 THEN '평가완료'
-            END                 AS perfStatus,
+            /* 다면 평균점수: 평가자별 합산 점수의 평균 */
+            (
+                SELECT AVG(CAST(sub.total AS FLOAT))
+                FROM (
+                    SELECT m2.id, SUM(a.score) AS total
+                    FROM eval_answer_52 a
+                    JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                    JOIN eval_type_52 t2 ON m2.eval_type_id = t2.id
+                    WHERE m2.evaluatee_no = e.emp_no
+                      AND m2.step = 1
+                      AND m2.status = 2
+                      AND t2.name LIKE '%다면%'
+                    GROUP BY m2.id
+                ) AS sub
+            ) AS multiAvgScore,
 
-            /* 역량평가: 1차=다면avg(동일), 2차=임원 */
-            es.avg_score        AS compFirst,
-            cr.second_score     AS compSecond,
-            cr.total_score      AS compTotal,
-            CASE cm.status
-                WHEN 0 THEN '본인평가중'
-                WHEN 1 THEN '1차평가대기'
-                WHEN 2 THEN '평가완료'
-            END                 AS compStatus,
+            /* 다면 상태: status=2(완료) 수 / 전체 평가자 수(step=1) */
+            (
+                SELECT
+                    CASE
+                        WHEN COUNT(*) = 0 THEN '평가전'
+                        WHEN SUM(CASE WHEN m2.status = 2 THEN 1 ELSE 0 END) = 0
+                            THEN CONCAT('평가중 (0/', COUNT(*), '명)')
+                        WHEN SUM(CASE WHEN m2.status = 2 THEN 1 ELSE 0 END) = COUNT(*)
+                            THEN '평가완료'
+                        ELSE CONCAT('평가중 (',
+                            SUM(CASE WHEN m2.status = 2 THEN 1 ELSE 0 END),
+                            '/',
+                            COUNT(*),
+                            '명)')
+                    END
+                FROM eval_target_mapping_52 m2
+                JOIN eval_type_52 t2 ON m2.eval_type_id = t2.id
+                WHERE m2.evaluatee_no = e.emp_no
+                  AND m2.step = 1
+                  AND t2.name LIKE '%다면%'
+            ) AS multiStatus,
 
-            fr.final_score      AS totalScore,
-            fr.grade            AS totalGrade,
-            fr.grade            AS confirmedGrade,
+            fr.grade        AS totalGrade,
+            fr.grade        AS confirmedGrade,
             CASE fr.status WHEN 1 THEN '확정' ELSE '미확정' END AS confirmStatus,
-            fr.reason           AS reason,
-            fr.weight_ratio     AS weightRatio
+            fr.reason       AS reason,
+            fr.weight_ratio AS weightRatio
 
         FROM employee_52 e
         JOIN department_52 d ON e.dept_id = d.id
-
-        /* 다면평가 집계 점수 */
-        LEFT JOIN eval_summary_52 es
-            ON es.evaluatee_no = e.emp_no
-           AND es.eval_type_id IN (
-               SELECT id FROM eval_type_52 WHERE name LIKE '%다면평가%'
-               <if test="year != null">AND year = #{year}</if>
-           )
-
-        LEFT JOIN eval_target_mapping_52 pm
-            ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
-
-        LEFT JOIN type_result_52 pr
-            ON pr.emp_no = e.emp_no AND pr.type_id = 2
-            <if test="year != null">AND pr.year = #{year}</if>
-
-        LEFT JOIN eval_target_mapping_52 cm
-            ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
-
-        LEFT JOIN type_result_52 cr
-            ON cr.emp_no = e.emp_no AND cr.type_id = 3
-            <if test="year != null">AND cr.year = #{year}</if>
-
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         LEFT JOIN final_result_52 fr
             ON fr.emp_no = e.emp_no
             <if test="year != null">AND fr.year = #{year}</if>
@@ -147,7 +195,78 @@
         <if test="empNo != null and empNo != ''">
             AND e.emp_no = #{empNo}
         </if>
+        <if test="deptId != null and deptId != ''">
+            AND e.dept_id = #{deptId}
+        </if>
         ORDER BY d.name, e.emp_no
+    </select>
+
+
+    <!-- 등급 재조정용: 부서별 미확정 사원 점수 목록 (점수 높은 순) -->
+    <select id="selectStaffScoreByDept" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$StaffScore">
+        SELECT
+            e.emp_no    AS empNo,
+            e.dept_id   AS deptId,
+            (
+                SELECT
+                    ISNULL(
+                        (SELECT CASE WHEN SUM(q.weight) = 0 THEN 0
+                              ELSE CAST(SUM(a.score) AS FLOAT) / SUM(q.weight) * 100 END
+                         FROM eval_answer_52 a
+                         JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                         JOIN eval_question_52 q ON a.question_id = q.id
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+                        ) * ISNULL(w2.weight, 50) / 100.0
+                        +
+                        (SELECT ISNULL(SUM(a.score * q.weight), 0)
+                         FROM eval_answer_52 a
+                         JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                         JOIN eval_question_52 q ON a.question_id = q.id
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+                        ) * ISNULL(w3.weight, 50) / 100.0
+                    , 0)
+                FROM (SELECT 1 AS dummy) AS t
+                LEFT JOIN dept_eval_weight_52 w2 ON w2.dept_id = e.dept_id AND w2.type_id = 2
+                LEFT JOIN dept_eval_weight_52 w3 ON w3.dept_id = e.dept_id AND w3.type_id = 3
+            ) AS totalScore,
+            fr.grade    AS currentGrade,
+            ISNULL(fr.status, 0) AS confirmStatus
+        FROM employee_52 e
+        LEFT JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+            AND fr.year = #{year}
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서원'
+          AND e.dept_id = #{deptId}
+        ORDER BY totalScore DESC
+    </select>
+
+    <!-- 부서장 전체 점수 목록 (자동 재조정용, 다면 평균점수 기준) -->
+    <select id="selectLeaderScoreList" resultType="com.eval.domain.finalgrade.dto.FinalGradeDTO$StaffScore">
+        SELECT
+            e.emp_no    AS empNo,
+            e.dept_id   AS deptId,
+            (
+                SELECT AVG(CAST(sub.total AS FLOAT))
+                FROM (
+                    SELECT m2.id, SUM(a.score) AS total
+                    FROM eval_answer_52 a
+                    JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
+                    JOIN eval_type_52 t2 ON m2.eval_type_id = t2.id
+                    WHERE m2.evaluatee_no = e.emp_no
+                      AND m2.step = 1
+                      AND m2.status = 2
+                      AND t2.name LIKE '%다면%'
+                    GROUP BY m2.id
+                ) AS sub
+            ) AS totalScore,
+            fr.grade    AS currentGrade,
+            ISNULL(fr.status, 0) AS confirmStatus
+        FROM employee_52 e
+        LEFT JOIN final_result_52 fr ON fr.emp_no = e.emp_no
+            <if test="year != null">AND fr.year = #{year}</if>
+        WHERE e.status = 'ACTIVE'
+          AND e.position = '부서장'
+        ORDER BY totalScore DESC
     </select>
 
     <!-- 부서별 등급 통계 -->
@@ -169,28 +288,26 @@
         ORDER BY d.name
     </select>
 
-    <!-- 단건 UPSERT -->
     <update id="upsertFinalResult">
         IF EXISTS (SELECT 1 FROM final_result_52 WHERE emp_no = #{empNo} AND year = #{year})
         BEGIN
             UPDATE final_result_52
             SET grade        = #{grade},
                 final_score  = #{finalScore},
-                status       = #{status},
                 reason       = #{reason},
                 weight_ratio = #{weightRatio},
                 updated_at   = GETDATE(),
                 updated_by   = #{updatedBy}
             WHERE emp_no = #{empNo} AND year = #{year}
+            /* status는 수정 안 함 - 확정 후에도 저장해도 확정 상태 유지 */
         END
         ELSE
         BEGIN
             INSERT INTO final_result_52 (emp_no, grade, final_score, status, reason, year, weight_ratio, updated_by, created_at)
-            VALUES (#{empNo}, #{grade}, #{finalScore}, #{status}, #{reason}, #{year}, #{weightRatio}, #{updatedBy}, GETDATE())
+            VALUES (#{empNo}, #{grade}, #{finalScore}, 0, #{reason}, #{year}, #{weightRatio}, #{updatedBy}, GETDATE())
         END
     </update>
 
-    <!-- 최종 확정 -->
     <update id="confirmFinalResult">
         UPDATE final_result_52
         SET status     = 1,
@@ -199,7 +316,6 @@
         WHERE emp_no = #{empNo} AND year = #{year}
     </update>
 
-    <!-- 매핑 상태 완료 처리 -->
     <update id="updateMappingStatus">
         UPDATE eval_target_mapping_52
         SET status     = 2,

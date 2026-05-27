@@ -1,23 +1,20 @@
-package com.eval.domain.finalgrade.controller;
+package com.eval.domain.empscore.controller;
 
-import com.eval.domain.dept.dto.DepartmentDto;
+import com.eval.domain.empscore.service.EmpScoreService;
 import com.eval.domain.dept.mapper.DepartmentMapper;
-import com.eval.domain.finalgrade.dto.FinalGradeDTO;
-import com.eval.domain.finalgrade.service.FinalGradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @Controller
-@RequestMapping("/evaluation/final-grade")
+@RequestMapping("/evaluation/employee-score")
 @RequiredArgsConstructor
-public class FinalGradeController {
+public class EmpScoreController {
 
-    private final FinalGradeService service;
+    private final EmpScoreService service;
     private final DepartmentMapper departmentMapper;
 
     @GetMapping("/list")
@@ -39,36 +36,8 @@ public class FinalGradeController {
         model.addAttribute("selectedDeptId", deptId);
         model.addAttribute("staffList", service.getStaffList(year, period, empNo, deptId));
         model.addAttribute("leaderList", service.getLeaderList(year, period, empNo, deptId));
-        model.addAttribute("deptStats", service.getDeptStat(year));
         model.addAttribute("deptList", departmentMapper.selectDepartmentList());
 
-        return "evaluation/finalgrade/list";
-    }
-
-    @PostMapping("/adjust")
-    @ResponseBody
-    public String adjust(@RequestBody FinalGradeDTO.GradeAdjustReq req) {
-        try {
-            service.adjustGrade(req);
-            return "success";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "error: " + e.getMessage();
-        }
-    }
-
-    @PostMapping("/confirm")
-    @ResponseBody
-    public String confirm(@RequestBody Map<String, Object> body) {
-        try {
-            @SuppressWarnings("unchecked")
-            List<String> empNos = (List<String>) body.get("empNos");
-            Integer year = (Integer) body.get("year");
-            service.confirmGrades(empNos, year);
-            return "success";
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "error: " + e.getMessage();
-        }
+        return "evaluation/empscore/list";
     }
 }
