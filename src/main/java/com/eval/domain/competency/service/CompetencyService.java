@@ -90,6 +90,7 @@ public class CompetencyService {
             }
             if ("Y".equals(req.getSubCheck())) {
                 mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2, 0);
+                mapper.updateEvalStatus(req.getTypeId(), req.getEmpNo(), 2, 1);
             }
         }
     }

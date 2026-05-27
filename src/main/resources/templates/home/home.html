@@ -185,10 +185,17 @@
         <!-- 상단 통계 카드 영역 -->
         <div class="card-grid">
             <div class="stat-card">
-                <div class="stat-title">나의 평가 진행률</div>
-                <div class="stat-value">0%</div>
-                <div style="font-size: 12px; color: #a0aec0; margin-top: 8px;">현재 진행 중인 평가가 없습니다.</div>
-            </div>
+			    <div class="stat-title">나의 평가 진행률</div>
+			
+			    <div class="stat-value" th:text="${myEvalPercent} + '%'">
+			        0%
+			    </div>
+			
+			    <div style="font-size: 12px; color: #a0aec0; margin-top: 8px;">
+			    	현재 평가 진행률입니다.
+			        <p style="font-size: 10px; color: #a0aec0; margin-top: 8px;">성과평가/역량평가 일 경우 부서장의 1차 평가가 완료되야 평가 완료로 적용됩니다.</p>
+			    </div>
+			</div>
             
 			<div class="stat-card">
 			    <div class="stat-title">예정된 면담 일정</div>
@@ -207,8 +214,10 @@
             <!-- 관리자에게만 보이는 통계 카드 -->
             <div sec:authorize="hasRole('ADMIN')" class="stat-card" style="background-color: #f8fafc;">
                 <div class="stat-title">조직 전체 평가 진척률</div>
-                <div class="stat-value" style="color: #805ad5;">15%</div>
-                <div style="font-size: 12px; color: #a0aec0; margin-top: 8px;">미완료자: 85명 남음</div>
+                <div class="stat-value" style="color: #805ad5;" th:text="${AllEvalPercent} + '%'">
+			        0%
+			    </div>
+                <div style="font-size: 12px; color: #a0aec0; margin-top: 8px;"th:text="'평가 미시작 '+${inCompleteEmpNum ?: 0} + '명'" >평가 미시작 0명</div>
             </div>
         </div>
 
@@ -299,7 +308,7 @@
 			        <li th:each="notice : ${noticeList}" >
 					
 					    <div class="notice-row">
-						
+							 
 						    <!-- 왼쪽: 제목 -->
 						    <a th:href="@{/notice/{id}(id=${notice.id})}"
 						       class="notice-title">

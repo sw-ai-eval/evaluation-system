@@ -49,6 +49,9 @@ public class HomeController {
             Long interviewCount = interviewMapper.countOngoingInterviewsByEmpNo(empNo);
             List<TodoListDto> todoList = homeService.getTodoList(empNo);
             List<NoticeListDto> noticeList= homeMapper.selectNoticeList();
+            double myEvalPercent = homeService.getMyOngoingEvalPercent(empNo);
+            double AllEvalPercent = homeService.getDeptOngoingEvalPercent();
+            long inCompleteEmpNum = homeMapper.countAllNotStartedEvalEmpNum();
             
             if (employee != null) {
                 model.addAttribute("empName", employee.getName());
@@ -58,6 +61,9 @@ public class HomeController {
                 model.addAttribute("interviewCount", interviewCount);
                 model.addAttribute("todoList", todoList);
                 model.addAttribute("noticeList", noticeList);
+                model.addAttribute("myEvalPercent", myEvalPercent);
+                model.addAttribute("AllEvalPercent", AllEvalPercent);
+                model.addAttribute("inCompleteEmpNum", inCompleteEmpNum);
             }
         }
         
