@@ -27,16 +27,9 @@
             </ul>
         </div>
 
-        <!-- 임원 전용 -->
-        <div th:if="${#authentication.principal.executive}" class="menu-group">
-            <div class="menu-label">임원 메뉴</div>
-            <ul class="menu-list">
-                <li><a href="/evaluation/final-grade/list" class="menu-item">최종등급 확정</a></li>
-            </ul>
-        </div>
-
-        <!-- ADMIN도 최종등급 확정 접근 -->
-        <div sec:authorize="hasRole('ADMIN')" class="menu-group">
+        <!-- 임원(level_id=6) 또는 ADMIN: 최종등급 확정 -->
+        <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}"
+             class="menu-group">
             <div class="menu-label">평가 확정</div>
             <ul class="menu-list">
                 <li><a href="/evaluation/final-grade/list" class="menu-item">최종등급 확정</a></li>
@@ -50,8 +43,16 @@
                 <li><a href="/evaluation/performance/list" class="menu-item">성과/업무평가</a></li>
                 <li><a href="/evaluation/competency/list"  class="menu-item">역량평가</a></li>
                 <li><a href="/evaluation/multi"            class="menu-item">다면평가</a></li>
-                <li><a href="/interview"        class="menu-item">면담 관리</a></li>
-                <li><a href="/evaluation/employee-score"   class="menu-item">평가 점수/등급 현황</a></li>
+                <li><a href="/interview"                   class="menu-item">면담 관리</a></li>
+            </ul>
+        </div>
+
+        <!-- 부서장, 임원, ADMIN만: 평가 점수/등급 현황 -->
+        <div th:if="${#authentication.principal.deptHead or #authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}"
+             class="menu-group">
+            <div class="menu-label">평가 조회</div>
+            <ul class="menu-list">
+                <li><a href="/evaluation/employee-score/list" class="menu-item">평가 점수/등급 현황</a></li>
             </ul>
         </div>
 

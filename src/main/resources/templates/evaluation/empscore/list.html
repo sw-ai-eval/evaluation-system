@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security" lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>평가결과 조회</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/sidebar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { margin:0; display:flex; background:#fff; font-family:'Noto Sans KR',sans-serif; min-height:100vh; color:#333; }
+        .main-content { flex-grow:1; padding:20px 30px; box-sizing:border-box; overflow-y:auto; }
+
+        h2 { font-size:20px; font-weight:700; margin:0 0 20px; padding-bottom:15px; border-bottom:1px solid #eee; }
+
+        .search-area { background:#f8f9fa; border:1px solid #e9ecef; padding:10px 16px; display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+        .search-area label { font-size:13px; color:#555; white-space:nowrap; }
+        .search-area select, .search-area input { padding:4px 8px; border:1px solid #ced4da; border-radius:4px; background:#fff; height:30px; font-size:13px; font-family:inherit; }
+        .search-area input { width:90px; height:30px; box-sizing:border-box; }
+        .btn-search { background:#0d6efd; color:#fff; border:none; padding:0 20px; height:30px; border-radius:4px; cursor:pointer; font-size:13px; font-family:inherit; }
+
+        .tabs { display:flex; border-bottom:1px solid #dee2e6; margin-bottom:12px; }
+        .tab-btn { padding:9px 20px; font-size:13px; font-weight:500; cursor:pointer; border:none; background:none; color:#6c757d; border-bottom:2px solid transparent; margin-bottom:-1px; font-family:inherit; }
+        .tab-btn.active { color:#0d6efd; border-bottom:2px solid #0d6efd; font-weight:700; }
+        .tab-content { display:none; }
+        .tab-content.active { display:block; }
+
+        .table-wrap { overflow-x:auto; }
+        table { width:100%; border-collapse:collapse; font-size:12px; text-align:center; }
+        th { background:#f1f3f5; border:1px solid #dee2e6; padding:9px 8px; font-weight:600; color:#495057; white-space:nowrap; }
+        td { border:1px solid #dee2e6; padding:8px 7px; vertical-align:middle; }
+        thead tr:first-child th { background:#e9ecef; }
+        tr:hover td { background:#f8f9fa; }
+
+        .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; white-space:nowrap; }
+        .badge-done { background:#d1e7dd; color:#0f5132; border:1px solid #a3cfbb; }
+        .badge-wait { background:#fff3cd; color:#856404; border:1px solid #ffc107; }
+        .badge-pend { background:#f8d7da; color:#842029; border:1px solid #f1aeb5; }
+        .badge-ing  { background:#e2e3e5; color:#41464b; border:1px solid #d3d6d8; }
+
+        .grade { font-weight:700; font-size:13px; }
+        .grade-S { color:#6f42c1; }
+        .grade-A { color:#0d6efd; }
+        .grade-B { color:#198754; }
+        .grade-C { color:#fd7e14; }
+        .grade-D { color:#dc3545; }
+
+        .ref { color:#aaa; font-size:11px; }
+        .dash { color:#ccc; }
+
+        .pagination-wrap { display:flex; justify-content:space-between; align-items:center; padding:8px 4px; margin-top:6px; font-size:12px; color:#6c757d; }
+        .pagination { display:flex; gap:3px; }
+        .pagination button { background:#fff; border:1px solid #dee2e6; width:26px; height:26px; border-radius:3px; cursor:pointer; font-size:11px; color:#555; font-family:inherit; }
+        .pagination button:hover:not(:disabled) { background:#e9ecef; }
+        .pagination button.active { background:#0d6efd; color:#fff; border-color:#0d6efd; }
+        .pagination button:disabled { color:#ccc; cursor:not-allowed; }
+        .empty-row td { color:#aaa; padding:30px; }
+    </style>
+</head>
+<body>
+    <div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+    <div class="main-content">
+        <h2>평가결과 조회
+            <i class="far fa-question-circle" style="color:#ccc; font-size:13px; cursor:pointer; margin-left:4px;"
+               title="확정된 평가 결과를 조회합니다. 부서장은 본인 부서원의 결과를, 임원/관리자는 전체 조회가 가능합니다."></i>
+        </h2>
+
+        <div class="search-area">
+            <label>조회년도</label>
+            <select id="searchYear">
+                <option th:each="y : ${yearList}" th:value="${y}" th:text="${y}" th:selected="${y == selectedYear}"></option>
+            </select>
+            <label>평가기간</label>
+            <select id="searchPeriod">
+                <option value="연간"  th:selected="${selectedPeriod == '연간'}">연간</option>
+                <option value="상반기" th:selected="${selectedPeriod == '상반기'}">상반기</option>
+                <option value="하반기" th:selected="${selectedPeriod == '하반기'}">하반기</option>
+            </select>
+            <label>부서</label>
+            <select id="searchDept" style="width:130px;">
+                <option value="">전체 부서</option>
+                <option th:each="dept : ${deptList}" th:value="${dept.id}" th:text="${dept.name}"
+                        th:selected="${dept.id == selectedDeptId}"></option>
+            </select>
+            <label>사번</label>
+            <input type="text" id="searchEmpNo" th:value="${selectedEmpNo}" placeholder="사번 입력">
+            <button class="btn-search" onclick="searchList()">조회</button>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('staff', this)">사원 평가</button>
+            <button class="tab-btn"
+                    th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}"
+                    onclick="switchTab('leader', this)">부서장 평가</button>
+        </div>
+
+        <!-- 사원 탭 -->
+        <div id="tab-staff" class="tab-content active">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="5">피평가자</th>
+                            <th colspan="3">성과업무평가</th>
+                            <th colspan="3">역량평가</th>
+                            <th rowspan="2">종합점수</th>
+                            <th rowspan="2">평가등급</th>
+                        </tr>
+                        <tr>
+                            <th>부서명</th><th>직책</th><th>직위</th><th>사번</th><th>성명</th>
+                            <th>0차(본인)</th><th>1차(부서장)</th><th>상태</th>
+                            <th>0차(본인)</th><th>1차(부서장)</th><th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffBody">
+                        <tr th:each="r : ${staffList}">
+                            <td th:text="${r.deptName}"></td>
+                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName}"></td>
+                            <td th:text="${r.empNo}"></td>
+                            <td th:text="${r.empName}"></td>
+                            <td class="ref" th:text="${r.perfSelf != null ? #numbers.formatDecimal(r.perfSelf,1,1) : '-'}"></td>
+                            <td th:text="${r.perfFirst != null ? #numbers.formatDecimal(r.perfFirst,1,1) : '-'}"></td>
+                            <td>
+                                <span th:if="${r.perfStatus != null}" class="badge"
+                                      th:classappend="${r.perfStatus == '평가완료'} ? 'badge-done' : (${r.perfStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.perfStatus}"></span>
+                                <span th:unless="${r.perfStatus != null}" class="dash">-</span>
+                            </td>
+                            <td class="ref" th:text="${r.compSelf != null ? #numbers.formatDecimal(r.compSelf,1,1) : '-'}"></td>
+                            <td th:text="${r.compFirst != null ? #numbers.formatDecimal(r.compFirst,1,1) : '-'}"></td>
+                            <td>
+                                <span th:if="${r.compStatus != null}" class="badge"
+                                      th:classappend="${r.compStatus == '평가완료'} ? 'badge-done' : (${r.compStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
+                                      th:text="${r.compStatus}"></span>
+                                <span th:unless="${r.compStatus != null}" class="dash">-</span>
+                            </td>
+                            <td th:text="${r.totalScore != null ? #numbers.formatDecimal(r.totalScore,1,1) : '-'}"></td>
+                            <td>
+                                <span th:if="${r.evalGrade != null}" class="grade"
+                                      th:classappend="'grade-' + ${r.evalGrade}"
+                                      th:text="${r.evalGrade}"></span>
+                                <span th:unless="${r.evalGrade != null}" class="dash">-</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(staffList)}" class="empty-row">
+                            <td colspan="13">조회된 데이터가 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-wrap">
+                <div class="pagination" id="staffPagination"></div>
+                <div id="staffPageInfo">0 건</div>
+            </div>
+        </div>
+
+        <!-- 부서장 탭: 임원/ADMIN만 -->
+        <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}">
+        <div id="tab-leader" class="tab-content">
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th colspan="5">피평가자</th>
+                            <th colspan="2">다면평가</th>
+                            <th rowspan="2">종합등급</th>
+                        </tr>
+                        <tr>
+                            <th>부서명</th><th>직책</th><th>직위</th><th>사번</th><th>성명</th>
+                            <th>평균점수</th><th>상태</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderBody">
+                        <tr th:each="r : ${leaderList}">
+                            <td th:text="${r.deptName}"></td>
+                            <td th:text="${r.position}"></td>
+                            <td th:text="${r.levelName}"></td>
+                            <td th:text="${r.empNo}"></td>
+                            <td th:text="${r.empName}"></td>
+                            <td th:text="${r.multiAvgScore != null ? #numbers.formatDecimal(r.multiAvgScore,1,2) : '-'}"></td>
+                            <td>
+                                <span th:if="${r.multiStatus != null}" class="badge"
+                                      th:classappend="${r.multiStatus == '평가완료'} ? 'badge-done' : 'badge-ing'"
+                                      th:text="${r.multiStatus}"></span>
+                                <span th:unless="${r.multiStatus != null}" class="dash">-</span>
+                            </td>
+                            <td>
+                                <span th:if="${r.evalGrade != null}" class="grade"
+                                      th:classappend="'grade-' + ${r.evalGrade}"
+                                      th:text="${r.evalGrade}"></span>
+                                <span th:unless="${r.evalGrade != null}" class="dash">-</span>
+                            </td>
+                        </tr>
+                        <tr th:if="${#lists.isEmpty(leaderList)}" class="empty-row">
+                            <td colspan="8">조회된 데이터가 없습니다.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="pagination-wrap">
+                <div class="pagination" id="leaderPagination"></div>
+                <div id="leaderPageInfo">0 건</div>
+            </div>
+        </div>
+        </div><!-- 임원/ADMIN 조건 끝 -->
+    </div>
+
+    <script>
+        const PAGE_SIZE = 10;
+        let currentTab = 'staff';
+
+        function switchTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('tab-' + tab).classList.add('active');
+        }
+
+        function renderPagination(tbodyId, paginationId, pageInfoId, page) {
+            const rows = [...document.getElementById(tbodyId).querySelectorAll('tr:not(.empty-row)')];
+            const total = rows.length;
+            const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            page = Math.min(Math.max(1, page), totalPages);
+            rows.forEach((row, i) => {
+                row.style.display = (i >= (page-1)*PAGE_SIZE && i < page*PAGE_SIZE) ? '' : 'none';
+            });
+            const pg = document.getElementById(paginationId);
+            const info = document.getElementById(pageInfoId);
+            if (total === 0) { pg.innerHTML = ''; info.textContent = '0 건'; return; }
+            var btns = '';
+            btns += '<button onclick="renderPagination(\'' + tbodyId + '\',\'' + paginationId + '\',\'' + pageInfoId + '\',1)" ' + (page===1?'disabled':'') + '><i class="fas fa-step-backward"></i></button>';
+            btns += '<button onclick="renderPagination(\'' + tbodyId + '\',\'' + paginationId + '\',\'' + pageInfoId + '\',' + (page-1) + ')" ' + (page===1?'disabled':'') + '><i class="fas fa-caret-left"></i></button>';
+            for (var p = 1; p <= totalPages; p++) {
+                btns += '<button class="' + (p===page?'active':'') + '" onclick="renderPagination(\'' + tbodyId + '\',\'' + paginationId + '\',\'' + pageInfoId + '\',' + p + ')">' + p + '</button>';
+            }
+            btns += '<button onclick="renderPagination(\'' + tbodyId + '\',\'' + paginationId + '\',\'' + pageInfoId + '\',' + (page+1) + ')" ' + (page===totalPages?'disabled':'') + '><i class="fas fa-caret-right"></i></button>';
+            btns += '<button onclick="renderPagination(\'' + tbodyId + '\',\'' + paginationId + '\',\'' + pageInfoId + '\',' + totalPages + ')" ' + (page===totalPages?'disabled':'') + '><i class="fas fa-step-forward"></i></button>';
+            pg.innerHTML = btns;
+            info.textContent = ((page-1)*PAGE_SIZE+1) + ' - ' + Math.min(page*PAGE_SIZE,total) + ' of ' + total + ' items';
+        }
+
+        function searchList() {
+            const year   = document.getElementById('searchYear').value;
+            const period = document.getElementById('searchPeriod').value;
+            const dept   = document.getElementById('searchDept').value;
+            const empNo  = document.getElementById('searchEmpNo').value.trim();
+            location.href = '/evaluation/employee-score/list?year=' + year + '&period=' + period + '&deptId=' + dept + '&empNo=' + empNo;
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderPagination('staffBody', 'staffPagination', 'staffPageInfo', 1);
+            renderPagination('leaderBody', 'leaderPagination', 'leaderPageInfo', 1);
+        });
+    </script>
+</body>
+</html>

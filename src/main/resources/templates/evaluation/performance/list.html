@@ -290,8 +290,15 @@
                     const isMyDoc = (data.empNo === currentUserNo);
                     const isDeptHead = (data.leaderEmpNo === currentUserNo);
                     
-                    const canEditSelf = isMyDoc && data.status === '본인평가중';
+                    const canEditSelf = isMyDoc && data.status === '본인평가중' && data.position !== '부서장';
                     const canEditFirst = isDeptHead && data.status === '1차평가대기';
+
+                    // 부서장 본인 행 클릭 시 안내
+                    if (isMyDoc && data.position === '부서장') {
+                        document.getElementById('evalItemBody').innerHTML = '<tr><td colspan="5" style="color:#aaa; padding:20px; text-align:center;">부서장은 다면평가로 진행됩니다.</td></tr>';
+                        document.getElementById('actionButtons').innerHTML = '';
+                        return;
+                    }
 
                     let tbodyHtml = '';
                     if (data.items && data.items.length > 0) {
