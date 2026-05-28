@@ -20,5 +20,9 @@ public interface InterviewMapper {
 
 	long countInterviewList(Map<String, Object> params);
 
-	Long countOngoingInterviewsByEmpNo(String empNo);
+	long countOngoingInterviewsByEmpNo(String empNo);
+
+	List<InterviewListDto> findAllInterviewList(Map<String, Object> params);
+
+	long countAllInterviewList(Map<String, Object> params);
 }

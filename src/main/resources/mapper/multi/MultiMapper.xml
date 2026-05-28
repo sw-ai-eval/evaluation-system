@@ -17,7 +17,6 @@
 	        e.dept_id AS deptId,
 	        d.name AS deptName,
 	        e.position AS position,
-	        e.emp_no AS empNo,
 	        et.start_date AS startDate,
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -60,17 +59,27 @@
 		    
 		    <if test="period != null and period != ''">
 		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
-		        <choose>
-		            <when test="period == '연간'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-		            </when>
-		            <when test="period == '상반기'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-		            </when>
-		            <when test="period == '하반기'">
-		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-		            </when>
-		        </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 		    </if>
 	    </where>
 		ORDER BY et.id DESC
@@ -86,12 +95,10 @@
 	        eval_emp.name AS evaluatorName,
 	        etm.evaluatee_no AS evaluateeNo,
 	        e.name AS evaluateeName,
-	        et.name AS evalName,
 	        etm.step,
 	        e.dept_id AS deptId,
 	        d.name AS deptName,
 	        e.position AS position,
-	        e.emp_no AS empNo,
 	        et.start_date AS startDate,
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -117,7 +124,7 @@
 	        ON cg.id = cc.group_id
 	
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	        AND EXISTS (
@@ -134,17 +141,27 @@
 		    
 		    <if test="period != null and period != ''">
 		        <!-- 기간이 상반기/하반기/연간이면 start_date와 end_date로 조건 -->
-		        <choose>
-		            <when test="period == '연간'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-		            </when>
-		            <when test="period == '상반기'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-		            </when>
-		            <when test="period == '하반기'">
-		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-		            </when>
-		        </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 		    </if>
 	    </where>
 	    ORDER BY et.id DESC
@@ -162,7 +179,7 @@
 	    LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS CHAR)
 	    LEFT JOIN code_group_52 cg ON cg.id = cc.group_id
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	        AND EXISTS (
@@ -185,7 +202,7 @@
 	    LEFT JOIN code_common_52 cc ON cc.code = CAST(etm.status AS CHAR)
 	    LEFT JOIN code_group_52 cg ON cg.id = cc.group_id
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	        AND EXISTS (
@@ -206,12 +223,10 @@
 	        eval_emp.name AS evaluatorName,
 	        etm.evaluatee_no AS evaluateeNo,
 	        e.name AS evaluateeName,
-	        et.name AS evalName,
 	        etm.step,
 	        e.dept_id AS deptId,
 	        d.name AS deptName,            
 	        e.position AS position,
-	        e.emp_no AS empNo,
 	        et.start_date AS startDate, 
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -228,7 +243,7 @@
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	        AND EXISTS (
@@ -251,17 +266,27 @@
 		    
 		    <if test="period != null and period != ''">
 		        
-		        <choose>
-		            <when test="period == '연간'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-		            </when>
-		            <when test="period == '상반기'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-		            </when>
-		            <when test="period == '하반기'">
-		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-		            </when>
-		        </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 		    </if>
 	    </where>
 	    ORDER BY et.id DESC
@@ -278,12 +303,10 @@
 	        eval_emp.name AS evaluatorName,
 	        etm.evaluatee_no AS evaluateeNo,
 	        e.name AS evaluateeName,
-	        et.name AS evalName,
 	        etm.step,
 	        e.dept_id AS deptId,
 	        d.name AS deptName,            
 	        e.position AS position,
-	        e.emp_no AS empNo,
 	        et.start_date AS startDate, 
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -297,7 +320,7 @@
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	        AND EXISTS (
@@ -320,17 +343,27 @@
 		    
 		    <if test="period != null and period != ''">
 		        
-		        <choose>
-		            <when test="period == '연간'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-		            </when>
-		            <when test="period == '상반기'">
-		                AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-		            </when>
-		            <when test="period == '하반기'">
-		                AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-		            </when>
-		        </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 		    </if>
 	    </where>
 	    ORDER BY et.id DESC
@@ -351,7 +384,7 @@
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	
@@ -376,17 +409,27 @@
 	        </if>
 	
 	        <if test="period != null and period != ''">
-	            <choose>
-	                <when test="period == '연간'">
-	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-	                </when>
-	                <when test="period == '상반기'">
-	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-	                </when>
-	                <when test="period == '하반기'">
-	                    AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-	                </when>
-	            </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 	        </if>
 	    </where>
 	</select>
@@ -404,7 +447,7 @@
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
 	
@@ -429,17 +472,27 @@
 	        </if>
 	
 	        <if test="period != null and period != ''">
-	            <choose>
-	                <when test="period == '연간'">
-	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 12
-	                </when>
-	                <when test="period == '상반기'">
-	                    AND MONTH(et.start_date) = 1 AND MONTH(et.end_date) = 6
-	                </when>
-	                <when test="period == '하반기'">
-	                    AND MONTH(et.start_date) = 7 AND MONTH(et.end_date) = 12
-	                </when>
-	            </choose>
+				<choose>
+				
+				    <!-- 연간 -->
+				    <when test="period == '연간'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 12
+				        AND MONTH(et.end_date) BETWEEN 1 AND 12
+				    </when>
+				
+				    <!-- 상반기 -->
+				    <when test="period == '상반기'">
+				        AND MONTH(et.start_date) BETWEEN 1 AND 6
+				        AND MONTH(et.end_date) BETWEEN 1 AND 6
+				    </when>
+				
+				    <!-- 하반기 -->
+				    <when test="period == '하반기'">
+				        AND MONTH(et.start_date) BETWEEN 7 AND 12
+				        AND MONTH(et.end_date) BETWEEN 7 AND 12
+				    </when>
+				
+				</choose>
 	        </if>
 	    </where>
 	</select>

@@ -64,20 +64,34 @@ import lombok.RequiredArgsConstructor;
     	    params.put("offset", pageable.getPageNumber() * pageable.getPageSize());
     	    params.put("size", pageable.getPageSize());
     	    
+
+    	    System.out.println("========== [MULTI PROGRESS PARAMS] ==========");
+    	    System.out.println("role = " + role);
+    	    System.out.println("empNo = " + empNo);
+    	    System.out.println("position = " + position);
+    	    System.out.println("params = " + params);
+    	    
     	    List<MultiEvalDTO> list=null;
     	    int total =0;
     	    if("ADMIN".equals(role)) {
+    	    	System.out.println("▶ ADMIN branch");
+    	    	
     	    	list = multiMapper.findAllDeptMultiProgressEval(params);
     	    	total = multiMapper.countAllDeptMultiProgressEval(params);
     	    }
     	    else {
     	    	params.put("userNo", empNo);
     	 	    params.put("position", position);
+    	 	    
+    	 	   System.out.println("▶ USER branch");
+    	        System.out.println("params(with user) = " + params);
+    	        
     	    	list = multiMapper.findMultiProgressEval(params);
     	    	total = multiMapper.countMultiProgressEval(params);
     	    }
 
-
+    	    System.out.println("result list size = " + (list != null ? list.size() : 0));
+    	    System.out.println("total = " + total);
 
     	    return new PageResponse<>(
     	            list,
@@ -102,19 +116,34 @@ import lombok.RequiredArgsConstructor;
  	    params.put("offset", pageable.getOffset());
  	    params.put("size", pageable.getPageSize());
  	    
+ 	    
+ 	   params.put("year", year);
+	    params.put("period", period);
+	    params.put("offset", pageable.getPageNumber() * pageable.getPageSize());
+	    params.put("size", pageable.getPageSize());
+ 	    
  	    List<MultiEvalDTO> list=null;
  	    int total =0;
  	    if(role.equals("ADMIN")) {
  	    	list = multiMapper.findAllDeptMultiCompletedEval(params);
  	    	total = multiMapper.countAllDeptMultiCompleteEval(params);
+ 	    	
+ 	    	System.out.println("▶ ADMIN branch");
+ 	    	
  	    }
  	    else {
  	    	params.put("userNo", empNo);
  	 	    params.put("position", position);
  	    	list = multiMapper.findMultiCompletedEval(params);
  	    	total = multiMapper.countMultiCompleteEval(params);
+ 	    	
+ 	    	System.out.println("▶ USER branch");
+	        System.out.println("params(with user) = " + params);
  	    }
 
+
+ 	   System.out.println("result list size = " + (list != null ? list.size() : 0));
+	    System.out.println("total = " + total);
 
 
  	    return new PageResponse<>(

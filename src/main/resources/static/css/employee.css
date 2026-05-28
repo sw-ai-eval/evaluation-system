@@ -174,11 +174,17 @@ flex: 0 0 auto;
 }
 .badge.manager {
     background: #d1fae5;
-  color: #065f46;
+    color: #065f46;
+}
+
+.badge.executive {
+    background: #dbeafe;
+    color: #1e3a8a;
 }
 
 .badge.staff {
-    background-color: #e5e7eb;
+    background: #e5e7eb;
+    color: #374151;
 }
 .badge.active {
   background: #d1fae5;

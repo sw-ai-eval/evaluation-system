@@ -196,83 +196,73 @@ public class EmployeeService {
     
     
     @Transactional
-    public void updateEmp(EmpManageDTO dto) { ////////////////////////////////////// 사원 정보 수정
-    	
-    	Employee employee = employeeRepository.findById(dto.getEmpNo())
-                .orElseThrow(() -> new IllegalArgumentException("사원 없음"));
-    	System.out.println("employeeRepository = " + employeeRepository);
-    	
-    	
-    	boolean deptChanged=false;
-    	if (employee.getDeptId() != null &&
-    		    dto.getDeptId() != null &&
-    		    !employee.getDeptId().equals(dto.getDeptId())) {
-    		    deptChanged = true;
-    		}
+    public void updateEmp(EmpManageDTO dto) { ///////////////////////////////////////////// 사원 수정
 
-    	if ("부서장".equals(employee.getPosition()) && deptChanged) {
-    	    throw new IllegalArgumentException("부서장은 부서 이동 대상에서 제외됩니다. \n리더 권한 이양 후 진행해 주세요.");
-    	}
-    	if ("임원".equals(employee.getPosition())&&dto.getLevelId()!=6) {
-    	    employee.setPosition("부서원");
-    	}
-    	
-        // 관리자 사번 --> 수정자 표시용
+        Employee employee = employeeRepository.findById(dto.getEmpNo())
+                .orElseThrow(() -> new IllegalArgumentException("사원 없음"));
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminNo = auth.getName();
-         
+
+        boolean deptChanged =employee.getDeptId() != null &&dto.getDeptId() != null && !employee.getDeptId().equals(dto.getDeptId());
+
+        // 부서장 부서 이동 제한
+        if ("부서장".equals(employee.getPosition()) && deptChanged) {
+            throw new IllegalArgumentException("부서장은 부서 이동 대상에서 제외됩니다. \n리더 권한 이양 후 진행해 주세요.");
+        }
+
+        boolean toExecutive = dto.getLevelId() == 6;
+        boolean wantResigned = "RESIGNED".equals(dto.getStatus());
+        boolean isLeader = "부서장".equals(employee.getPosition());
+
+
+        employee.setName(dto.getName());
+        employee.setEmail(dto.getEmail());
+        employee.setPhone(dto.getPhone());
+        employee.setDeptId(dto.getDeptId());
+        employee.setLevelId(dto.getLevelId());
+        employee.setJobId(dto.getJobId());
+        employee.setHireDate(dto.getHireDate());
+        employee.setResignDate(dto.getResignDate());
+        employee.setRole(dto.getRole());
+
         employee.setUpdatedBy(adminNo);
         employee.setUpdatedAt(LocalDateTime.now());
         
-    	employee.setName(dto.getName());
-    	employee.setEmail(dto.getEmail());
-    	employee.setPhone(dto.getPhone());
-    	employee.setDeptId(dto.getDeptId());
-    	employee.setLevelId(dto.getLevelId());
-    	employee.setJobId(dto.getJobId());
-    	employee.setHireDate(dto.getHireDate());
-    	employee.setResignDate(dto.getResignDate());
-    	employee.setRole(dto.getRole());
-        
-    	boolean wantResigned = "RESIGNED".equals(dto.getStatus());
+        if("임원".equals(employee.getPosition())&&dto.getLevelId()!=6) {
+        	employee.setPosition("부서원");
+        }
 
-    	boolean isResignDateValid =
-    	        dto.getResignDate() != null
-    	        && !dto.getResignDate().isAfter(LocalDate.now());
-    	
-    	if (wantResigned && !isResignDateValid) {
-    	    throw new IllegalArgumentException("퇴직일이 아직 도래하지 않았습니다. \n퇴직일을 수정하거나 재직상태를 유지해주세요.");
-    	}
-    	
-    	if (wantResigned && isResignDateValid) {
-    	    employee.setStatus("RESIGNED");
-    	    employee.setLocked(1);
-    	    employee.setLockedAt(LocalDateTime.now());
-    	    
-    	    // 🔥 부서장일 경우 부서 leader 제거
-    	    if ("부서장".equals(employee.getPosition())) {
 
-    	        Department department = departmentRepository
-    	                .findById(employee.getDeptId())
-    	                .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+        boolean isResignDateValid =dto.getResignDate() != null &&!dto.getResignDate().isAfter(LocalDate.now());
 
-    	        // 본인이 현재 부서장일 때만 제거
-    	        if (employee.getEmpNo() != null &&
-    	            employee.getEmpNo().equals(department.getLeaderEmpNo())) {
-    	        	
-    	            department.setLeaderEmpNo(null);
-    	            department.setUpdatedBy(adminNo);
-    	            department.setUpdatedAt(LocalDateTime.now());
-    	        }
-    	    }
-    	}
-    	else {
-    	    employee.setStatus(dto.getStatus());
-    	}
-    	
-    	if (employee.getPosition() == null) {
+        if (wantResigned && !isResignDateValid) {
+            throw new IllegalArgumentException("퇴직일이 아직 도래하지 않았습니다.");
+        }
+
+        if (wantResigned && isResignDateValid) {
+            employee.setStatus("RESIGNED");
+            employee.setLocked(1);
+            employee.setLockedAt(LocalDateTime.now());
+
+            removeDepartmentLeaderIfNeeded(employee, adminNo);
+        } else {
+            employee.setStatus(dto.getStatus());
+        }
+
+
+        // 승진 처리 (임원)
+        if (toExecutive) {
+            employee.setPosition("임원");
+
+            removeDepartmentLeaderIfNeeded(employee, adminNo);
+        }
+
+
+        if (employee.getPosition() == null) {
             employee.setPosition("부서원");
         }
+
 
         if (employee.getCreatedAt() == null) {
             employee.setCreatedAt(LocalDateTime.now());
@@ -281,8 +271,28 @@ public class EmployeeService {
         if (employee.getCreatedBy() == null) {
             employee.setCreatedBy(adminNo);
         }
-        
     }
+    
+    private void removeDepartmentLeaderIfNeeded(Employee employee, String adminNo) {
+
+        if (!"부서장".equals(employee.getPosition())) return;
+        if (employee.getDeptId() == null) return;
+
+        Department department = departmentRepository
+                .findById(employee.getDeptId())
+                .orElseThrow(() -> new IllegalArgumentException("부서 없음"));
+
+        if (employee.getEmpNo() != null &&
+            employee.getEmpNo().equals(department.getLeaderEmpNo())) {
+
+            department.setLeaderEmpNo(null);
+            department.setUpdatedBy(adminNo);
+            department.setUpdatedAt(LocalDateTime.now());
+        }
+    }
+    
+    
+    
     public List<Employee> findExecutive() {
         return employeeRepository.findByLevelId(6);
     }
