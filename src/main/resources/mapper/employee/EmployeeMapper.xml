@@ -174,5 +174,14 @@
        	SET password = #{newPw}
      	WHERE emp_no = #{empNo}
 	</update>
+	
+	<select id="findExecutiveEmpNoByDeptId" resultType="string">
+	    SELECT TOP 1 emp_no
+	    FROM employee_52
+	    WHERE dept_id = #{deptId}
+	      AND level_id = 6
+	      AND status = 'ACTIVE'
+	    ORDER BY emp_no ASC
+	</select>
 
 </mapper>

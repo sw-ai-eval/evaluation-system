@@ -296,5 +296,35 @@ public class EmployeeService {
         // 2. 같은 부서의 ACTIVE 상태, 특정 직책 사원 조회
         return employeeRepository.findByDeptIdAndStatusAndPosition(emp.getDeptId(), "ACTIVE", position);
     }
+    
+
+    public String getExecutivesEmpNo(String deptId) {
+
+        String currentDeptId = deptId;
+
+        while (currentDeptId != null) {
+
+            // 현재 부서 임원 조회
+            String empNo =employeeMapper.findExecutiveEmpNoByDeptId(currentDeptId);
+
+            if (empNo != null) {
+                return empNo;
+            }
+
+            // 부서 조회
+            Department dept = departmentRepository
+                    .findById(currentDeptId)
+                    .orElse(null);
+
+            if (dept == null) {
+                return null;
+            }
+
+            // 상위 부서 이동
+            currentDeptId = dept.getParentId();
+        }
+
+        return null;
+    }
 
 }
