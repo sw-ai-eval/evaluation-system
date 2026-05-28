@@ -213,11 +213,14 @@ public class EmployeeService {
     	if ("부서장".equals(employee.getPosition()) && deptChanged) {
     	    throw new IllegalArgumentException("부서장은 부서 이동 대상에서 제외됩니다. \n리더 권한 이양 후 진행해 주세요.");
     	}
+    	if ("임원".equals(employee.getPosition())&&dto.getLevelId()!=6) {
+    	    employee.setPosition("부서원");
+    	}
     	
         // 관리자 사번 --> 수정자 표시용
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String adminNo = auth.getName();
-        
+         
         employee.setUpdatedBy(adminNo);
         employee.setUpdatedAt(LocalDateTime.now());
         
