@@ -182,7 +182,7 @@
                     	<div>
 						    <label>직급</label>
 						    <select th:field="*{levelId}" required>
-						        <option value="">선택</option>
+						        <option value="" disabled selected>선택</option>
 						
 						        <option th:each="code : ${level}"
 						                th:value="${code.id}"
@@ -193,7 +193,7 @@
                     	<div>
 						    <label>직종</label>
 						    <select th:field="*{jobId}" required>
-						        <option value="">선택</option>
+						        <option value="" disabled selected>선택</option>
 						
 						        <option th:each="code : ${jobCode}"
 						                th:value="${code.id}"
@@ -290,7 +290,7 @@
                     	<div>
 						    <label>직급</label>
 						    <select th:field="*{levelId}" required>
-						        <option value="">선택</option>
+						        <option value="" disabled selected>선택</option>
 						
 						        <option th:each="code : ${level}"
 						                th:value="${code.id}"
@@ -301,7 +301,7 @@
                     	<div>
 						    <label>직종</label>
 						    <select th:field="*{jobId}" required>
-						        <option value="">선택</option>
+						        <option value="" disabled selected>선택</option>
 						
 						        <option th:each="code : ${jobCode}"
 						                th:value="${code.id}"
