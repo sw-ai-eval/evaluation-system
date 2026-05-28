@@ -53,4 +53,5 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     void disableAllByIds(@Param("ids") List<String> ids);
 
     List<Department> findByUseYn(boolean b);
+
 }

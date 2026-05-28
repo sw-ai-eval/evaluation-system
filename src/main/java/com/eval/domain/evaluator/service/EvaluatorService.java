@@ -23,6 +23,7 @@ import com.eval.domain.dept.repository.DepartmentRepository;
 import com.eval.domain.employee.Employee;
 import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.employee.controller.EmployeeController;
+import com.eval.domain.employee.service.EmployeeService;
 import com.eval.domain.evaluation.EvalType;
 import com.eval.domain.evaluation.repository.EvalTypeRepository;
 import com.eval.domain.evaluator.EvalTargetMapping;
@@ -50,6 +51,7 @@ public class EvaluatorService {
 	    private final DepartmentRepository departmentRepository;
 	    private final EvalTypeRepository evalTypeRepository;
 	    private final FinalResultRepository finalResultRepository;
+	    private final EmployeeService employeeService;
 	    
 	    @PersistenceContext
 	    private EntityManager em;
@@ -154,26 +156,23 @@ public class EvaluatorService {
 	            throw new IllegalStateException("부서장 정보가 존재하지 않습니다.");
 	        }
 	        
-	        List<Employee> executives = employeeRepository.findByLevelId(6);
+	        String executive = employeeService.getExecutivesEmpNo(deptId);
+	        
+	        Employee executiveEmp = employeeRepository.findByEmpNo(executive);
 
-	        if (executives == null || executives.isEmpty()) {
+	        if (executiveEmp == null) {
 	            throw new IllegalStateException("임원 정보가 존재하지 않습니다.");
 	        }
-
-	        Set<String> executiveNos = executives.stream()
-	                .map(Employee::getEmpNo)
-	                .collect(Collectors.toSet());
 
 	        boolean isMultiEval = evalType.getName().contains("다면평가");
 
 	        List<EvalTargetMapping> list = new ArrayList<>();
-	        int execIndex = 0;
-	        int execSize = executives.size();
+
 
 	        for (Employee e : employees) {
 
 	            boolean isLeaderEmp = e.getEmpNo().equals(leader.getEmpNo());
-	            boolean isExecutive = executiveNos.contains(e.getEmpNo());
+	            boolean isExecutive = e.getEmpNo().equals(executiveEmp.getEmpNo());
 
 	            // ================= 다면평가 =================
 	            if (isMultiEval) {
@@ -187,7 +186,7 @@ public class EvaluatorService {
 	                // 1차 : 부서원 -> 부서장
 	                for (Employee member : employees) {
 	                    boolean memberIsLeader = member.getEmpNo().equals(leader.getEmpNo());
-	                    boolean memberIsExecutive = executiveNos.contains(member.getEmpNo());
+	                    boolean memberIsExecutive = e.getEmpNo().equals(executiveEmp.getEmpNo());
 
 	                    if (memberIsLeader || memberIsExecutive) continue;
 
@@ -202,9 +201,8 @@ public class EvaluatorService {
 	                }
 
 	                // 2차 : 임원 -> 부서장
-	                Employee exec = executives.get(execIndex % execSize);
 	                list.add(EvalTargetMapping.builder()
-	                        .evaluatorNo(exec.getEmpNo())
+	                        .evaluatorNo(executiveEmp.getEmpNo())
 	                        .evaluateeNo(leader.getEmpNo())
 	                        .step(2)
 	                        .systemType("AUTO")
@@ -212,7 +210,6 @@ public class EvaluatorService {
 	                        .typeId(evalType)
 	                        .build());
 
-	                execIndex++;
 
 	                // FinalResult 생성
 	                boolean finalExists = finalResultRepository.existsByEmployeeAndYear(leader, evalType.getYear());
@@ -260,9 +257,8 @@ public class EvaluatorService {
 	                    .build());
 
 	            // 2차 임원 평가
-	            Employee exec = executives.get(execIndex % execSize);
 	            list.add(EvalTargetMapping.builder()
-	                    .evaluatorNo(exec.getEmpNo())
+	                    .evaluatorNo(executiveEmp.getEmpNo())
 	                    .evaluateeNo(e.getEmpNo())
 	                    .step(2)
 	                    .systemType("AUTO")
@@ -270,7 +266,6 @@ public class EvaluatorService {
 	                    .typeId(evalType)
 	                    .build());
 
-	            execIndex++;
 
 	            // FinalResult 생성
 	            boolean finalExists = finalResultRepository.existsByEmployeeAndYear(e, evalType.getYear());
