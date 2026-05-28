@@ -99,5 +99,75 @@
 	      AND (evaluator_no = #{empNo} OR evaluatee_no = #{empNo})
 	      AND status !=2
 	</select>
+	
+	<select id="findAllInterviewList" parameterType="map" resultType="com.eval.domain.interview.dto.InterviewListDto">
+	    SELECT 
+	        i.id,
+	        i.start_at AS startAt,
+	        i.end_at AS endAt,
+	        i.type AS interviewType,
+	        et.name AS interviewTypeName,
+	        i.evaluator_no AS evaluatorNo,
+	        e.name AS evaluatorName,
+	        i.evaluatee_no AS evaluateeNo,
+	        u.name AS evaluateeName,
+	        i.place,
+	        c.name AS statusName
+	    FROM interview_52 i
+	    LEFT JOIN eval_type_52 et ON i.type = et.id
+	    LEFT JOIN employee_52 e ON i.evaluator_no = e.emp_no
+	    LEFT JOIN employee_52 u ON i.evaluatee_no = u.emp_no
+	    LEFT JOIN code_common_52 c ON c.code = CAST(i.status AS varchar)
+	        AND c.group_id = 4
+	    
+	    <if test="startDay != null and startDay != ''">
+	        AND CAST(i.start_at AS DATE) = #{startDay}
+	    </if>
+	
+	    <if test="employee != null and employee != ''">
+	        AND (i.evaluator_no = #{employee} OR i.evaluatee_no = #{employee})
+	    </if>
+	
+	    <if test="type != null and type != ''">
+	        AND i.type = #{type}
+	    </if>
+	
+	    <if test="status != null and status != ''">
+	        AND i.status = #{status}
+	    </if>
+	
+	    ORDER BY i.start_at DESC
+	
+	    <!-- SQL Server용 페이징 -->
+	    <if test="limit != null and offset != null">
+	        OFFSET #{offset} ROWS FETCH NEXT #{limit} ROWS ONLY
+	    </if>
+	</select>
+	
+	<select id="countAllInterviewList" parameterType="map" resultType="long">
+	    SELECT COUNT(*)
+	    FROM interview_52 i
+	    LEFT JOIN eval_type_52 et ON i.type = et.id
+	    LEFT JOIN employee_52 e ON i.evaluator_no = e.emp_no
+	    LEFT JOIN employee_52 u ON i.evaluatee_no = u.emp_no
+	    LEFT JOIN code_common_52 c ON c.code = CAST(i.status AS varchar)
+	        AND c.group_id = 4
+	
+	    <if test="startDay != null and startDay != ''">
+	        AND CAST(i.start_at AS DATE) = #{startDay}
+	    </if>
+	
+	    <if test="employee != null and employee != ''">
+	        AND (i.evaluator_no = #{employee} OR i.evaluatee_no = #{employee})
+	    </if>
+	
+	    <if test="type != null and type != ''">
+	        AND i.type = #{type}
+	    </if>
+	
+	    <if test="status != null and status != ''">
+	        AND i.status = #{status}
+	    </if>
+	</select>
 
 </mapper>

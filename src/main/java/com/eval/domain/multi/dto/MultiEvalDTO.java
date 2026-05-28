@@ -21,7 +21,7 @@ public class MultiEvalDTO {
 	
     private String evaluatorNo;
     private String evaluateeNo;
-    private String evalName;
+
     private int step;
     private String statusName;
     

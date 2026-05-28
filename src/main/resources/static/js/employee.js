@@ -69,9 +69,13 @@ document.querySelectorAll('.btn-edit').forEach(button => {
 		
 		badge.textContent = emp.position;
 
-		badge.className = emp.position === '부서장'
-		    ? 'badge manager'
-		    : 'badge staff';
+		const badgeMap = {
+		    '부서장': 'manager',
+		    '임원': 'executive',
+		    '부서원': 'staff'
+		};
+
+		badge.className = `badge ${badgeMap[emp.position] || 'staff'}`;;
 			
 		const lockedBadge = document.querySelector('#employee-update-form #lockedBadge');
 

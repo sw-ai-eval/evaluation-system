@@ -60,9 +60,21 @@ public class InterviewService {
             params.put("limit", pageable.getPageSize());
             params.put("offset", pageable.getPageNumber() * pageable.getPageSize());
         }
+        
+        List<InterviewListDto> list=null;
+        // 전체 갯수 조회 (페이징용)
+        long total = 0;
 
         // 실제 조회
-        List<InterviewListDto> list = interviewMapper.findInterviewList(params);
+        if("ADMIN".equals(role)) {
+        	list = interviewMapper.findAllInterviewList(params);
+        	total = interviewMapper.countAllInterviewList(params);
+        }
+        else {
+        	list = interviewMapper.findInterviewList(params);
+        	total = interviewMapper.countInterviewList(params);
+        }
+
 
         // topics 매핑
         List<Long> ids = list.stream().map(InterviewListDto::getId).toList();
@@ -77,10 +89,6 @@ public class InterviewService {
         for (InterviewListDto dto : list) {
             dto.setTopics(topicMap.getOrDefault(dto.getId(), List.of()));
         }
-
-        // 전체 갯수 조회 (페이징용)
-        long total = interviewMapper.countInterviewList(params);
-
         // Page 객체 생성
         return new PageImpl<>(list, pageable, total);
     }

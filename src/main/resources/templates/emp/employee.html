@@ -255,7 +255,10 @@
 						    <label>부서장 여부</label>
 										
 							<span id="positionBadge"
-							      th:classappend="${employee.position == '부서장' ? 'badge manager' : 'badge staff'}"
+							      th:class="${'badge ' + 
+							          (#strings.equals(employee.position, '부서장') ? 'manager' :
+							          #strings.equals(employee.position, '임원') ? 'executive' :
+							          'staff')}"
 							      th:text="${employee.position}">
 							</span>
                     	
