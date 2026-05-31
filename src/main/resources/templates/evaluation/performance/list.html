@@ -124,7 +124,7 @@
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalPeriod}">11.24 - 01.30</td>
                                 <td th:text="${eval.deptName}">개발팀</td>
-                                <td th:text="${eval.position}">선임</td>
+                                <td th:text="${eval.levelName}">대리</td>
                                 <td th:text="${eval.empNo}">1001</td>
                                 <td th:text="${eval.empName}">홍길동</td>
                                 <td><span class="badge" th:text="${eval.status}">본인평가중</span></td>
@@ -154,7 +154,7 @@
                                 onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalPeriod}"></td>
                                 <td th:text="${eval.deptName}"></td>
-                                <td th:text="${eval.position}"></td>
+                                <td th:text="${eval.levelName}"></td>
                                 <td th:text="${eval.empNo}"></td>
                                 <td th:text="${eval.empName}"></td>
                                 <td><span class="badge" style="background:#d1e7dd;color:#0f5132;border:1px solid #badbcc;" th:text="${eval.totalGrade ?: '-'}"></span></td>
@@ -186,12 +186,12 @@
                     <div class="info-table">
                         <table>
                             <tr>
-                                <th>부서</th><th>직위</th><th>직책</th><th>직종</th><th>사번</th><th>성명</th>
+                                <th>부서</th><th>직책</th><th>직위</th><th>직종</th><th>사번</th><th>성명</th>
                             </tr>
                             <tr>
                                 <td id="infoDept"></td>
+                                <td id="infoTitle"></td>
                                 <td id="infoPos"></td>
-                                <td id="infoTitle">팀원</td>
                                 <td id="infoJob">일반직</td>
                                 <td id="infoEmpNo"></td>
                                 <td id="infoName"></td>
@@ -278,7 +278,8 @@
                     document.getElementById('detailPanel').style.display = 'flex'; 
                     
                     document.getElementById('infoDept').innerText = data.deptName;
-                    document.getElementById('infoPos').innerText = data.position;
+                    document.getElementById('infoPos').innerText = data.levelName || '-';
+                    document.getElementById('infoTitle').innerText = data.position || '-';
                     document.getElementById('infoEmpNo').innerText = data.empNo;
                     document.getElementById('infoName').innerText = data.empName;
                     document.getElementById('infoGrade').innerText = data.totalGrade || '-';

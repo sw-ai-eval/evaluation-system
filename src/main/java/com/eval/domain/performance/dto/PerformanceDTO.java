@@ -13,6 +13,7 @@ public class PerformanceDTO {
         private String deptName;
         private String leaderEmpNo;
         private String position;
+        private String levelName;
         private String empNo;
         private String empName; 
         private String status;

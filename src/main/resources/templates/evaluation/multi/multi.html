@@ -163,7 +163,7 @@
     <div th:replace="~{layout/sidebar :: sidebar}"></div>
 
     <div class="main-content">
-        <h2>다면 평가
+        <h2>다면평가
 		    <span title="평가 진행 순서: [부서원: 부서장 평가] ➡️ [부서장은 부서원의 1차 평가를 진행" 
 		          style="cursor:pointer; color:#ccc; font-size:14px;">
 		        <i class="far fa-question-circle"></i>
@@ -214,13 +214,13 @@
 			        <table>
 			            <thead>
 			                <tr>
-			                    <th>평가명</th>
-			                    <th>부서명</th>
-			                    <th>평가자 사번</th>
-			                    <th>평가자</th>
 			                    <th>평가수행기간</th>
-			                    <th>대상직위</th>
-			                    <th>대상사번</th>
+			                    <th>부서명</th>
+			                    <th>평가자직위</th>
+			                    <th>평가자사번</th>
+			                    <th>평가자명</th>
+			                    <th>대상자직위</th>
+			                    <th>대상자사번</th>
 			                    <th>대상자명</th>
 			                    <th>상태</th>
 			                </tr>
@@ -241,13 +241,13 @@
 			        <table>
 			            <thead>
 			                <tr>
-			                    <th>평가명</th>
-			                    <th>부서명</th>
-			                    <th>평가자 사번</th>
-			                    <th>평가자</th>
 			                    <th>평가수행기간</th>
-			                    <th>대상직위</th>
-			                    <th>대상사번</th>
+			                    <th>부서명</th>
+			                    <th>평가자직위</th>
+			                    <th>평가자사번</th>
+			                    <th>평가자명</th>
+			                    <th>대상자직위</th>
+			                    <th>대상자사번</th>
 			                    <th>대상자명</th>
 			                    <th>상태</th>
 			                </tr>
@@ -272,16 +272,12 @@
                     <div class="info-table">
                         <table>
                             <tr>
-                                <th>평가명</th><th>부서</th><th>직위</th>
-                                <!-- <th>직책</th><th>직종</th> -->
-                                <th>사번</th><th>성명</th>
+                                <th>부서</th><th>직책</th><th>직위</th><th>사번</th><th>성명</th>
                             </tr>
                             <tr>
-                            	<td id="evalTypeName"></td>
                                 <td id="infoDept"></td>
+                                <td id="infoTitle"></td>
                                 <td id="infoPos"></td>
-<!--                                 <td id="infoTitle">팀원</td>
-                                <td id="infoJob">일반직</td> -->
                                 <td id="infoEmpNo"></td>
                                 <td id="infoName"></td>
                             </tr>
@@ -407,7 +403,7 @@ function loadEvalDetail(rowElement) {
         .then(res => res.json())
         .then(data => {
             const status = String(data.statusName || '').trim();
-            const isCompleted = status === '평가 완료';
+            const isCompleted = status === '평가완료';
             const isSelf = String(currentUserNo) === String(data.evaluateeNo);
             const isEvaluator = String(currentUserNo) === String(data.evaluatorNo);
 
@@ -416,9 +412,9 @@ function loadEvalDetail(rowElement) {
             detailPanel.style.display = 'flex';
 
             // 기본 정보
-            document.getElementById('evalTypeName').innerText = data.evalTypeName || '-';
-            document.getElementById('infoDept').innerText = data.deptName || '-';
-            document.getElementById('infoPos').innerText = data.position || '-';
+                        document.getElementById('infoDept').innerText = data.deptName || '-';
+            document.getElementById('infoTitle').innerText = data.position || '-';
+            document.getElementById('infoPos').innerText = data.levelName || '-';
             document.getElementById('infoEmpNo').innerText = data.evaluateeNo || '-';
             document.getElementById('infoName').innerText = data.evaluateeName || '-';
 
@@ -813,12 +809,12 @@ function createRow(e) {
     tr.dataset.evaluatorNo = e.evaluatorNo;
 
     tr.innerHTML = `
-        <td>${e.evalTypeName}</td>
+        <td>${e.evalPeriod}</td>
         <td>${e.deptName}</td>
+        <td>${e.evaluatorLevelName || '-'}</td>
         <td>${e.evaluatorNo}</td>
         <td>${e.evaluatorName}</td>
-        <td>${e.evalPeriod}</td>
-        <td>${e.position}</td>
+        <td>${e.levelName || '-'}</td>
         <td>${e.evaluateeNo}</td>
         <td>${e.evaluateeName}</td>
         <td><span class="status-badge"></span></td>
@@ -827,7 +823,7 @@ function createRow(e) {
     const badge = tr.querySelector(".status-badge");
     badge.textContent = e.statusName;
     badge.classList.add(
-        e.statusName === "평가 완료" ? "success" : "badge"
+        e.statusName === "평가완료" ? "success" : "badge"
     );
 
     tr.addEventListener("click", function () {

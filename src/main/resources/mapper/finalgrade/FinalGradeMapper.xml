@@ -26,7 +26,7 @@
              FROM eval_answer_52 a
              JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
              JOIN eval_question_52 q ON a.question_id = q.id
-             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = 2
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
             ) AS perfSelf,
 
             /* 성과 1차: 정규화 (합계/배점합계*100) */
@@ -35,7 +35,7 @@
              FROM eval_answer_52 a
              JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
              JOIN eval_question_52 q ON a.question_id = q.id
-             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
             ) AS perfFirst,
 
             CASE ISNULL(pm.status, -1)
@@ -50,7 +50,7 @@
              FROM eval_answer_52 a
              JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
              JOIN eval_question_52 q ON a.question_id = q.id
-             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = 3
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 0 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
             ) AS compSelf,
 
             /* 역량 1차: 부서장 점수 (배점 × 등급배수) */
@@ -58,7 +58,7 @@
              FROM eval_answer_52 a
              JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
              JOIN eval_question_52 q ON a.question_id = q.id
-             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+             WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
             ) AS compFirst,
 
             CASE ISNULL(cm.status, -1)
@@ -77,14 +77,14 @@
                          FROM eval_answer_52 a
                          JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
                          JOIN eval_question_52 q ON a.question_id = q.id
-                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
                         ) * ISNULL(w2.weight, 50) / 100.0
                         +
                         (SELECT ISNULL(SUM(a.score * q.weight), 0)
                          FROM eval_answer_52 a
                          JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
                          JOIN eval_question_52 q ON a.question_id = q.id
-                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
                         ) * ISNULL(w3.weight, 50) / 100.0
                     , 0)
                 FROM (SELECT 1 AS dummy) AS t
@@ -103,10 +103,10 @@
         LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
 
         LEFT JOIN eval_target_mapping_52 pm
-            ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = 2
+            ON pm.evaluatee_no = e.emp_no AND pm.step = 0 AND pm.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
 
         LEFT JOIN eval_target_mapping_52 cm
-            ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = 3
+            ON cm.evaluatee_no = e.emp_no AND cm.step = 0 AND cm.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
 
         LEFT JOIN final_result_52 fr
             ON fr.emp_no = e.emp_no
@@ -122,7 +122,7 @@
         <if test="deptId != null and deptId != ''">
             AND e.dept_id = #{deptId}
         </if>
-        ORDER BY d.name, e.emp_no
+        ORDER BY d.name, e.level_id DESC, e.emp_no
     </select>
 
     <!-- =============================================
@@ -198,7 +198,7 @@
         <if test="deptId != null and deptId != ''">
             AND e.dept_id = #{deptId}
         </if>
-        ORDER BY d.name, e.emp_no
+        ORDER BY d.name, e.level_id DESC, e.emp_no
     </select>
 
 
@@ -215,14 +215,14 @@
                          FROM eval_answer_52 a
                          JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
                          JOIN eval_question_52 q ON a.question_id = q.id
-                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 2
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
                         ) * ISNULL(w2.weight, 50) / 100.0
                         +
                         (SELECT ISNULL(SUM(a.score * q.weight), 0)
                          FROM eval_answer_52 a
                          JOIN eval_target_mapping_52 m2 ON a.mapping_id = m2.id
                          JOIN eval_question_52 q ON a.question_id = q.id
-                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = 3
+                         WHERE m2.evaluatee_no = e.emp_no AND m2.step = 1 AND m2.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
                         ) * ISNULL(w3.weight, 50) / 100.0
                     , 0)
                 FROM (SELECT 1 AS dummy) AS t
