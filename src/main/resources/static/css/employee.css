@@ -251,6 +251,7 @@ flex: 0 0 auto;
     color: #6b7280;
     font-weight: 600;
     border-bottom: 1px solid #e5e7eb;
+    text-align: center;
 }
 .employee-table tbody tr {
     background: white;
@@ -262,6 +263,7 @@ flex: 0 0 auto;
     font-size: 14px;
     color: #111827;
     vertical-align: middle;
+    text-align: center;
 }
 .employee-table tbody tr:hover {
     background: #f9fafb;

@@ -213,6 +213,7 @@ public class EmployeeService {
 
         boolean toExecutive = dto.getLevelId() == 6;
         boolean wantResigned = "RESIGNED".equals(dto.getStatus());
+        boolean wantActive = "ACTIVE".equals(dto.getStatus());
         boolean isLeader = "부서장".equals(employee.getPosition());
 
 
@@ -236,18 +237,32 @@ public class EmployeeService {
 
         boolean isResignDateValid =dto.getResignDate() != null &&!dto.getResignDate().isAfter(LocalDate.now());
 
-        if (wantResigned && !isResignDateValid) {
-            throw new IllegalArgumentException("퇴직일이 아직 도래하지 않았습니다.");
-        }
 
-        if (wantResigned && isResignDateValid) {
+        if (wantResigned) {
+
+            if (!isResignDateValid) {
+                throw new IllegalArgumentException("퇴직일이 아직 도래하지 않았습니다.");
+            }
+
             employee.setStatus("RESIGNED");
             employee.setLocked(1);
             employee.setLockedAt(LocalDateTime.now());
 
             removeDepartmentLeaderIfNeeded(employee, adminNo);
+
+        } else if (wantActive && "RESIGNED".equals(employee.getStatus())) {
+
+            if ("부서장".equals(employee.getPosition())) {
+                employee.setPosition("부서원");
+            }
+            employee.setLocked(0);
+            employee.setLockedAt(null);
+            employee.setStatus("ACTIVE");
+
         } else {
+
             employee.setStatus(dto.getStatus());
+
         }
 
 
