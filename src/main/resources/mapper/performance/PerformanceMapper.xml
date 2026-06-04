@@ -73,6 +73,7 @@
         LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no 
             AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = m.eval_type_id)
+            AND fr.status = 1
         WHERE m.eval_type_id = #{typeId} 
           AND m.evaluatee_no = #{empNo}
           AND m.step = 0

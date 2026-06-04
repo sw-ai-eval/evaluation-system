@@ -403,7 +403,7 @@ function loadEvalDetail(rowElement) {
         .then(res => res.json())
         .then(data => {
             const status = String(data.statusName || '').trim();
-            const isCompleted = status === '평가완료';
+            const isCompleted = status === '평가 완료';
             const isSelf = String(currentUserNo) === String(data.evaluateeNo);
             const isEvaluator = String(currentUserNo) === String(data.evaluatorNo);
 

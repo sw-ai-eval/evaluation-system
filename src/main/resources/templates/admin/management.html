@@ -133,10 +133,11 @@
                                   class="badge bg-normal">정상</span>
                         </td>
                         <td>
-                            <!-- 🌟 2. 파라미터 name -> empName 으로 수정 -->
                             <button th:if="${(emp.locked == 1 or emp.failCount ge 5) and emp.status != 'RESIGNED' and emp.status != '퇴사' and emp.empNo != #authentication.name}" 
-                                    class="btn-reset" 
-                                    th:onclick="|doReset('${emp.empNo}', '${emp.empName}')|">
+                                    class="btn-reset"
+                                    th:data-empno="${emp.empNo}"
+                                    th:data-empname="${emp.empName}"
+                                    onclick="doReset(this.dataset.empno, this.dataset.empname)">
                                 계정 복구
                             </button>
                             

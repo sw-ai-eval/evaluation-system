@@ -143,19 +143,19 @@
                             <td class="ref" th:text="${r.perfSelf != null ? #numbers.formatDecimal(r.perfSelf,1,1) : '-'}"></td>
                             <td th:text="${r.perfFirst != null ? #numbers.formatDecimal(r.perfFirst,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.perfStatus != null}" class="badge"
+                                <span th:if="${r.perfStatus != null and r.perfStatus != '-'}" class="badge"
                                       th:classappend="${r.perfStatus == '평가완료'} ? 'badge-done' : (${r.perfStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
                                       th:text="${r.perfStatus}"></span>
-                                <span th:unless="${r.perfStatus != null}" class="dash">-</span>
+                                <span th:unless="${r.perfStatus != null and r.perfStatus != '-'}" class="dash">-</span>
                             </td>
                             <!-- 역량 -->
                             <td class="ref" th:text="${r.compSelf != null ? #numbers.formatDecimal(r.compSelf,1,1) : '-'}"></td>
                             <td th:text="${r.compFirst != null ? #numbers.formatDecimal(r.compFirst,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.compStatus != null}" class="badge"
+                                <span th:if="${r.compStatus != null and r.compStatus != '-'}" class="badge"
                                       th:classappend="${r.compStatus == '평가완료'} ? 'badge-done' : (${r.compStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
                                       th:text="${r.compStatus}"></span>
-                                <span th:unless="${r.compStatus != null}" class="dash">-</span>
+                                <span th:unless="${r.compStatus != null and r.compStatus != '-'}" class="dash">-</span>
                             </td>
                             <!-- 종합 -->
                             <td th:text="${r.totalScore != null ? #numbers.formatDecimal(r.totalScore,1,1) : '-'}"></td>

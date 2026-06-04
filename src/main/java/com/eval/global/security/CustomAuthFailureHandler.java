@@ -39,8 +39,14 @@ public class CustomAuthFailureHandler extends SimpleUrlAuthenticationFailureHand
         
         String errorMessage = defaultMessage; // 일단 기본값으로 시작
         
+        // InternalAuthenticationServiceException의 cause 확인
+        Throwable cause = exception.getCause();
+        if (cause instanceof DisabledException) {
+            errorMessage = "퇴사 처리된 계정입니다.";
+        } else if (cause instanceof LockedException) {
+            errorMessage = lockedMessage;
         // 2. 조건별 분기
-        if (exception instanceof BadCredentialsException) {
+        } else if (exception instanceof BadCredentialsException) {
             // 비번 틀림 -> 카운트 증가
             int failCount = employeeService.increaseFailCount(empNo);
             

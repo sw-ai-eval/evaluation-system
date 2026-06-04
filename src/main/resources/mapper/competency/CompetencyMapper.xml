@@ -24,12 +24,14 @@
                 WHEN m.status = 1 THEN '1차평가대기'
                 WHEN m.status = 2 THEN '평가완료'
                 ELSE '대기'
-            END AS status
+            END AS status,
+            fr.grade AS totalGrade
         FROM eval_target_mapping_52 m
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 t ON m.eval_type_id = t.id
         LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+        LEFT JOIN final_result_52 fr ON fr.emp_no = e.emp_no
         WHERE m.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
           AND m.step = 0
           AND e.status = 'ACTIVE'
@@ -39,6 +41,7 @@
         </if>
         <if test="year != null">
             AND t.year = #{year}
+            AND (fr.year = #{year} OR fr.year IS NULL)
         </if>
         <if test="period != null and period != ''">
             <choose>
@@ -62,6 +65,7 @@
             e.position AS position,
             ISNULL(lv.name, '-') AS levelName,
             d.leader_emp_no AS leaderEmpNo,
+            fr.grade AS totalGrade,
             CASE 
                 WHEN m.status = 0 THEN '본인평가중'
                 WHEN m.status = 1 THEN '1차평가대기'
@@ -72,6 +76,9 @@
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+        LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no
+            AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = m.eval_type_id)
+            AND fr.status = 1
         WHERE m.eval_type_id = #{typeId} AND m.evaluatee_no = #{empNo} AND m.step = 0
     </select>
 
@@ -110,7 +117,6 @@
         ORDER BY q.id ASC
     </select>
 
-    <!-- 본인 역량 평가 저장: 행 있으면 UPDATE, 없으면 INSERT (UPSERT) -->
     <!-- 확정 문서 목록: final_result_52.status=1 인 사원만 -->
     <select id="selectConfirmedList" resultType="com.eval.domain.competency.dto.CompetencyDTO$Info">
         SELECT
@@ -120,12 +126,14 @@
             e.name AS empName,
             d.name AS deptName,
             e.position AS position,
+            ISNULL(lv.name, '-') AS levelName,
             fr.grade AS totalGrade,
             '평가완료' AS status
         FROM eval_target_mapping_52 m
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 t ON m.eval_type_id = t.id
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         JOIN final_result_52 fr ON fr.emp_no = e.emp_no
         WHERE m.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%역량%' AND status = 1)
           AND m.step = 0

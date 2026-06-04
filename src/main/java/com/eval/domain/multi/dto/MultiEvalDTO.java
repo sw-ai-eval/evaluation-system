@@ -67,6 +67,7 @@ public class MultiEvalDTO {
         private Integer score;
         private String content;
         private Long mappingId;
+        
     }
     
     @Getter
@@ -88,6 +89,7 @@ public class MultiEvalDTO {
         private List<Double> allAvgScores = new ArrayList<>();
         
         private List<Integer> maxScores = new ArrayList<>();
+
     }
     
     @Getter 
@@ -104,6 +106,7 @@ public class MultiEvalDTO {
         private String categoryName;
         private Double totalScore;
         private int evaluatorCount;
+ 
     }
     
     // 다면 평가 결과 나온 후 화면에서 보여주는 용
@@ -115,6 +118,7 @@ public class MultiEvalDTO {
         private Long questionId;
         private Double score;
         private String content;
+ 
     }
     
 }

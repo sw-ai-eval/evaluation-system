@@ -85,6 +85,7 @@
 	
 	        e.resign_date AS resignDate,
 	        e.locked AS locked,
+	        ISNULL(e.login_fail_count, 0) AS failCount,
 	
 	        CASE 
 	            WHEN e.resign_date IS NOT NULL 

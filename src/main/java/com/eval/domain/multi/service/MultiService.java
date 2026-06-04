@@ -179,7 +179,7 @@ import lombok.RequiredArgsConstructor;
     	    dto.setItems(items);
     	    
     	    
-    	    if(!"평가 전".equals(dto.getStatusName())) {
+    	    if(!"평가전".equals(dto.getStatusName())) {
     	    // 각 문항에 기존 답변(점수/피드백) 세팅
 	    	    for (MultiEvalDTO.EvalItem item : items) {
 	    	    	Long mappingId = etm != null ? etm.getId() : null;
@@ -207,7 +207,7 @@ import lombok.RequiredArgsConstructor;
     	 // statusName 확인 후 "평가 완료"이면 카테고리 그룹화 건너뜀
     	    List<Integer> totalWeightList = new ArrayList<>();
 
-    	    if (!"평가 완료".equals(dto.getStatusName())) {
+    	    if (!"평가완료".equals(dto.getStatusName())) {
     	        // 평가 미완료: 기존처럼 CategorySummary 생성
     	        Map<String, MultiEvalDTO.CategorySummary> categoryMap = new LinkedHashMap<>();
     	        for (MultiEvalDTO.EvalItem item : items) {
