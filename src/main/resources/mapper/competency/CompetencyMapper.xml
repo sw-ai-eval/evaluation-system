@@ -36,8 +36,16 @@
           AND m.step = 0
           AND e.status = 'ACTIVE'
           AND e.position != '부서장'
+          AND NOT EXISTS (
+              SELECT 1 FROM final_result_52 fr2
+              WHERE fr2.emp_no = e.emp_no AND fr2.status = 1
+              <if test="year != null">AND fr2.year = #{year}</if>
+          )
         <if test="currentEmpNo != null and currentEmpNo != ''">
             AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
         </if>
         <if test="year != null">
             AND t.year = #{year}
@@ -141,6 +149,9 @@
           AND fr.status = 1
         <if test="currentEmpNo != null and currentEmpNo != ''">
             AND (e.emp_no = #{currentEmpNo} OR d.leader_emp_no = #{currentEmpNo})
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
         </if>
         <if test="year != null">
             AND t.year = #{year} AND fr.year = #{year}

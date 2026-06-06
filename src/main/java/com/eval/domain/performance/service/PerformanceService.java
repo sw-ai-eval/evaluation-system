@@ -27,11 +27,13 @@ public class PerformanceService {
         CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal();
         String currentEmpNo = auth.getName();
 
-        // ADMIN이면 전체 조회 (empNo = null → WHERE 조건 없음)
         if ("ADMIN".equals(userDetails.getRole())) {
-            return mapper.selectEvalList(year, period, null);
+            return mapper.selectEvalList(year, period, null, null);
         }
-        return mapper.selectEvalList(year, period, currentEmpNo);
+        if (userDetails.isExecutive()) {
+            return mapper.selectEvalList(year, period, null, userDetails.getDeptCode());
+        }
+        return mapper.selectEvalList(year, period, currentEmpNo, null);
     }
 
     public List<PerformanceDTO.Info> getConfirmedList(Integer year, String period) {
@@ -40,9 +42,12 @@ public class PerformanceService {
         String currentEmpNo = auth.getName();
 
         if ("ADMIN".equals(userDetails.getRole())) {
-            return mapper.selectConfirmedList(year, period, null);
+            return mapper.selectConfirmedList(year, period, null, null);
         }
-        return mapper.selectConfirmedList(year, period, currentEmpNo);
+        if (userDetails.isExecutive()) {
+            return mapper.selectConfirmedList(year, period, null, userDetails.getDeptCode());
+        }
+        return mapper.selectConfirmedList(year, period, currentEmpNo, null);
     }
 
     public PerformanceDTO.Info getEvalDetail(Integer typeId, String empNo) {
@@ -53,8 +58,8 @@ public class PerformanceService {
         String currentEmpNo = auth.getName();
 
         if (info != null) {
-            // ADMIN은 모든 내용 열람 가능
-            if ("ADMIN".equals(userDetails.getRole())) {
+            // ADMIN, 임원은 모든 내용 열람 가능
+            if ("ADMIN".equals(userDetails.getRole()) || userDetails.isExecutive()) {
                 info.setItems(mapper.selectEvalItems(typeId, empNo));
                 return info;
             }

@@ -13,7 +13,8 @@
             position,
             locked,
             login_fail_count AS failCount,
-            level_id AS levelId
+            level_id AS levelId,
+            dept_id AS deptCode
         FROM dbo.employee_52
         WHERE emp_no = #{empNo}
     </select>

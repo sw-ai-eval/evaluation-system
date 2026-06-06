@@ -142,7 +142,7 @@
                                 <td th:text="${eval.levelName}">대리</td>
                                 <td th:text="${eval.empNo}">1001</td>
                                 <td th:text="${eval.empName}">홍길동</td>
-                                <td><span class="badge" th:text="${eval.status}">본인평가중</span></td>
+                                <td><span th:if="${eval.status != null and eval.status != '-'}" class="badge" th:text="${eval.status}">본인평가중</span><span th:unless="${eval.status != null and eval.status != '-'}">-</span></td>
                             </tr>
 
                         </tbody>
@@ -165,7 +165,7 @@
                                 class="clickable-row"
                                 th:data-typeid="${eval.typeId}"
                                 th:data-empno="${eval.empNo}"
-                                onclick="loadDetail(this)">
+                                onclick="loadEvalDetail(this)">
                                 <td th:text="${eval.evalPeriod}"></td>
                                 <td th:text="${eval.deptName}"></td>
                                 <td th:text="${eval.levelName}"></td>
@@ -206,7 +206,7 @@
                                 <td id="infoDept"></td>
                                 <td id="infoTitle"></td>
                                 <td id="infoPos"></td>
-                                <td id="infoJob">기술직</td>
+                                <td id="infoJob">일반직</td>
                                 <td id="infoEmpNo"></td>
                                 <td id="infoName"></td>
                             </tr>

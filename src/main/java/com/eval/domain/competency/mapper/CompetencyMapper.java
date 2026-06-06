@@ -14,13 +14,15 @@ public interface CompetencyMapper {
     List<CompetencyDTO.Info> selectEvalList(
             @Param("year") Integer year,
             @Param("period") String period,
-            @Param("currentEmpNo") String currentEmpNo);
+            @Param("currentEmpNo") String currentEmpNo,
+            @Param("deptId") String deptId);
 
     /** 확정 문서 목록 */
     List<CompetencyDTO.Info> selectConfirmedList(
             @Param("year") Integer year,
             @Param("period") String period,
-            @Param("currentEmpNo") String currentEmpNo);
+            @Param("currentEmpNo") String currentEmpNo,
+            @Param("deptId") String deptId);
 
     CompetencyDTO.Info selectCompetencyInfo(@Param("typeId") Integer typeId, @Param("empNo") String empNo);
 

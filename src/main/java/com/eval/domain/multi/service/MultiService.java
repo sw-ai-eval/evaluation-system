@@ -6,32 +6,29 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List; import java.util.Map;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.eval.domain.employee.EmployeeRepository;
 import com.eval.domain.evaluator.EvalTargetMapping;
 import com.eval.domain.evaluator.repository.EvaluatorRepository;
 import com.eval.domain.evaluator.service.EvaluatorService;
 import com.eval.domain.multi.EvalCategorySummary;
-import com.eval.domain.multi.EvalSummaryChart;
 import com.eval.domain.multi.MultiEvalAnswer;
 import com.eval.domain.multi.dto.MultiEvalDTO;
-import com.eval.domain.multi.dto.PageResponse;
 import com.eval.domain.multi.dto.MultiEvalDTO.CategoryAvgDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.MultiChartDto;
 import com.eval.domain.multi.dto.MultiEvalDTO.MyCategoryScoreDto;
+import com.eval.domain.multi.dto.PageResponse;
 import com.eval.domain.multi.mapper.MultiMapper;
 import com.eval.domain.multi.repository.EvalCategorySummaryRepository;
-import com.eval.domain.multi.repository.EvalSummaryRepository;
 import com.eval.domain.multi.repository.MultiEvalAnswerRepository;
-import com.eval.domain.performance.dto.PerformanceDTO.EvalType;
 
 import lombok.RequiredArgsConstructor;
  
@@ -75,11 +72,21 @@ import lombok.RequiredArgsConstructor;
     	    int total =0;
     	    if("ADMIN".equals(role)) {
     	    	System.out.println("▶ ADMIN branch");
-    	    	
     	    	list = multiMapper.findAllDeptMultiProgressEval(params);
     	    	total = multiMapper.countAllDeptMultiProgressEval(params);
+    	    } else if (empNo != null) {
+    	    	// 임원 체크 - SecurityContext에서 직접 확인
+    	    	Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+    	    	if (auth.getPrincipal() instanceof com.eval.global.security.CustomUserDetails executive) {
+    	    	    if (executive.isExecutive()) {
+    	    	        params.put("deptId", executive.getDeptCode());
+    	    	        list = multiMapper.findAllDeptMultiProgressEval(params);
+    	    	        total = multiMapper.countAllDeptMultiProgressEval(params);
+    	    	        return new PageResponse<>(list, total, pageable.getPageNumber(), pageable.getPageSize());
+    	    	    }
+    	    	}
     	    }
-    	    else {
+    	    if (list == null) {
     	    	params.put("userNo", empNo);
     	 	    params.put("position", position);
     	 	    
@@ -127,11 +134,17 @@ import lombok.RequiredArgsConstructor;
  	    if(role.equals("ADMIN")) {
  	    	list = multiMapper.findAllDeptMultiCompletedEval(params);
  	    	total = multiMapper.countAllDeptMultiCompleteEval(params);
- 	    	
  	    	System.out.println("▶ ADMIN branch");
- 	    	
+ 	    } else {
+ 	    	Authentication auth2 = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+ 	    	if (auth2.getPrincipal() instanceof com.eval.global.security.CustomUserDetails executive2 && executive2.isExecutive()) {
+ 	    	    params.put("deptId", executive2.getDeptCode());
+ 	    	    list = multiMapper.findAllDeptMultiCompletedEval(params);
+ 	    	    total = multiMapper.countAllDeptMultiCompleteEval(params);
+ 	    	    return new PageResponse<>(list, total, pageable.getPageNumber(), pageable.getPageSize());
+ 	    	}
  	    }
- 	    else {
+ 	    if (list == null) {
  	    	params.put("userNo", empNo);
  	 	    params.put("position", position);
  	    	list = multiMapper.findMultiCompletedEval(params);
