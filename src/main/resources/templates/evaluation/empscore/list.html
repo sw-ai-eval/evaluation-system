@@ -38,13 +38,6 @@
         .badge-pend { background:#f8d7da; color:#842029; border:1px solid #f1aeb5; }
         .badge-ing  { background:#e2e3e5; color:#41464b; border:1px solid #d3d6d8; }
 
-        .grade { font-weight:700; font-size:13px; }
-        .grade-S { color:#6f42c1; }
-        .grade-A { color:#0d6efd; }
-        .grade-B { color:#198754; }
-        .grade-C { color:#fd7e14; }
-        .grade-D { color:#dc3545; }
-
         .ref { color:#aaa; font-size:11px; }
         .dash { color:#ccc; }
 
@@ -95,7 +88,6 @@
                     onclick="switchTab('leader', this)">부서장 평가</button>
         </div>
 
-        <!-- 사원 탭 -->
         <div id="tab-staff" class="tab-content active">
             <div class="table-wrap">
                 <table>
@@ -138,9 +130,7 @@
                             </td>
                             <td th:text="${r.totalScore != null ? #numbers.formatDecimal(r.totalScore,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.evalGrade != null}" class="grade"
-                                      th:classappend="'grade-' + ${r.evalGrade}"
-                                      th:text="${r.evalGrade}"></span>
+                                <span th:if="${r.evalGrade != null}" th:text="${r.evalGrade}"></span>
                                 <span th:unless="${r.evalGrade != null}" class="dash">-</span>
                             </td>
                         </tr>
@@ -156,7 +146,6 @@
             </div>
         </div>
 
-        <!-- 부서장 탭: 임원/ADMIN만 -->
         <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}">
         <div id="tab-leader" class="tab-content">
             <div class="table-wrap">
@@ -201,8 +190,7 @@
                 <div id="leaderPageInfo">0 건</div>
             </div>
         </div>
-        </div><!-- 임원/ADMIN 조건 끝 -->
-    </div>
+        </div></div>
 
     <script>
         const PAGE_SIZE = 10;
