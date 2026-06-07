@@ -100,7 +100,7 @@
             <button class="btn-confirm-top" id="confirmBtn" onclick="confirmSelected()" disabled style="opacity:0.5;cursor:not-allowed;">선택 확정</button>
         </div>
 
-        <p class="notice">※ 종합등급과 다르게 확정등급 변경 시 반드시 <b>변경사유</b>를 입력하십시오. S등급 부여 시에도 사유 입력이 필요합니다.</p>
+        <p class="notice">※ 종합등급과 다르게 확정등급 변경 시 반드시 <b>변경사유</b>를 입력하십시오.</p>
 
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('staff', this)">사원 평가</button>
@@ -132,9 +132,10 @@
                     </thead>
                     <tbody id="staffBody">
                         <tr th:each="r : ${staffList}" class="hover-row"
-                            th:data-empno="${r.empNo}" th:data-year="${selectedYear}">
+                            th:data-empno="${r.empNo}" th:data-year="${selectedYear}"
+                            th:data-totalgrade="${r.totalGrade}">
                             <td><input type="checkbox" class="row-check staff-check"
-                                       th:disabled="${r.confirmStatus == '확정'}"></td>
+                                       th:disabled="${r.confirmStatus == '확정'}" onchange="checkConfirmBtn()"></td>
                             <td th:text="${r.deptName}"></td>
                             <td th:text="${r.levelName != null ? r.levelName : '-'}"></td>
                             <td th:text="${r.empNo}"></td>
@@ -212,9 +213,10 @@
                     <tbody id="leaderBody">
                         <tr th:each="r : ${leaderList}" class="hover-row"
                             th:data-empno="${r.empNo}" th:data-year="${selectedYear}"
-                            th:data-position="${r.position}" th:data-deptid="${r.deptId}">
+                            th:data-position="${r.position}" th:data-deptid="${r.deptId}"
+                            th:data-totalgrade="${r.totalGrade}">
                             <td><input type="checkbox" class="row-check leader-check"
-                                       th:disabled="${r.confirmStatus == '확정'}"></td>
+                                       th:disabled="${r.confirmStatus == '확정'}" onchange="checkConfirmBtn()"></td>
                             <td th:text="${r.deptName}"></td>
                             <td th:text="${r.levelName != null ? r.levelName : '-'}"></td>
                             <td th:text="${r.empNo}"></td>
@@ -310,19 +312,14 @@
         }
 
         function checkConfirmBtn() {
-            const bodyId = currentTab === 'staff' ? 'staffBody' : 'leaderBody';
-            const rows = [...document.getElementById(bodyId).querySelectorAll('tr:not(.empty-row)')];
-            // 미확정 행 중 등급 선택 안 된 행이 있으면 비활성화
-            const unconfirmedRows = rows.filter(tr => {
-                const confirmStatus = tr.querySelector('.confirm-status-badge');
-                return confirmStatus && confirmStatus.textContent.trim() !== '확정';
-            });
-            const allSaved = unconfirmedRows.length === 0 || unconfirmedRows.every(tr => {
-                const sel = tr.querySelector('.grade-select');
+            const cls = currentTab === 'staff' ? '.staff-check:checked' : '.leader-check:checked';
+            const checked = [...document.querySelectorAll(cls)];
+            const btn = document.getElementById('confirmBtn');
+            const hasGrade = checked.length > 0 && checked.every(cb => {
+                const sel = cb.closest('tr').querySelector('.grade-select');
                 return sel && sel.value !== '';
             });
-            const btn = document.getElementById('confirmBtn');
-            if (allSaved && rows.length > 0) {
+            if (hasGrade) {
                 btn.disabled = false;
                 btn.style.opacity = '1';
                 btn.style.cursor = 'pointer';
@@ -336,6 +333,7 @@
         function toggleAll(master, type) {
             document.querySelectorAll('.' + type + '-check:not(:disabled)')
                 .forEach(cb => cb.checked = master.checked);
+            checkConfirmBtn();
         }
 
         function renderPagination(tbodyId, paginationId, pageInfoId, page) {
@@ -384,10 +382,10 @@
             const select   = tr.querySelector('.grade-select');
             const reason   = tr.querySelector('.reason-input').value.trim();
             const grade    = select.value;
-            const original = select.getAttribute('data-original');
+            const original = select.getAttribute('data-original') || tr.getAttribute('data-totalgrade') || '';
             if (!grade) { alert('확정등급을 선택해주세요.'); return; }
-            if ((grade === 'S' || grade !== original) && !reason) {
-                alert('등급 변경 또는 S등급 부여 시 변경사유를 입력해야 합니다.');
+            if ((original && grade !== original) && !reason) {
+                alert('등급 변경 시 변경사유를 입력해야 합니다.');
                 tr.querySelector('.reason-input').focus();
                 return;
             }
@@ -396,18 +394,13 @@
             fetch('/evaluation/final-grade/adjust', {
                 method:'POST', headers:{'Content-Type':'application/json'},
                 body: JSON.stringify({ empNo, deptId, position, confirmedGrade: grade, reason, year })
-            }).then(r=>r.json()).then(res => {
-                if (res.status === 'success') {
+            }).then(r=>r.text()).then(res => {
+                if (res === 'success') {
                     select.setAttribute('data-original', grade);
-                    if (res.changed && res.changed.length > 0) {
-                        alert('저장되었습니다.\n\n[등급 자동 재조정]\n' + res.changed.join('\n'));
-                        location.reload();
-                    } else {
-                        alert('저장되었습니다.');
-                        checkConfirmBtn();
-                    }
+                    alert('저장되었습니다.');
+                    checkConfirmBtn();
                 } else {
-                    alert('저장 실패: ' + res.message);
+                    alert('저장 실패: ' + res);
                 }
             });
         }

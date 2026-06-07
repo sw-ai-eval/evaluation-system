@@ -219,7 +219,7 @@
                                     <th>구분</th>
                                     <th>항목<br>(업무 목표)</th>
                                     <th>배점</th>
-                                    <th>업무 수행 과정 및 결과 / 잘된 점 - 개선할 점</th>
+                                    <th>업무 수행 과정 및 결과 / 잘한 점 - 개선할 점</th>
                                     <th>평가<br>점수</th>
                                 </tr>
                             </thead>
@@ -316,7 +316,7 @@
                                     </td>
                                     <td style="background:#fff;">${weight}</td>
                                     <td style="text-align:left; vertical-align:top; background:#fff; padding: 0;">
-                                        <textarea name="selfFeedback_${item.questionId}" class="${selfClass}" ${selfReadonly} placeholder="업무 수행 과정 및 결과, 잘된 점/개선할 점을 입력하세요.">${item.selfFeedback || ''}</textarea>
+                                        <textarea name="selfFeedback_${item.questionId}" class="${selfClass}" ${selfReadonly} placeholder="업무 수행 과정 및 결과, 잘한 점/개선할 점을 입력하세요.">${item.selfFeedback || ''}</textarea>
                                     </td>
                                     <td style="background:#fff; vertical-align:middle;">
                                         <input type="number" name="selfScore_${item.questionId}" value="${item.selfScore || ''}" ${selfReadonly} 

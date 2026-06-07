@@ -165,6 +165,7 @@
                                             JOIN eval_type_52 tx ON mx.eval_type_id = tx.id
                                             WHERE mx.evaluatee_no = lb2.empNo AND tx.name LIKE '%다면%' AND mx.step = 1)) = 0
                          AND (SELECT COUNT(*) FROM LeaderBase WHERE allDone = 1) > 0
+                         AND rl.pctRank IS NOT NULL
                     THEN
                    CASE
                        WHEN rl.pctRank &lt;= ISNULL(g.grade_s, 10) / 100.0 THEN 'S'
