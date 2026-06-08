@@ -4,6 +4,7 @@ import com.eval.domain.performance.dto.PerformanceDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import java.util.List;
+import java.util.Map;
 
 @Mapper
 public interface PerformanceMapper {
@@ -33,4 +34,7 @@ public interface PerformanceMapper {
     void updateFirstAnswer(@Param("empNo") String empNo, @Param("typeId") Integer typeId, @Param("item") PerformanceDTO.Item item);
 
     void updateEvalStatus(@Param("typeId") Integer typeId, @Param("empNo") String empNo, @Param("status") Integer status, @Param("step") Integer step);
+
+    /** 평가 기간(start_date, end_date) 조회 */
+    Map<String, Object> selectEvalPeriod(@Param("typeId") Integer typeId);
 }

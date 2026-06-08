@@ -9,8 +9,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -82,6 +84,19 @@ public class PerformanceService {
 
     @Transactional
     public void saveEvaluation(PerformanceDTO.SaveReq req) {
+        // 평가 기간 체크
+        Map<String, Object> period = mapper.selectEvalPeriod(req.getTypeId());
+        if (period != null) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime startDate = (LocalDateTime) period.get("startDate");
+            LocalDateTime endDate   = (LocalDateTime) period.get("endDate");
+            if (startDate != null && now.isBefore(startDate)) {
+                throw new IllegalStateException("평가 기간이 시작되지 않았습니다.");
+            }
+            if (endDate != null && now.isAfter(endDate)) {
+                throw new IllegalStateException("평가 기간이 종료되었습니다.");
+            }
+        }
         if ("SELF".equals(req.getStep())) {
             for (PerformanceDTO.Item item : req.getItems()) {
                 mapper.updateSelfAnswer(req.getEmpNo(), req.getTypeId(), item);
