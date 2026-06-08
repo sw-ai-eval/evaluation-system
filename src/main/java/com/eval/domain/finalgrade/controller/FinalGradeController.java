@@ -57,7 +57,7 @@ public class FinalGradeController {
         }
     }
 
-    @PostMapping("/confirm")
+@PostMapping("/confirm")
     @ResponseBody
     public String confirm(@RequestBody Map<String, Object> body) {
         try {

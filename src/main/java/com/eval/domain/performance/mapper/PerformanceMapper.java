@@ -14,13 +14,15 @@ public interface PerformanceMapper {
     List<PerformanceDTO.Info> selectEvalList(
             @Param("year") Integer year,
             @Param("period") String period,
-            @Param("empNo") String empNo);
+            @Param("empNo") String empNo,
+            @Param("deptId") String deptId);
 
     /** 확정 문서 목록 (final_result_52.status=1인 사원만) */
     List<PerformanceDTO.Info> selectConfirmedList(
             @Param("year") Integer year,
             @Param("period") String period,
-            @Param("empNo") String empNo);
+            @Param("empNo") String empNo,
+            @Param("deptId") String deptId);
 
     PerformanceDTO.Info selectEvalInfo(@Param("typeId") Integer typeId, @Param("empNo") String empNo);
 

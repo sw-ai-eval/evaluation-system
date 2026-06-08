@@ -13,6 +13,7 @@ public class CompetencyDTO {
         private String empName;
         private String deptName;
         private String position;
+        private String levelName;
         private String status;        // 본인평가중, 1차평가대기 등
         private String leaderEmpNo;   // 1차 평가자(부서장) 사번
         private String totalGrade;    // 종합 등급

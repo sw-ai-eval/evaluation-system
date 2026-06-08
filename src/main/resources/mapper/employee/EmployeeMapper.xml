@@ -13,7 +13,8 @@
             position,
             locked,
             login_fail_count AS failCount,
-            level_id AS levelId
+            level_id AS levelId,
+            dept_id AS deptCode
         FROM dbo.employee_52
         WHERE emp_no = #{empNo}
     </select>
@@ -85,6 +86,7 @@
 	
 	        e.resign_date AS resignDate,
 	        e.locked AS locked,
+	        ISNULL(e.login_fail_count, 0) AS failCount,
 	
 	        CASE 
 	            WHEN e.resign_date IS NOT NULL 

@@ -17,6 +17,8 @@
 	        e.dept_id AS deptId,
 	        d.name AS deptName,
 	        e.position AS position,
+	        ISNULL(lv.name, '-') AS levelName,
+	        ISNULL(eval_lv.name, '-') AS evaluatorLevelName,
 	        et.start_date AS startDate,
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -35,8 +37,11 @@
 	    LEFT JOIN employee_52 eval_emp
 	        ON eval_emp.emp_no = etm.evaluator_no
 	
+	    LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+	    LEFT JOIN code_common_52 eval_lv ON eval_emp.level_id = eval_lv.id AND eval_lv.group_id = 1
+	
 	    LEFT JOIN code_common_52 cc
-	        ON cc.code = CAST(etm.status AS CHAR)
+	        ON cc.code = CAST(etm.status AS CHAR) AND cc.group_id = 3
 	
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id
@@ -52,7 +57,9 @@
 			      AND fr.year = et.year
 			      AND fr.status = 0
 			)
-	        
+	        <if test="deptId != null and deptId != ''">
+	            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
+	        </if>
 	        <if test="year != null">
 		        AND et.year = #{year}
 		    </if>
@@ -82,7 +89,7 @@
 				</choose>
 		    </if>
 	    </where>
-		ORDER BY et.id DESC
+		ORDER BY d.name, eval_emp.level_id DESC, etm.evaluator_no ASC
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
 	</select>
@@ -99,6 +106,8 @@
 	        e.dept_id AS deptId,
 	        d.name AS deptName,
 	        e.position AS position,
+	        ISNULL(lv.name, '-') AS levelName,
+	        ISNULL(eval_lv.name, '-') AS evaluatorLevelName,
 	        et.start_date AS startDate,
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -117,8 +126,11 @@
 	    LEFT JOIN employee_52 eval_emp
 	        ON eval_emp.emp_no = etm.evaluator_no
 	
+	    LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+	    LEFT JOIN code_common_52 eval_lv ON eval_emp.level_id = eval_lv.id AND eval_lv.group_id = 1
+	
 	    LEFT JOIN code_common_52 cc
-	        ON cc.code = CAST(etm.status AS CHAR)
+	        ON cc.code = CAST(etm.status AS CHAR) AND cc.group_id = 3
 	
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id
@@ -134,7 +146,9 @@
 			      AND fr.year = et.year
 			      AND fr.status = 1
 			)
-	        
+	        <if test="deptId != null and deptId != ''">
+	            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
+	        </if>
 	        <if test="year != null">
 		        AND et.year = #{year}
 		    </if>
@@ -164,7 +178,7 @@
 				</choose>
 		    </if>
 	    </where>
-	    ORDER BY et.id DESC
+	    ORDER BY d.name, eval_emp.level_id DESC, etm.evaluator_no ASC
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
 	
@@ -227,6 +241,8 @@
 	        e.dept_id AS deptId,
 	        d.name AS deptName,            
 	        e.position AS position,
+	        ISNULL(lv.name, '-') AS levelName,
+	        ISNULL(eval_lv.name, '-') AS evaluatorLevelName,
 	        et.start_date AS startDate, 
 	        et.end_date AS endDate,
 	        cc.name AS statusName
@@ -236,10 +252,12 @@
 	    
 	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
 	    
-	    LEFT JOIN department_52 d ON d.id = e.dept_id 
-	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
+	    LEFT JOIN department_52 d ON d.id = e.dept_id
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
+	    LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+	    LEFT JOIN code_common_52 eval_lv ON eval_emp.level_id = eval_lv.id AND eval_lv.group_id = 1
 	    LEFT JOIN code_common_52 cc 
-	        ON cc.code = CAST(etm.status AS VARCHAR)
+	        ON cc.code = CAST(etm.status AS VARCHAR) AND cc.group_id = 3
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
@@ -289,7 +307,7 @@
 				</choose>
 		    </if>
 	    </where>
-	    ORDER BY et.id DESC
+	    ORDER BY d.name, eval_emp.level_id DESC, etm.evaluator_no ASC
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
 	</select>
@@ -307,16 +325,20 @@
 	        e.dept_id AS deptId,
 	        d.name AS deptName,            
 	        e.position AS position,
+	        ISNULL(lv.name, '-') AS levelName,
+	        ISNULL(eval_lv.name, '-') AS evaluatorLevelName,
 	        et.start_date AS startDate, 
 	        et.end_date AS endDate,
 	        cc.name AS statusName
 	    FROM eval_target_mapping_52 etm
 	    JOIN eval_type_52 et ON et.id = etm.eval_type_id
 	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
-	    LEFT JOIN department_52 d ON d.id = e.dept_id 
-	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no   
+	    LEFT JOIN department_52 d ON d.id = e.dept_id
+	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
+	    LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+	    LEFT JOIN code_common_52 eval_lv ON eval_emp.level_id = eval_lv.id AND eval_lv.group_id = 1
 	    LEFT JOIN code_common_52 cc 
-	        ON cc.code = CAST(etm.status AS VARCHAR)
+	        ON cc.code = CAST(etm.status AS VARCHAR) AND cc.group_id = 3
 	    LEFT JOIN code_group_52 cg
 	        ON cg.id = cc.group_id AND cg.group_code = 'EVAL_STATUS'
 	    <where>
@@ -366,7 +388,7 @@
 				</choose>
 		    </if>
 	    </where>
-	    ORDER BY et.id DESC
+	    ORDER BY d.name, eval_emp.level_id DESC, etm.evaluator_no ASC
 		OFFSET #{offset} ROWS
 		FETCH NEXT #{size} ROWS ONLY
 	</select>
@@ -506,6 +528,7 @@
 	        etm.evaluatee_no AS evaluateeNo,
 	        e.name AS evaluateeName,
 	        e.position AS position,
+	        ISNULL(lv.name, '-') AS levelName,
 	        e.dept_id AS deptId,
 	        d.name AS deptName,
 	        et.start_date AS startDate,
@@ -516,6 +539,7 @@
 	    JOIN employee_52 e ON e.emp_no = etm.evaluatee_no
 	    LEFT JOIN employee_52 eval_emp ON eval_emp.emp_no = etm.evaluator_no
 	    LEFT JOIN department_52 d ON d.id = e.dept_id
+	    LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
 	    LEFT JOIN code_common_52 cc 
 	        ON cc.group_id = 3 AND cc.code = CAST(etm.status AS VARCHAR)
 	    WHERE etm.eval_type_id = #{evalTypeId}

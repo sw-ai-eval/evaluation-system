@@ -15,12 +15,12 @@ public class EmpManageDTO {
     private String password;
     private String name;
 
-    // 🔥 여기 핵심 변경
     private String deptId;
-    private String deptName; // 부서명 조인으로 찾을 거임
+    private String deptName;
 
     private String status;
     private Integer locked;
+    private Integer failCount;
     private String role; // 권한
 
     private String email;

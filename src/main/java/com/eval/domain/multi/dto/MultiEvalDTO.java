@@ -29,6 +29,8 @@ public class MultiEvalDTO {
     private String evaluatorName;
     private String evaluateeName;
     private String position;
+    private String levelName;
+    private String evaluatorLevelName;
     private String deptId;
     private String deptName;
     
@@ -118,8 +120,5 @@ public class MultiEvalDTO {
         private String content;
  
     }
-    
-    
-    
     
 }

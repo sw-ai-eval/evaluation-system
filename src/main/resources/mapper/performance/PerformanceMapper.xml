@@ -14,6 +14,7 @@
             FORMAT(et.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(et.end_date, 'yyyy-MM-dd') AS evalPeriod,
             d.name AS deptName,
             e.position AS position,
+            ISNULL(lv.name, '-') AS levelName,
             e.emp_no AS empNo,
             e.name AS empName,
             CASE 
@@ -26,13 +27,27 @@
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 et ON m.eval_type_id = et.id
-        WHERE m.eval_type_id = 2
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
+        WHERE m.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
           AND m.step = 0
           AND e.status = 'ACTIVE'
           AND e.position != '부서장'
+          AND NOT EXISTS (
+              SELECT 1 FROM final_result_52 fr2
+              WHERE fr2.emp_no = e.emp_no AND fr2.status = 1
+              <if test="year != null">AND fr2.year = #{year}</if>
+          )
         <if test="empNo != null and empNo != ''">
             AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
         </if>
+        <if test="deptId != null and deptId != ''">
+            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
+        </if>
+        AND NOT EXISTS (
+            SELECT 1 FROM final_result_52 fr2
+            WHERE fr2.emp_no = e.emp_no AND fr2.status = 1
+            <if test="year != null">AND fr2.year = #{year}</if>
+        )
         <if test="year != null">
             AND et.year = #{year}
         </if>
@@ -46,7 +61,7 @@
                 </when>
             </choose>
         </if>
-        ORDER BY (CASE WHEN e.emp_no = #{empNo} THEN 0 ELSE 1 END), e.emp_no ASC
+        ORDER BY d.name, e.level_id DESC, (CASE WHEN e.emp_no = #{empNo} THEN 0 ELSE 1 END), e.emp_no ASC
     </select>
 
     <select id="selectEvalInfo" resultType="com.eval.domain.performance.dto.PerformanceDTO$Info">
@@ -55,6 +70,7 @@
             d.name AS deptName,
             d.leader_emp_no AS leaderEmpNo,
             e.position AS position,
+            ISNULL(lv.name, '-') AS levelName,
             e.emp_no AS empNo,
             e.name AS empName,
             fr.grade AS totalGrade,
@@ -67,8 +83,10 @@
         FROM eval_target_mapping_52 m
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         LEFT JOIN final_result_52 fr ON e.emp_no = fr.emp_no 
             AND fr.year = (SELECT TOP 1 year FROM eval_type_52 WHERE id = m.eval_type_id)
+            AND fr.status = 1
         WHERE m.eval_type_id = #{typeId} 
           AND m.evaluatee_no = #{empNo}
           AND m.step = 0
@@ -181,6 +199,7 @@
             FORMAT(et.start_date, 'yyyy-MM-dd') + ' ~ ' + FORMAT(et.end_date, 'yyyy-MM-dd') AS evalPeriod,
             d.name AS deptName,
             e.position AS position,
+            ISNULL(lv.name, '-') AS levelName,
             e.emp_no AS empNo,
             e.name AS empName,
             fr.grade AS totalGrade,
@@ -189,13 +208,17 @@
         JOIN employee_52 e ON m.evaluatee_no = e.emp_no
         JOIN department_52 d ON e.dept_id = d.id
         JOIN eval_type_52 et ON m.eval_type_id = et.id
+        LEFT JOIN code_common_52 lv ON e.level_id = lv.id AND lv.group_id = 1
         JOIN final_result_52 fr ON fr.emp_no = e.emp_no
-        WHERE m.eval_type_id = 2
+        WHERE m.eval_type_id = (SELECT id FROM eval_type_52 WHERE name LIKE '%성과%' AND status = 1)
           AND m.step = 0
           AND e.status = 'ACTIVE'
           AND fr.status = 1
         <if test="empNo != null and empNo != ''">
             AND (e.emp_no = #{empNo} OR d.leader_emp_no = #{empNo})
+        </if>
+        <if test="deptId != null and deptId != ''">
+            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
         </if>
         <if test="year != null">
             AND et.year = #{year} AND fr.year = #{year}
@@ -206,7 +229,7 @@
                 <when test="period == '하반기'">AND MONTH(et.start_date) BETWEEN 7 AND 12</when>
             </choose>
         </if>
-        ORDER BY d.name, e.emp_no ASC
+        ORDER BY d.name, e.level_id DESC, e.emp_no ASC
     </select>
 
     <update id="updateEvalStatus">

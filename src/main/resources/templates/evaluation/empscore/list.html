@@ -38,13 +38,6 @@
         .badge-pend { background:#f8d7da; color:#842029; border:1px solid #f1aeb5; }
         .badge-ing  { background:#e2e3e5; color:#41464b; border:1px solid #d3d6d8; }
 
-        .grade { font-weight:700; font-size:13px; }
-        .grade-S { color:#6f42c1; }
-        .grade-A { color:#0d6efd; }
-        .grade-B { color:#198754; }
-        .grade-C { color:#fd7e14; }
-        .grade-D { color:#dc3545; }
-
         .ref { color:#aaa; font-size:11px; }
         .dash { color:#ccc; }
 
@@ -95,7 +88,6 @@
                     onclick="switchTab('leader', this)">부서장 평가</button>
         </div>
 
-        <!-- 사원 탭 -->
         <div id="tab-staff" class="tab-content active">
             <div class="table-wrap">
                 <table>
@@ -123,24 +115,22 @@
                             <td class="ref" th:text="${r.perfSelf != null ? #numbers.formatDecimal(r.perfSelf,1,1) : '-'}"></td>
                             <td th:text="${r.perfFirst != null ? #numbers.formatDecimal(r.perfFirst,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.perfStatus != null}" class="badge"
+                                <span th:if="${r.perfStatus != null and r.perfStatus != '-'}" class="badge"
                                       th:classappend="${r.perfStatus == '평가완료'} ? 'badge-done' : (${r.perfStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
                                       th:text="${r.perfStatus}"></span>
-                                <span th:unless="${r.perfStatus != null}" class="dash">-</span>
+                                <span th:unless="${r.perfStatus != null and r.perfStatus != '-'}" class="dash">-</span>
                             </td>
                             <td class="ref" th:text="${r.compSelf != null ? #numbers.formatDecimal(r.compSelf,1,1) : '-'}"></td>
                             <td th:text="${r.compFirst != null ? #numbers.formatDecimal(r.compFirst,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.compStatus != null}" class="badge"
+                                <span th:if="${r.compStatus != null and r.compStatus != '-'}" class="badge"
                                       th:classappend="${r.compStatus == '평가완료'} ? 'badge-done' : (${r.compStatus == '1차평가대기'} ? 'badge-wait' : 'badge-pend')"
                                       th:text="${r.compStatus}"></span>
-                                <span th:unless="${r.compStatus != null}" class="dash">-</span>
+                                <span th:unless="${r.compStatus != null and r.compStatus != '-'}" class="dash">-</span>
                             </td>
                             <td th:text="${r.totalScore != null ? #numbers.formatDecimal(r.totalScore,1,1) : '-'}"></td>
                             <td>
-                                <span th:if="${r.evalGrade != null}" class="grade"
-                                      th:classappend="'grade-' + ${r.evalGrade}"
-                                      th:text="${r.evalGrade}"></span>
+                                <span th:if="${r.evalGrade != null}" th:text="${r.evalGrade}"></span>
                                 <span th:unless="${r.evalGrade != null}" class="dash">-</span>
                             </td>
                         </tr>
@@ -156,7 +146,6 @@
             </div>
         </div>
 
-        <!-- 부서장 탭: 임원/ADMIN만 -->
         <div th:if="${#authentication.principal.levelId == 6 or #authentication.principal.role == 'ADMIN'}">
         <div id="tab-leader" class="tab-content">
             <div class="table-wrap">
@@ -164,12 +153,11 @@
                     <thead>
                         <tr>
                             <th colspan="5">피평가자</th>
-                            <th colspan="2">다면평가</th>
-                            <th rowspan="2">종합등급</th>
+                            <th colspan="3">다면평가</th>
                         </tr>
                         <tr>
                             <th>부서명</th><th>직책</th><th>직위</th><th>사번</th><th>성명</th>
-                            <th>평균점수</th><th>상태</th>
+                            <th>상태</th><th>평균점수</th><th>평가등급</th>
                         </tr>
                     </thead>
                     <tbody id="leaderBody">
@@ -179,17 +167,15 @@
                             <td th:text="${r.levelName}"></td>
                             <td th:text="${r.empNo}"></td>
                             <td th:text="${r.empName}"></td>
-                            <td th:text="${r.multiAvgScore != null ? #numbers.formatDecimal(r.multiAvgScore,1,2) : '-'}"></td>
                             <td>
-                                <span th:if="${r.multiStatus != null}" class="badge"
+                                <span th:if="${r.multiStatus != null and r.multiStatus != '-'}" class="badge"
                                       th:classappend="${r.multiStatus == '평가완료'} ? 'badge-done' : 'badge-ing'"
                                       th:text="${r.multiStatus}"></span>
-                                <span th:unless="${r.multiStatus != null}" class="dash">-</span>
+                                <span th:unless="${r.multiStatus != null and r.multiStatus != '-'}" class="dash">-</span>
                             </td>
+                            <td th:text="${r.multiAvgScore != null ? #numbers.formatDecimal(r.multiAvgScore,1,2) : '-'}"></td>
                             <td>
-                                <span th:if="${r.evalGrade != null}" class="grade"
-                                      th:classappend="'grade-' + ${r.evalGrade}"
-                                      th:text="${r.evalGrade}"></span>
+                                <span th:if="${r.evalGrade != null}" th:text="${r.evalGrade}"></span>
                                 <span th:unless="${r.evalGrade != null}" class="dash">-</span>
                             </td>
                         </tr>
@@ -204,8 +190,7 @@
                 <div id="leaderPageInfo">0 건</div>
             </div>
         </div>
-        </div><!-- 임원/ADMIN 조건 끝 -->
-    </div>
+        </div></div>
 
     <script>
         const PAGE_SIZE = 10;
