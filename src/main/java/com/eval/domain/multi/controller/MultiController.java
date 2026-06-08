@@ -101,6 +101,16 @@ import com.eval.domain.multi.service.MultiService;
 	      String loginEmpNo = user.getUsername();
 	      String position = user.getPosition();
 	      
+	      if(multiService.isInStartDateEndDate(evalTypeId)) {
+	    	  redirectAttributes.addFlashAttribute(
+	                  "alertMessage",
+	                  "평가 기간이 아닙니다!"
+	          );
+	    	  
+	    	  return "redirect:/evaluation/multi";
+	      }
+	      
+	      
 	      if(multiService.ifFinishSelfEval(loginEmpNo)) {
 	    	  redirectAttributes.addFlashAttribute(
 	                  "alertMessage",

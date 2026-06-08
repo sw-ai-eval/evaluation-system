@@ -170,7 +170,7 @@ public class EmployeeService {
 	    	employee.setPosition("부서원");
 	    }
         
-        employee.setEmpNo(empNo); // 사번 자동 증가 로직 구현해야 함----------------------
+        employee.setEmpNo(empNo); 
         employee.setName(employeeDTO.getName());
         employee.setDeptId(employeeDTO.getDeptId());
         employee.setStatus(employeeDTO.getStatus());

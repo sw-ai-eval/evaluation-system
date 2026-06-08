@@ -78,7 +78,7 @@ function showEditForm(btn) {
         });
 
     set("edit-parentId", d.parentid || "");
-    set("edit-parentName", d.parentname || "");
+    set("edit-parentName", d.parentname || "현재 부서가 최상위 부서입니다.");
 
     const form = document.querySelector("#editForm form");
 
