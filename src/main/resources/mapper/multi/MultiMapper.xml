@@ -645,5 +645,16 @@
 		GROUP BY category_name
 	</select>
 	
+	<select id="isEvaluationPeriod" parameterType="long" resultType="boolean">
+	    SELECT
+	        CASE
+	            WHEN GETDATE() BETWEEN start_date AND end_date
+	            THEN CAST(1 AS BIT)
+	            ELSE CAST(0 AS BIT)
+	        END
+	    FROM eval_type_52
+	    WHERE id = #{evalTypeId}
+	    
+	</select>
 
 </mapper>

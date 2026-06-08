@@ -96,7 +96,8 @@ public class DepartmentService {
         Department parent = null;
 
         String newId;
-
+        
+        // 하위부서
         if (dto.getParentId() != null && !dto.getParentId().isBlank()) {
             parent = departmentRepository.findById(dto.getParentId())
                     .orElseThrow(() -> new IllegalArgumentException("상위 부서 없음"));
@@ -105,12 +106,11 @@ public class DepartmentService {
             dept.setLevel(parent.getLevel() + 1);
 
             newId = generateTreeDepartmentId(parent.getId());
-        } else {
-            dept.setLevel(0);
-            dept.setParent(null);
-
-            // 루트 부서 ID, 예: S3_00
-            newId = generateTreeDepartmentId(null);
+        }
+        else { // 최상위 부서
+        	dept.setLevel(0);
+        	dept.setParent(null);
+        	newId = generateTreeDepartmentId(null);
         }
 
         dept.setId(newId);
@@ -125,70 +125,78 @@ public class DepartmentService {
         departmentRepository.save(dept);
     }
 
-    /**
-     * 트리형 ID 생성 (_ 포함)
-     */
-    private String generateTreeDepartmentId(String parentId) {
+    //트리형 ID 생성
+    @Transactional
+    public String generateTreeDepartmentId(String parentId) {
 
+        // =========================
+        // 1. 최상위 부서
+        // =========================
         if (parentId == null || parentId.isBlank()) {
-            // 루트 부서 처리
-            List<Department> roots = departmentRepository.findByParent_Id(null); // 루트 부서만 가져오기
-            int nextRootNum = 0;
 
-            if (!roots.isEmpty()) {
-                // 기존 루트 부서에서 가장 큰 숫자 추출
-                nextRootNum = roots.stream()
-                        .map(Department::getId)
-                        .map(id -> {
-                            // 루트 부서는 "S숫자" 형식
-                            try {
-                                return Integer.parseInt(id.replaceAll("[^0-9]", ""));
-                            } catch (NumberFormatException e) {
-                                return -1; // 숫자가 안될 경우
-                            }
-                        })
-                        .max(Integer::compareTo)
-                        .orElse(-1) + 1; // 다음 루트 번호
-            }
+            // 루트 동시성 제어
+            departmentRepository.lockRootInsert();
+
+            List<Department> roots =
+                    departmentRepository.findByParentIsNull();
+
+            int nextRootNum = roots.stream()
+                    .map(Department::getId)
+                    .map(id -> {
+                        try {
+                            return Integer.parseInt(id.substring(1)); // S 제거
+                        } catch (Exception e) {
+                            return -1;
+                        }
+                    })
+                    .max(Integer::compareTo)
+                    .orElse(0) + 1;
 
             if (nextRootNum > 99) {
                 throw new RuntimeException("루트 부서 번호 초과");
             }
 
             return "S" + nextRootNum;
-        } else {
-            // 하위 부서 처리
-            String parentCode = parentId;
-
-            List<Department> children = departmentRepository.findByParent_Id(parentId);
-
-            int nextSeq = 1;
-            if (!children.isEmpty()) {
-                Set<Integer> used = children.stream()
-                        .map(Department::getId)
-                        .map(id -> {
-                            int lastUnderscore = id.lastIndexOf('_');
-                            String numPart = lastUnderscore == -1 ? id.replaceAll("[^0-9]", "") : id.substring(lastUnderscore + 1);
-                            try {
-                                return Integer.parseInt(numPart);
-                            } catch (NumberFormatException e) {
-                                return 0;
-                            }
-                        })
-                        .collect(Collectors.toSet());
-
-                while (used.contains(nextSeq)) {
-                    nextSeq++;
-                }
-            }
-
-            if (nextSeq > 99) {
-                throw new RuntimeException("ID 자리수 초과 (설계 변경 필요)");
-            }
-
-            String childCode = String.format("%02d", nextSeq);
-            return parentCode + "_" + childCode;
         }
+
+        // =========================
+        // 2. 하위 부서
+        // =========================
+
+        Department parent =
+                departmentRepository.findByIdForUpdate(parentId);
+
+        List<Department> children =
+                departmentRepository.findByParent_Id(parentId);
+
+        int nextSeq = 1;
+
+        if (!children.isEmpty()) {
+
+            Set<Integer> used = children.stream()
+                    .map(Department::getId)
+                    .map(id -> {
+                        try {
+                            int idx = id.lastIndexOf('_');
+                            String num = id.substring(idx + 1);
+                            return Integer.parseInt(num);
+                        } catch (Exception e) {
+                            return 0;
+                        }
+                    })
+                    .collect(Collectors.toSet());
+
+            while (used.contains(nextSeq)) {
+                nextSeq++;
+            }
+        }
+
+        // ✔ 핵심 안전장치
+        if (parentId == null || parentId.isBlank()) {
+            return "S" + nextSeq;
+        }
+
+        return parentId + "_" + String.format("%02d", nextSeq);
     }
 
     //////////////////////////////////////////////////////////////////////////// 부서 수정

@@ -429,4 +429,10 @@ import lombok.RequiredArgsConstructor;
     	    return chart;
     	}
 
+	 public boolean isInStartDateEndDate(long evalTypeId) {
+    	 boolean isEvalDate= multiMapper.isEvaluationPeriod(evalTypeId);
+    	 System.out.println("isEvalDate boolean: "+isEvalDate);
+    	 return isEvalDate;
+	 }
+
  }

@@ -28,21 +28,30 @@ public class HomeService {
 	private final HomeMapper homeMapper;
 	private final NoticeRepository noticeRepository;
 	
-	public List<TodoListDto> getTodoList(String empNo){
+	public List<TodoListDto> getTodoList(String empNo, String position){
+		
 
 	    // 1. 면담 할 일
 	    List<TodoListDto> interviewList = homeMapper.selectInterviewTodoList(empNo);
-
+	    List<TodoListDto> evalList =null;
 	    // 2. 평가 할 일
-	    List<TodoListDto> evalList = homeMapper.selectEvaluationTodoList(empNo);
+	    if("임원".equals(position)) {
+	    	evalList=homeMapper.selectExecutiveEvaluationTodoList(empNo);
+	    }else {
+	    	evalList = homeMapper.selectEvaluationTodoList(empNo);
+	    }
+	    
 
-	    // 3. 합치기
 	    List<TodoListDto> result = new ArrayList<>();
 	    result.addAll(interviewList);
 	    result.addAll(evalList);
 
-	    // 4. 정렬 (핵심🔥)
-	    result.sort(Comparator.comparing(TodoListDto::getDueDate));
+	    result.sort(
+	    	    Comparator.comparing(
+	    	        TodoListDto::getDueDate,
+	    	        Comparator.nullsLast(Comparator.naturalOrder())
+	    	    )
+	    	);
 
 	    return result;
 	}

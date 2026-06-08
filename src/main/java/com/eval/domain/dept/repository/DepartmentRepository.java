@@ -21,10 +21,19 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	List<Department> findByParent_Id(String parentId);
     
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT d FROM Department d WHERE d.id = :id")
-    Optional<Department> findByIdForUpdate(String id);
-    
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT d FROM Department d WHERE d.id = :parentId")
+	Department findParentForUpdate(@Param("parentId") String parentId);
+	
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT d FROM Department d WHERE d.parent IS NULL")
+	List<Department> lockRootInsert();
+	
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("SELECT d FROM Department d WHERE d.id = :id")
+	Department findByIdForUpdate(@Param("id") String id);
+	
+	
     boolean existsByParentId(String parentId);
 
     @Modifying
@@ -53,5 +62,7 @@ public interface DepartmentRepository extends JpaRepository<Department, String> 
     void disableAllByIds(@Param("ids") List<String> ids);
 
     List<Department> findByUseYn(boolean b);
+
+	List<Department> findByParentIsNull();
 
 }

@@ -53,5 +53,7 @@ public interface MultiMapper{
 
 	int countMultiCompleteEval(Map<String, Object> params);
 
+	boolean isEvaluationPeriod(long evalTypeId);
+
 	
 }

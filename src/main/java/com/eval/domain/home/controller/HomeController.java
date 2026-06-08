@@ -47,7 +47,7 @@ public class HomeController {
             
             EmpManageDTO employee = employeeMapper.findByEmpNoDetail(empNo);
             Long interviewCount = interviewMapper.countOngoingInterviewsByEmpNo(empNo);
-            List<TodoListDto> todoList = homeService.getTodoList(empNo);
+            List<TodoListDto> todoList = homeService.getTodoList(empNo, employee.getPosition());
             List<NoticeListDto> noticeList= homeMapper.selectNoticeList();
             double myEvalPercent = homeService.getMyOngoingEvalPercent(empNo);
             double AllEvalPercent = homeService.getDeptOngoingEvalPercent();
@@ -57,7 +57,7 @@ public class HomeController {
                 model.addAttribute("empName", employee.getName());
                 model.addAttribute("empNo", employee.getEmpNo());
                 model.addAttribute("deptName", employee.getDeptName());
-                model.addAttribute("position", employee.getLevelName());
+                model.addAttribute("levelName", employee.getLevelName());
                 model.addAttribute("interviewCount", interviewCount);
                 model.addAttribute("todoList", todoList);
                 model.addAttribute("noticeList", noticeList);

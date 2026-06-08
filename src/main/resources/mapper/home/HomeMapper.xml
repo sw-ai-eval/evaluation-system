@@ -135,5 +135,25 @@
 	    WHERE status = 0
 	
 	</select>
+	
+	<select id="selectExecutiveEvaluationTodoList" resultType="com.eval.domain.home.dto.TodoListDto">
+	    SELECT DISTINCT
+	        '최종 등급 확정' AS type,
+	        ev.name AS evaluatorName,
+	        ee.name AS evaluateeName,
+	        '확정 전' AS status
+	    FROM eval_target_mapping_52 etm
+	
+	    LEFT JOIN employee_52 ev
+	        ON ev.emp_no = etm.evaluator_no
+	
+	    LEFT JOIN employee_52 ee
+	        ON ee.emp_no = etm.evaluatee_no
+	
+	    WHERE 
+	        etm.evaluator_no = #{empNo}
+	        AND etm.status != 2
+
+	</select>
 
 </mapper>
