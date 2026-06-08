@@ -304,5 +304,15 @@
           AND step = 0
           AND eval_type_id IN (SELECT id FROM eval_type_52 WHERE year = #{year})
     </update>
+    
+    <update id="updateExecutiveMappingStatus">
+        UPDATE eval_target_mapping_52
+        SET status     = 2,
+            updated_at = GETDATE()
+            updated_by= #{updatedBy}
+        WHERE evaluatee_no = #{empNo}
+          AND step = 2
+          AND eval_type_id IN (SELECT id FROM eval_type_52 WHERE year = #{year})
+    </update>
 
 </mapper>

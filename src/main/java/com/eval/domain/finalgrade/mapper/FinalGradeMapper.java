@@ -51,4 +51,6 @@ public interface FinalGradeMapper {
     void updateMappingStatus(
             @Param("empNo") String empNo,
             @Param("year") Integer year);
+
+	void updateExecutiveMappingStatus(@Param("empNo") String empNo,@Param("year") Integer year, @Param("updatedBy")  String updatedBy);
 }
