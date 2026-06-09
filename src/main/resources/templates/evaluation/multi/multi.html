@@ -369,12 +369,7 @@
 <script th:if="${alertMessage}" th:inline="javascript">
     const msg = /*[[${alertMessage}]]*/ '';
 
-    Swal.fire({
-        icon: 'warning',
-        title: '알림',
-        text: msg,
-        confirmButtonColor: '#3085d6'
-    });
+    alert(msg);
 </script>
 <script type="text/javascript">
 window.onload = () => {
@@ -406,6 +401,7 @@ function loadEvalDetail(rowElement) {
             const isCompleted = status === '평가 완료' || status === '평가완료';
             const isSelf = String(currentUserNo) === String(data.evaluateeNo);
             const isEvaluator = String(currentUserNo) === String(data.evaluatorNo);
+            const canEvaluate = !isCompleted && !isSelf && isEvaluator;
 
             // 우측 패널
             const detailPanel = document.getElementById('detailPanel');
@@ -426,7 +422,8 @@ function loadEvalDetail(rowElement) {
 
             // 시작 버튼 표시/숨김
             const actionButtons = document.getElementById('actionButtons');
-            actionButtons.style.display = (isCompleted || isSelf || !isEvaluator) ? 'none' : 'block';
+            actionButtons.style.display = canEvaluate ? 'block' : 'none';
+            
             const tfoot = document.getElementById('evalTfoot');
             
             const totalScoreEl = document.getElementById('totalScore');

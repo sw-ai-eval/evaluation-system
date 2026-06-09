@@ -58,6 +58,7 @@ public class FinalGradeService {
         for (String empNo : empNos) {
             mapper.confirmFinalResult(empNo, year, updatedBy);
             mapper.updateMappingStatus(empNo, year);
+            mapper.updateExecutiveMappingStatus(empNo, year,updatedBy);
         }
     }
 

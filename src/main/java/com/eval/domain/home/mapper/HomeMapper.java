@@ -28,5 +28,7 @@ public interface HomeMapper {
 	long countAllStartedEval();
 	
 	Long countAllNotStartedEvalEmpNum();
+
+	List<TodoListDto> selectExecutiveEvaluationTodoList(String empNo);
 	
 }
