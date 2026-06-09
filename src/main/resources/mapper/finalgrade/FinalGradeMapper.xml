@@ -308,7 +308,7 @@
     <update id="updateExecutiveMappingStatus">
         UPDATE eval_target_mapping_52
         SET status     = 2,
-            updated_at = GETDATE()
+            updated_at = GETDATE(),
             updated_by= #{updatedBy}
         WHERE evaluatee_no = #{empNo}
           AND step = 2

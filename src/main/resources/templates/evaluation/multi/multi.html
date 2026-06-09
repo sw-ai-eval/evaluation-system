@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         body { margin: 0; display: flex; background-color: #f8f9fa; font-family: 'Noto Sans KR', sans-serif; min-height: 100vh; color: #333; }
-        .main-content { flex-grow: 1; padding: 20px 30px; box-sizing: border-box; background: #fff; }
+        .main-content { flex-grow: 1; padding: 20px 30px; box-sizing: border-box; background: #fff;  min-height: 0; }
         h2 { font-size: 20px; margin-top: 0; margin-bottom: 20px; font-weight: bold; border-bottom: 1px solid #eee; padding-bottom: 15px; }
         
         /* 상단 검색 영역 */
@@ -21,7 +21,7 @@
         .split-container { display: flex; gap: 20px; height: calc(100vh - 180px); }
         
         /* 좌측 패널 (목록) */
-        .left-panel { flex: 4; display: flex; flex-direction: column; border: 1px solid #dee2e6; background: #fff; position: relative; }
+        .left-panel { flex: 4; display: flex; flex-direction: column; border: 1px solid #dee2e6; background: #fff; position: relative;  min-height: 0;}
         .tabs { display: flex; border-bottom: 1px solid #dee2e6; background: #f8f9fa; margin: 0; padding: 0; list-style: none; }
         .tabs li { padding: 10px 20px; font-size: 13px; cursor: pointer; border-right: 1px solid #dee2e6; color: #495057; }
         .tabs li.active { background: #fff; font-weight: bold; color: #000; border-bottom: 1px solid #fff; margin-bottom: -1px; }
@@ -31,7 +31,7 @@
 		    display: block;
 		}
 
-        .table-wrap { overflow-y: auto; flex-grow: 1; }
+        .table-wrap { overflow-y: auto; flex: 1; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
         th { background-color: #f1f3f5; border: 1px solid #dee2e6; padding: 10px; font-weight: 500; color: #495057; }
         td { border: 1px solid #dee2e6; padding: 10px; vertical-align: middle; }
@@ -227,12 +227,11 @@
 			            </thead>
 			            <tbody id="progressBody"></tbody>
 			        </table>
-			
-			        <div class="pagination-wrap">
-					    <div class="pagination" id="progressPaging"></div>
-					    <div id="progressPagingInfo"></div>
-					</div>
 			    </div>
+		    	<div class="pagination-wrap" id="progressPagingWrap" >
+				    <div class="pagination" id="progressPaging"></div>
+				    <div id="progressPagingInfo"></div>
+				</div>
 			
 			    <!-- ===================== -->
 			    <!-- COMPLETED TABLE -->
@@ -255,11 +254,11 @@
 			            <tbody id="completedBody"></tbody>
 			        </table>
 			
-			        <div class="pagination-wrap">
-					    <div class="pagination" id="completedPaging"></div>
-					    <div id="completedPagingInfo"></div>
-					</div>
 			    </div>
+		    	<div class="pagination-wrap" id="completedPagingWrap" >
+				    <div class="pagination" id="completedPaging"></div>
+				    <div id="completedPagingInfo"></div>
+				</div>
 			
 			</div>
 
@@ -895,6 +894,19 @@ document.getElementById("tab-progress").onclick = () => {
     document.getElementById("progressWrap").style.display = "block";
     document.getElementById("completedWrap").style.display = "none";
 
+    // progress paging
+    document.getElementById("progressPaging").style.display = "flex";
+    document.getElementById("progressPagingInfo").style.display = "block";
+    document.getElementById("progressPagingWrap").style.display = "flex";
+
+
+    document.getElementById("completedPaging").style.display = "none";
+    document.getElementById("completedPagingInfo").style.display = "none";
+    document.getElementById("completedPagingWrap").style.display = "none";
+
+
+
+
     loadProgress(0);
 };
 
@@ -904,6 +916,15 @@ document.getElementById("tab-completed").onclick = () => {
 
     document.getElementById("progressWrap").style.display = "none";
     document.getElementById("completedWrap").style.display = "block";
+
+    // progress paging 숨김
+    document.getElementById("progressPaging").style.display = "none";
+    document.getElementById("progressPagingInfo").style.display = "none";
+    document.getElementById("progressPagingWrap").style.display = "none";
+
+    document.getElementById("completedPagingWrap").style.display = "flex";
+    document.getElementById("completedPaging").style.display = "flex";
+    document.getElementById("completedPagingInfo").style.display = "block";
 
     loadCompleted(0);
 };
