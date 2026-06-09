@@ -90,6 +90,7 @@
 			    <thead>
 			    <tr>
 			        <th>부서</th>
+			        <th>피평가자 사번</th>
 			        <th>사원명(피평가자)</th>
 			        <th>직급</th>
 			        <th>1차 평가자</th>
@@ -102,6 +103,7 @@
 			    <tbody>
 			    <tr th:each="eval : ${evalList}">
 			        <td th:text="${eval.deptName}"></td>
+			        <td th:text="${eval.empNo}"></td>
 			        <td th:text="${eval.empName}"></td>
 			        <td th:text="${eval.position}"></td>
 			        <td th:text="${#strings.isEmpty(eval.firstEvaluatorNames) ? '다면평가' : eval.firstEvaluatorNames}"></td>
