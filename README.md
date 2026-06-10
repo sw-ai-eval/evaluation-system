@@ -22,17 +22,17 @@
 
 # 📌 Table of Contents
 
-* [📖 프로젝트 개요](#프로젝트-개요)
-* [✨ 주요 기능](#주요-기능)
-* [🛠 기술 스택](#기술-스택)
-* [🏗 시스템 아키텍처](#시스템-아키텍처)
-* [🗄 데이터베이스](#database-design)
-* [🔥 핵심 구현](#핵심-구현)
-* [🚀 향후 개선 사항](#향후-개선-사항)
+* [Project Overview](#project-overview)
+* [Key Features](#key-features)
+* [Tech Stack](#tech-stack)
+* [System Architecture](#system-architecture)
+* [Database Design](#database-design)
+* [Core Implementation](#core-implementation)
+* [Future Improvements](#future-improvements)
 
 ---
 
-# 📖 프로젝트 개요
+# Project Overview
 
 사내 인사평가 프로세스를 디지털화하기 위한 **성과평가, 역량평가, 다면평가 기반 HR 평가 시스템**입니다.
 
@@ -48,7 +48,7 @@
 
 ---
 
-# ✨ 주요 기능
+# Key Features
 
 ## 🔐 Authentication & Authorization
 
@@ -122,7 +122,7 @@
 
 ---
 
-# 🛠 기술 스택
+# Tech Stack
 
 ## Backend
 
@@ -152,13 +152,13 @@
 
 ---
 
-# 🏗 시스템 아키텍처
+# System Architecture
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/6cd9567d-3ded-44f2-b476-7e279fb6cc25" width="500">
 </p>
 
-# 🗄 Database Design
+# Database Design
 
 ### ERD
 
@@ -175,7 +175,7 @@ https://www.erdcloud.com/d/GXkcZEbxARZXLqWX2
 
 ---
 
-# 🔥 핵심 구현
+# Core Implementation
 
 ## 1. 동시성을 고려한 부서코드, 사번 자동 생성
 
@@ -244,7 +244,7 @@ mvn spring-boot:run
 
 ---
 
-# 📌  향후 개선 사항
+# Future Improvements
 
 * CI/CD 자동 배포 (GitHub Actions / Jenkins)
 * 클라우드 배포
