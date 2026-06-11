@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -183,6 +184,20 @@ public class EvaluationController {
     public String deleteEvalItem(@PathVariable("id") Integer id) {
         evalItemRepository.deleteById(id);
         return "success";
+    }
+
+    @PostMapping("/delete-type/{id}")
+    @ResponseBody
+    public String deleteEvalType(@PathVariable("id") Integer id) {
+        try {
+            evalTypeRepository.deleteById(id);
+            return "success";
+        } catch (DataIntegrityViolationException e) {
+            return "사용 중인 평가 유형은 삭제할 수 없습니다.";
+        } catch (Exception e) {
+            log.error("❌ 평가 유형 삭제 오류: ", e);
+            return "error: " + e.getMessage();
+        }
     }
 
     @PostMapping("/save-weights")

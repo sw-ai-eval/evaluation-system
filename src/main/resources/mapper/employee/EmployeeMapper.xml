@@ -70,24 +70,24 @@
 	        d.name AS deptName,
 	        e.name AS name,
 	        e.status AS status,
-	
+
 	        e.position AS position,
 	        e.role AS role,
-	
+
 	        e.job_id AS jobId,
-			j.name AS jobName, 
-			
+		j.name AS jobName, 
+		
 	        e.email AS email,
 	        e.phone AS phone,
 	        e.hire_date AS hireDate,
-	
+
 	        e.level_id AS levelId,
 	        l.name AS levelName,  <!-- 🔥 여기 핵심 -->
-	
+
 	        e.resign_date AS resignDate,
 	        e.locked AS locked,
 	        ISNULL(e.login_fail_count, 0) AS failCount,
-	
+
 	        CASE 
 	            WHEN e.resign_date IS NOT NULL 
 	             AND e.resign_date <![CDATA[<=]]> CAST(GETDATE() AS DATE)
@@ -96,33 +96,33 @@
 	            ]]>
 	            THEN 1 ELSE 0
 	        END AS overdueResignFlag
-	
+
 	    FROM dbo.employee_52 e
-	
+
 	    LEFT JOIN dbo.department_52 d 
 	        ON e.dept_id = d.id
-	
+
 	    LEFT JOIN dbo.code_common_52 j ON e.job_id   = j.id AND j.group_id = 2
 	    LEFT JOIN dbo.code_common_52 l ON e.level_id = l.id AND l.group_id = 1
-	
+
 	    <where>
 	        <if test="keyword != null and keyword != ''">
 	            e.emp_no = #{keyword} OR e.name LIKE '%' + #{keyword} + '%'
 	        </if>
-	
+
 	        <if test="deptId != null and deptId != ''">
 	            AND e.dept_id = #{deptId}
 	        </if>
-	
+
 	        <if test="status != null and status != ''">
 	            AND e.status = #{status}
 	        </if>
 	    </where>
-	
+
 	    ORDER BY e.emp_no DESC
 	    OFFSET #{offset} ROWS
 	    FETCH NEXT #{size} ROWS ONLY
-	
+
 	</select>
 		
 	<select id="findByEmpNoDetail" resultType="com.eval.domain.employee.dto.EmpManageDTO">
@@ -143,21 +143,22 @@
 	        j.name          AS jobName,
 	        e.hire_date     AS hireDate,
 	        e.resign_date   AS resignDate,
-	        e.position      AS position
-	
+	        e.position      AS position,
+	        e.password      AS password
+
 	    FROM dbo.employee_52 e
 	    LEFT JOIN dbo.department_52 d   ON e.dept_id  = d.id
 	    LEFT JOIN dbo.code_common_52 j  ON e.job_id   = j.id AND j.group_id = 2
 	    LEFT JOIN dbo.code_common_52 l  ON e.level_id = l.id AND l.group_id = 1
 	    WHERE e.emp_no = #{empNo}
-	
+
 	</select>
 	<select id="countEmployees" resultType="int">
 	
 	    SELECT COUNT(*)
 	    FROM dbo.employee_52 e
 	    LEFT JOIN dbo.department_52 d ON e.dept_id = d.id
-	
+
 	    <where>
 	        <if test="keyword != null and keyword != ''">
 	            AND e.name LIKE '%' + #{keyword} + '%'
@@ -169,7 +170,7 @@
 	            AND e.status = #{status}
 	        </if>
 	    </where>
-	
+
 	</select>
 	<update id="updatePassword">
     	UPDATE dbo.employee_52

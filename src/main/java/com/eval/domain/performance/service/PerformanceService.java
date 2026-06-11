@@ -9,6 +9,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,8 +89,10 @@ public class PerformanceService {
         Map<String, Object> period = mapper.selectEvalPeriod(req.getTypeId());
         if (period != null) {
             LocalDateTime now = LocalDateTime.now();
-            LocalDateTime startDate = (LocalDateTime) period.get("startDate");
-            LocalDateTime endDate   = (LocalDateTime) period.get("endDate");
+            LocalDateTime startDate = period.get("startDate") != null
+                    ? ((Timestamp) period.get("startDate")).toLocalDateTime() : null;
+            LocalDateTime endDate   = period.get("endDate") != null
+                    ? ((Timestamp) period.get("endDate")).toLocalDateTime() : null;
             if (startDate != null && now.isBefore(startDate)) {
                 throw new IllegalStateException("평가 기간이 시작되지 않았습니다.");
             }
