@@ -47,15 +47,15 @@
 	        ON cg.id = cc.group_id
 	
 	    <where>
-	        et.name LIKE '%다면평가%'
+	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
-	        AND EXISTS (
+	        AND NOT EXISTS (
 			    SELECT 1
 			    FROM final_result_52 fr
 			    WHERE fr.emp_no = etm.evaluatee_no
 			      AND fr.year = et.year
-			      AND fr.status = 0
+			      AND fr.status = 1
 			)
 	        <if test="deptId != null and deptId != ''">
 	            AND (e.dept_id = #{deptId} OR d.parent_id = #{deptId})
@@ -196,12 +196,12 @@
 	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
-	        AND EXISTS (
+	        AND NOT EXISTS (
 	            SELECT 1
 	            FROM final_result_52 fr
 	            WHERE fr.emp_no = etm.evaluatee_no
 	              AND fr.year = et.year
-	              AND fr.status = 0
+	              AND fr.status = 1
 	        )
 	    </where>
 	</select>
@@ -264,12 +264,12 @@
 	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
-	        AND EXISTS (
-			    SELECT 0
+	        AND NOT EXISTS (
+			    SELECT 1
 			    FROM final_result_52 fr
 			    WHERE fr.emp_no = etm.evaluatee_no
 			      AND fr.year = et.year
-			      AND fr.status = 0
+			      AND fr.status = 1
 			)
 	        
 	        <if test="position == '부서원'">
@@ -409,27 +409,27 @@
 	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
-	
-	        AND EXISTS (
-	            SELECT 0
+
+	        AND NOT EXISTS (
+	            SELECT 1
 	            FROM final_result_52 fr
 	            WHERE fr.emp_no = etm.evaluatee_no
 	              AND fr.year = et.year
-	              AND fr.status = 0
+	              AND fr.status = 1
 	        )
-	
+
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
-	
+
 	        <if test="position == '부서장'">
 	            AND etm.evaluatee_no = #{userNo}
 	        </if>
-	
+
 	        <if test="year != null">
 	            AND et.year = #{year}
 	        </if>
-	
+
 	        <if test="period != null and period != ''">
 				<choose>
 				
@@ -472,7 +472,7 @@
 	        et.name LIKE '%다면%'
 	        AND cg.group_code = 'EVAL_STATUS'
 	        AND (eval_emp.level_id IS NULL OR eval_emp.level_id != 6)
-	
+
 	        AND EXISTS (
 	            SELECT 0
 	            FROM final_result_52 fr
@@ -480,19 +480,19 @@
 	              AND fr.year = et.year
 	              AND fr.status = 1
 	        )
-	
+
 	        <if test="position == '부서원'">
 	            AND etm.evaluator_no = #{userNo}
 	        </if>
-	
+
 	        <if test="position == '부서장'">
 	            AND etm.evaluatee_no = #{userNo}
 	        </if>
-	
+
 	        <if test="year != null">
 	            AND et.year = #{year}
 	        </if>
-	
+
 	        <if test="period != null and period != ''">
 				<choose>
 				
